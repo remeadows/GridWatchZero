@@ -1,0 +1,17 @@
+The whole UI doesn't need to fit on one screen. Scrolling up and down is fine. Keep the resolution tight. "Project Plague" Should be clearly displayed on the screen, not just Plague. 
+
+Add defense applications 
+1. For Firewall --> Add NGFW --> A/ML
+2. Syslog --> SIEM --> SOAR --> AI Enhancement for automation and reporting
+3. EDR --> XDR --> MXDR -->AI Enhancements for endpoint protection
+4. IDS --> IPS --> ML/IPS --> AI Enhancements for signature recognition an offensive manuevers
+5. Router --> ISR --> CLOUD ISR --> Encryption 
+6. Data at rest 
+
+Add network topology 
+
+Add a full screen alarm when threat is high and risk becomes critical. Action required
+
+Goal = Earn credits while keeping the threat low. Learn Malus footprint. Report it to the team 
+
+Update Issues.md
