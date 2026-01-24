@@ -313,7 +313,17 @@ struct UnitRowView: View {
                                 .font(.terminalMicro)
                                 .foregroundColor(.neonGreen)
                         }
-                    } else if !isUnlocked {
+                    } else if isUnlocked {
+                        // Unlocked but not equipped - show owned status
+                        HStack(spacing: 4) {
+                            Image(systemName: "checkmark.circle.fill")
+                                .font(.system(size: 10))
+                            Text("OWNED")
+                                .font(.terminalMicro)
+                        }
+                        .foregroundColor(.neonCyan)
+                    } else {
+                        // Locked - show cost
                         HStack(spacing: 4) {
                             Image(systemName: "lock.fill")
                                 .font(.system(size: 10))
@@ -397,6 +407,8 @@ struct UnitRowView: View {
         case "source_t2_corp_leech": return "30/tick"
         case "source_t3_zero_day": return "75/tick"
         case "source_t4_helix_scanner": return "150/tick"
+        case "source_t5_neural_tap": return "300/tick"
+        case "source_t6_helix_collector": return "750/tick"
         default: return "?/tick"
         }
     }
@@ -407,6 +419,8 @@ struct UnitRowView: View {
         case "link_t2_fiber_relay": return "21/tick"
         case "link_t3_quantum_bridge": return "56/tick"
         case "link_t4_helix_conduit": return "140/tick"
+        case "link_t5_neural_backbone": return "375/tick"
+        case "link_t6_helix_channel": return "900/tick"
         default: return "?/tick"
         }
     }
@@ -417,6 +431,8 @@ struct UnitRowView: View {
         case "sink_t2_shadow_market": return "23.4/tick"
         case "sink_t3_corp_backdoor": return "58.5/tick"
         case "sink_t4_helix_decoder": return "104/tick"
+        case "sink_t5_neural_exchange": return "270/tick"
+        case "sink_t6_helix_core": return "600/tick"
         default: return "?/tick"
         }
     }
@@ -427,6 +443,8 @@ struct UnitRowView: View {
         case "sink_t2_shadow_market": return "2.0x"
         case "sink_t3_corp_backdoor": return "2.5x"
         case "sink_t4_helix_decoder": return "3.0x"
+        case "sink_t5_neural_exchange": return "3.5x"
+        case "sink_t6_helix_core": return "4.5x"
         default: return "?x"
         }
     }

@@ -689,6 +689,32 @@ enum IntelMilestone: Int, CaseIterable {
         case .counterIntel: return .attackFrequencyReduction(0.10) // 10% fewer attacks
         }
     }
+
+    /// Short name for UI display
+    var name: String {
+        switch self {
+        case .firstReport: return "First Contact"
+        case .patternAnalyst: return "Pattern Analyst"
+        case .signatureExpert: return "Signature Expert"
+        case .threatHunter: return "Threat Hunter"
+        case .malusTracker: return "Malus Tracker"
+        case .originDiscovery: return "Origin Found"
+        case .counterIntel: return "Counter-Intel"
+        }
+    }
+
+    /// Human-readable description of the bonus
+    var bonusDescription: String {
+        switch self {
+        case .firstReport: return "+10% intel collection"
+        case .patternAnalyst: return "+25% pattern ID speed"
+        case .signatureExpert: return "+15% intel collection"
+        case .threatHunter: return "20% attack early warning"
+        case .malusTracker: return "+5% damage reduction"
+        case .originDiscovery: return "+25% intel collection"
+        case .counterIntel: return "10% fewer attacks"
+        }
+    }
 }
 
 enum IntelBonus {

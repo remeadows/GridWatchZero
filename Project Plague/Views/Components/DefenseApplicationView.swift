@@ -9,9 +9,19 @@ import SwiftUI
 struct DefenseStackView: View {
     let stack: DefenseStack
     let credits: Double
+    let maxTierAvailable: Int  // Maximum tier available in current level (defaults to 6 for sandbox)
     let onUpgrade: (DefenseCategory) -> Void
     let onDeploy: (DefenseAppTier) -> Void
     let onUnlock: (DefenseAppTier) -> Void
+
+    init(stack: DefenseStack, credits: Double, maxTierAvailable: Int = 6, onUpgrade: @escaping (DefenseCategory) -> Void, onDeploy: @escaping (DefenseAppTier) -> Void, onUnlock: @escaping (DefenseAppTier) -> Void) {
+        self.stack = stack
+        self.credits = credits
+        self.maxTierAvailable = maxTierAvailable
+        self.onUpgrade = onUpgrade
+        self.onDeploy = onDeploy
+        self.onUnlock = onUnlock
+    }
 
     var body: some View {
         VStack(spacing: 8) {
@@ -40,6 +50,7 @@ struct DefenseStackView: View {
                         application: stack.application(for: category),
                         stack: stack,
                         credits: credits,
+                        maxTierAvailable: maxTierAvailable,
                         onUpgrade: { onUpgrade(category) },
                         onDeploy: { tier in onDeploy(tier) },
                         onUnlock: { tier in onUnlock(tier) }
@@ -122,11 +133,12 @@ struct DefenseAppCard: View {
     let application: DefenseApplication?
     let stack: DefenseStack
     let credits: Double
+    let maxTierAvailable: Int  // Maximum tier available in this level
     let onUpgrade: () -> Void
     let onDeploy: (DefenseAppTier) -> Void
     let onUnlock: (DefenseAppTier) -> Void
 
-    @State private var showingUpgradeSheet = false
+    @State private var showingTierSheet = false
 
     private var cardColor: Color {
         guard let app = application else { return .terminalGray }
@@ -166,7 +178,7 @@ struct DefenseAppCard: View {
             if let app = application {
                 // Deployed application
                 VStack(alignment: .leading, spacing: 4) {
-                    // Name and tier
+                    // Name and tier indicator
                     HStack {
                         Text(app.shortName)
                             .font(.terminalBody)
@@ -174,6 +186,15 @@ struct DefenseAppCard: View {
                             .glow(cardColor, radius: 2)
 
                         Spacer()
+
+                        // Show tier badge
+                        Text("T\(app.tier.tierNumber)")
+                            .font(.system(size: 7, weight: .bold, design: .monospaced))
+                            .foregroundColor(.terminalBlack)
+                            .padding(.horizontal, 3)
+                            .padding(.vertical, 1)
+                            .background(cardColor.opacity(0.8))
+                            .cornerRadius(2)
 
                         Image(systemName: app.status.icon)
                             .font(.system(size: 8))
@@ -204,7 +225,7 @@ struct DefenseAppCard: View {
 
                         Spacer()
 
-                        // Upgrade button
+                        // Level upgrade button
                         Button(action: onUpgrade) {
                             HStack(spacing: 2) {
                                 Image(systemName: "arrow.up")
@@ -219,6 +240,48 @@ struct DefenseAppCard: View {
                             .cornerRadius(2)
                         }
                         .disabled(credits < app.upgradeCost)
+                    }
+
+                    // Tier upgrade section - show if higher tier is available
+                    if let nextTier = app.tier.nextTier, nextTier.tierNumber <= maxTierAvailable {
+                        let isNextUnlocked = stack.isUnlocked(nextTier)
+                        let canUnlockNext = stack.canUnlock(nextTier)
+
+                        Divider()
+                            .background(Color.terminalGray.opacity(0.3))
+
+                        if isNextUnlocked {
+                            // Can deploy next tier directly
+                            Button(action: { onDeploy(nextTier) }) {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "arrow.up.circle.fill")
+                                        .font(.system(size: 8))
+                                    Text("UPGRADE TO T\(nextTier.tierNumber)")
+                                        .font(.system(size: 7, weight: .bold, design: .monospaced))
+                                }
+                                .foregroundColor(.terminalBlack)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 4)
+                                .background(Color.neonCyan)
+                                .cornerRadius(2)
+                            }
+                        } else if canUnlockNext {
+                            // Need to unlock first
+                            Button(action: { onUnlock(nextTier) }) {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "lock.open.fill")
+                                        .font(.system(size: 8))
+                                    Text("UNLOCK T\(nextTier.tierNumber) ¢\(nextTier.unlockCost.formatted)")
+                                        .font(.system(size: 7, weight: .bold, design: .monospaced))
+                                }
+                                .foregroundColor(credits >= nextTier.unlockCost ? .terminalBlack : .terminalGray)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 4)
+                                .background(credits >= nextTier.unlockCost ? Color.neonAmber : Color.terminalGray.opacity(0.3))
+                                .cornerRadius(2)
+                            }
+                            .disabled(credits < nextTier.unlockCost)
+                        }
                     }
                 }
             } else {

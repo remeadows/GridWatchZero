@@ -16,6 +16,12 @@ struct StatsHeaderView: View {
     let onLore: () -> Void
     let onMilestones: () -> Void
 
+    // Campaign mode info (optional)
+    var campaignLevelId: Int? = nil
+    var campaignLevelName: String? = nil
+    var isInsaneMode: Bool = false
+    var onPauseCampaign: (() -> Void)? = nil
+
     @State private var showResetConfirm = false
     @State private var isAmbientOn = false
 
@@ -23,13 +29,40 @@ struct StatsHeaderView: View {
         VStack(spacing: 8) {
             // Title bar
             HStack(spacing: 8) {
-                Text("PROJECT PLAGUE")
-                    .font(.terminalTitle)
-                    .foregroundColor(.neonGreen)
-                    .glow(.neonGreen, radius: 4)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.7)
+                // Show campaign level info or game title
+                if let levelId = campaignLevelId, let levelName = campaignLevelName {
+                    // Campaign mode header
+                    VStack(alignment: .leading, spacing: 1) {
+                        HStack(spacing: 4) {
+                            Text("LEVEL \(levelId)")
+                                .font(.terminalMicro)
+                                .foregroundColor(.neonCyan)
+
+                            if isInsaneMode {
+                                Text("INSANE")
+                                    .font(.system(size: 7, weight: .bold, design: .monospaced))
+                                    .foregroundColor(.terminalBlack)
+                                    .padding(.horizontal, 3)
+                                    .padding(.vertical, 1)
+                                    .background(Color.neonRed)
+                                    .cornerRadius(2)
+                            }
+                        }
+                        Text(levelName)
+                            .font(.terminalSmall)
+                            .foregroundColor(.white)
+                    }
                     .accessibilityAddTraits(.isHeader)
+                } else {
+                    // Normal mode - show game title
+                    Text("PROJECT PLAGUE")
+                        .font(.terminalTitle)
+                        .foregroundColor(.neonGreen)
+                        .glow(.neonGreen, radius: 4)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
+                        .accessibilityAddTraits(.isHeader)
+                }
 
                 Spacer()
 
@@ -134,20 +167,40 @@ struct StatsHeaderView: View {
                     .accessibilityLabel(isRunning ? "Pause game" : "Resume game")
                     .accessibilityHint(isRunning ? "Pauses the game tick loop" : "Resumes the game tick loop")
 
-                    Button(action: { showResetConfirm = true }) {
-                        Image(systemName: "arrow.counterclockwise")
-                            .font(.system(size: 12))
-                            .foregroundColor(.neonRed)
-                            .frame(width: 30, height: 30)
-                            .background(Color.terminalDarkGray)
-                            .cornerRadius(4)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 4)
-                                    .stroke(Color.neonRed.opacity(0.5), lineWidth: 1)
-                            )
+                    // Show campaign exit or reset button
+                    if let pauseAction = onPauseCampaign {
+                        // Campaign mode - show exit/pause button
+                        Button(action: pauseAction) {
+                            Image(systemName: "rectangle.portrait.and.arrow.right")
+                                .font(.system(size: 12))
+                                .foregroundColor(.neonRed)
+                                .frame(width: 30, height: 30)
+                                .background(Color.terminalDarkGray)
+                                .cornerRadius(4)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 4)
+                                        .stroke(Color.neonRed.opacity(0.5), lineWidth: 1)
+                                )
+                        }
+                        .accessibilityLabel("Exit mission")
+                        .accessibilityHint("Save and exit current mission")
+                    } else {
+                        // Endless mode - show reset button
+                        Button(action: { showResetConfirm = true }) {
+                            Image(systemName: "arrow.counterclockwise")
+                                .font(.system(size: 12))
+                                .foregroundColor(.neonRed)
+                                .frame(width: 30, height: 30)
+                                .background(Color.terminalDarkGray)
+                                .cornerRadius(4)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 4)
+                                        .stroke(Color.neonRed.opacity(0.5), lineWidth: 1)
+                                )
+                        }
+                        .accessibilityLabel("Reset game")
+                        .accessibilityHint("Erases all progress and starts fresh")
                     }
-                    .accessibilityLabel("Reset game")
-                    .accessibilityHint("Erases all progress and starts fresh")
                 }
             }
 

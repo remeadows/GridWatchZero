@@ -17,6 +17,9 @@ struct DashboardView: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
+    // Campaign exit callback (nil for endless mode)
+    var onCampaignExit: (() -> Void)? = nil
+
     var body: some View {
         ZStack {
             // Background
@@ -157,6 +160,7 @@ struct DashboardView: View {
                         DefenseStackView(
                             stack: engine.defenseStack,
                             credits: engine.resources.credits,
+                            maxTierAvailable: engine.maxTierAvailable,
                             onUpgrade: { category in
                                 _ = engine.upgradeDefenseApp(category)
                             },
@@ -312,7 +316,11 @@ struct DashboardView: View {
                 onReset: { engine.resetGame() },
                 onShop: { showingShop = true },
                 onLore: { showingLore = true },
-                onMilestones: { showingMilestones = true }
+                onMilestones: { showingMilestones = true },
+                campaignLevelId: engine.levelConfiguration?.level.id,
+                campaignLevelName: engine.levelConfiguration?.level.name,
+                isInsaneMode: engine.levelConfiguration?.isInsane ?? false,
+                onPauseCampaign: onCampaignExit
             )
 
             // Threat / Defense / Risk bar
@@ -427,6 +435,7 @@ struct DashboardView: View {
                     DefenseStackView(
                         stack: engine.defenseStack,
                         credits: engine.resources.credits,
+                        maxTierAvailable: engine.maxTierAvailable,
                         onUpgrade: { category in
                             _ = engine.upgradeDefenseApp(category)
                         },

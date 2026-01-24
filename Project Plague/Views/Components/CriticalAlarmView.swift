@@ -304,10 +304,21 @@ struct MalusIntelPanel: View {
     let intel: MalusIntelligence
     let onSendReport: () -> Void
 
+    @State private var showingInfo = false
+
+    private var nextReward: Double {
+        // Base reward scales with patterns known
+        100.0 + (Double(intel.patternsIdentified) * 10.0)
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            // Header
+            // Header with mission context
             HStack {
+                Image(systemName: "target")
+                    .font(.system(size: 12))
+                    .foregroundColor(.neonAmber)
+
                 Text("[ MALUS INTELLIGENCE ]")
                     .font(.terminalSmall)
                     .foregroundColor(.terminalGray)
@@ -315,77 +326,178 @@ struct MalusIntelPanel: View {
                 Rectangle()
                     .fill(Color.terminalGray.opacity(0.3))
                     .frame(height: 1)
+
+                // Info button
+                Button(action: { showingInfo.toggle() }) {
+                    Image(systemName: "questionmark.circle")
+                        .font(.system(size: 12))
+                        .foregroundColor(.terminalGray)
+                }
             }
 
-            // Stats
-            HStack(spacing: 16) {
+            // Mission context (collapsible)
+            if showingInfo {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Footprint Data")
-                        .font(.terminalMicro)
+                    Text("MISSION: Track the source of Malus attacks")
+                        .font(.system(size: 9, weight: .bold, design: .monospaced))
+                        .foregroundColor(.neonAmber)
+
+                    Text("Every attack leaves traces. Your SIEM and IDS systems collect footprint data when you survive attacks. Send reports to help Ronin's team locate Malus and rescue Helix.")
+                        .font(.system(size: 8, design: .monospaced))
                         .foregroundColor(.terminalGray)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .padding(8)
+                .background(Color.terminalDarkGray.opacity(0.5))
+                .cornerRadius(4)
+            }
+
+            // Collection Stats
+            HStack(spacing: 0) {
+                // Footprint Data (main resource)
+                VStack(alignment: .center, spacing: 2) {
+                    Image(systemName: "waveform.path")
+                        .font(.system(size: 10))
+                        .foregroundColor(.neonCyan)
                     Text(intel.footprintData.formatted)
                         .font(.terminalBody)
                         .foregroundColor(.neonCyan)
-                }
-
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Patterns")
-                        .font(.terminalMicro)
+                    Text("DATA")
+                        .font(.system(size: 6, design: .monospaced))
                         .foregroundColor(.terminalGray)
+                }
+                .frame(maxWidth: .infinity)
+
+                // Patterns Identified
+                VStack(alignment: .center, spacing: 2) {
+                    Image(systemName: "brain.head.profile")
+                        .font(.system(size: 10))
+                        .foregroundColor(.neonAmber)
                     Text("\(intel.patternsIdentified)")
                         .font(.terminalBody)
                         .foregroundColor(.neonAmber)
-                }
-
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Reports Sent")
-                        .font(.terminalMicro)
+                    Text("PATTERNS")
+                        .font(.system(size: 6, design: .monospaced))
                         .foregroundColor(.terminalGray)
+                }
+                .frame(maxWidth: .infinity)
+
+                // Reports Sent
+                VStack(alignment: .center, spacing: 2) {
+                    Image(systemName: "paperplane.fill")
+                        .font(.system(size: 10))
+                        .foregroundColor(.neonGreen)
                     Text("\(intel.reportsSent)")
                         .font(.terminalBody)
                         .foregroundColor(.neonGreen)
-                }
-
-                Spacer()
-            }
-
-            // Analysis progress
-            VStack(alignment: .leading, spacing: 4) {
-                HStack {
-                    Text("Analysis Progress")
-                        .font(.terminalMicro)
+                    Text("REPORTS")
+                        .font(.system(size: 6, design: .monospaced))
                         .foregroundColor(.terminalGray)
-                    Spacer()
-                    Text("\(Int(intel.analysisProgress))%")
-                        .font(.terminalSmall)
-                        .foregroundColor(.neonCyan)
                 }
+                .frame(maxWidth: .infinity)
 
-                GeometryReader { geo in
-                    ZStack(alignment: .leading) {
-                        Rectangle()
-                            .fill(Color.terminalGray.opacity(0.3))
-                        Rectangle()
-                            .fill(Color.neonCyan)
-                            .frame(width: geo.size.width * (intel.analysisProgress / 100.0))
+                // Credits Earned
+                VStack(alignment: .center, spacing: 2) {
+                    Image(systemName: "creditcard.fill")
+                        .font(.system(size: 10))
+                        .foregroundColor(.neonGreen)
+                    Text("₵\(intel.totalIntelCredits.formatted)")
+                        .font(.terminalBody)
+                        .foregroundColor(.neonGreen)
+                    Text("EARNED")
+                        .font(.system(size: 6, design: .monospaced))
+                        .foregroundColor(.terminalGray)
+                }
+                .frame(maxWidth: .infinity)
+            }
+            .padding(.vertical, 8)
+            .background(Color.terminalDarkGray.opacity(0.3))
+            .cornerRadius(4)
+
+            // Milestone Progress
+            if let nextMilestone = intel.nextMilestone {
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack {
+                        Image(systemName: "flag.checkered")
+                            .font(.system(size: 8))
+                            .foregroundColor(.neonAmber)
+                        Text("NEXT MILESTONE: \(nextMilestone.name)")
+                            .font(.system(size: 8, weight: .bold, design: .monospaced))
+                            .foregroundColor(.neonAmber)
+                        Spacer()
+                        Text("\(intel.reportsSent)/\(nextMilestone.rawValue) reports")
+                            .font(.system(size: 7, design: .monospaced))
+                            .foregroundColor(.terminalGray)
+                    }
+
+                    // Progress bar to next milestone
+                    GeometryReader { geo in
+                        ZStack(alignment: .leading) {
+                            Rectangle()
+                                .fill(Color.terminalGray.opacity(0.3))
+
+                            let progress = Double(intel.reportsSent) / Double(nextMilestone.rawValue)
+                            Rectangle()
+                                .fill(Color.neonAmber)
+                                .frame(width: geo.size.width * min(1.0, progress))
+                        }
+                    }
+                    .frame(height: 4)
+                    .cornerRadius(2)
+
+                    // Milestone reward preview
+                    HStack(spacing: 4) {
+                        Image(systemName: "gift.fill")
+                            .font(.system(size: 7))
+                            .foregroundColor(.neonGreen)
+                        Text("Reward: ₵\(nextMilestone.creditReward.formatted) + \(nextMilestone.bonusDescription)")
+                            .font(.system(size: 7, design: .monospaced))
+                            .foregroundColor(.terminalGray)
                     }
                 }
-                .frame(height: 6)
-                .cornerRadius(3)
+            } else {
+                // All milestones complete!
+                HStack {
+                    Image(systemName: "checkmark.seal.fill")
+                        .font(.system(size: 10))
+                        .foregroundColor(.neonGreen)
+                    Text("ALL MILESTONES COMPLETE")
+                        .font(.system(size: 8, weight: .bold, design: .monospaced))
+                        .foregroundColor(.neonGreen)
+                }
             }
 
-            // Send report button
+            // Send report button with reward preview
             Button(action: onSendReport) {
                 HStack {
                     Image(systemName: "paperplane.fill")
                         .font(.system(size: 10))
-                    Text("SEND REPORT TO TEAM")
-                        .font(.terminalSmall)
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text("SEND INTEL REPORT")
+                            .font(.system(size: 9, weight: .bold, design: .monospaced))
+                        if intel.canSendReport {
+                            Text("Reward: ~₵\(Int(nextReward))")
+                                .font(.system(size: 7, design: .monospaced))
+                                .opacity(0.8)
+                        }
+                    }
                     Spacer()
                     if intel.canSendReport {
-                        Text("-250 data")
-                            .font(.terminalMicro)
-                            .foregroundColor(.neonAmber)
+                        VStack(alignment: .trailing, spacing: 1) {
+                            Text("READY")
+                                .font(.system(size: 7, weight: .bold, design: .monospaced))
+                            Text("-\(Int(intel.reportCost)) data")
+                                .font(.system(size: 7, design: .monospaced))
+                                .opacity(0.8)
+                        }
+                    } else {
+                        VStack(alignment: .trailing, spacing: 1) {
+                            Text("NEED DATA")
+                                .font(.system(size: 7, weight: .bold, design: .monospaced))
+                            Text("\(Int(intel.footprintData))/\(Int(intel.reportCost))")
+                                .font(.system(size: 7, design: .monospaced))
+                                .opacity(0.8)
+                        }
                     }
                 }
                 .foregroundColor(intel.canSendReport ? .terminalBlack : .terminalGray)
@@ -395,6 +507,18 @@ struct MalusIntelPanel: View {
                 .cornerRadius(4)
             }
             .disabled(!intel.canSendReport)
+
+            // Tip for new players
+            if intel.reportsSent == 0 && intel.footprintData < 50 {
+                HStack(spacing: 4) {
+                    Image(systemName: "lightbulb.fill")
+                        .font(.system(size: 8))
+                        .foregroundColor(.neonAmber)
+                    Text("Tip: Survive attacks to collect footprint data. SIEM & IDS boost collection!")
+                        .font(.system(size: 7, design: .monospaced))
+                        .foregroundColor(.terminalGray)
+                }
+            }
         }
         .terminalCard(borderColor: .neonCyan)
     }

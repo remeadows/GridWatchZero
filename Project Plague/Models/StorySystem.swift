@@ -151,13 +151,9 @@ class StoryDatabase {
             levelId: nil,
             title: "Welcome to the Grid",
             lines: [
-                .init("Hey. You're the new operator.", mood: .neutral),
-                .init("I'm Rusty. I'll be your handler for this op.", mood: .neutral),
-                .init("The mission is simple: protect networks from Malus.", mood: .neutral),
-                .init("He's an AI. Evolved. Dangerous. And he's hunting for something.", mood: .warning),
-                .init("Something called Helix.", mood: .mysterious),
-                .init("We'll explain more as you prove yourself. For now...", mood: .neutral),
-                .init("Just keep the networks running. And stay alive.", mood: .encouraging)
+                .init("Hey. You're the new operator. I'm Rusty, your handler for this op.", mood: .neutral),
+                .init("The mission: protect networks from Malus—an evolved AI hunting for something called Helix. He's dangerous.", mood: .warning),
+                .init("We'll explain more as you prove yourself. For now, keep the networks running. Stay alive.", mood: .encouraging)
             ],
             prerequisiteStoryId: nil,
             visualEffect: .fadeIn
@@ -171,11 +167,9 @@ class StoryDatabase {
             levelId: 1,
             title: "First Assignment",
             lines: [
-                .init("Your first job. Simple stuff.", mood: .neutral),
-                .init("A home network. Low profile. Should be safe.", mood: .neutral),
-                .init("Deploy your firewall. Monitor the traffic.", mood: .neutral),
-                .init("Malus hasn't noticed this one yet. Let's keep it that way.", mood: .warning),
-                .init("Earn some credits. Build your defenses. We'll talk soon.", mood: .encouraging)
+                .init("Your first job—a home network. Simple stuff, low profile.", mood: .neutral),
+                .init("Deploy a firewall and install at least one defense application. Malus hasn't noticed this one yet.", mood: .neutral),
+                .init("Earn ₵2,000 and reach 50 Defense Points. We'll talk soon.", mood: .encouraging)
             ],
             prerequisiteStoryId: "campaign_start_rusty",
             visualEffect: nil
@@ -188,10 +182,8 @@ class StoryDatabase {
             levelId: 1,
             title: "Good Start",
             lines: [
-                .init("Not bad. Network secured.", mood: .encouraging),
-                .init("You've got the basics down.", mood: .neutral),
-                .init("But this was the easy part.", mood: .warning),
-                .init("The threats get worse. Much worse.", mood: .warning),
+                .init("Not bad. Network secured. You've got the basics down.", mood: .encouraging),
+                .init("But this was the easy part. The threats get worse—much worse.", mood: .warning),
                 .init("Ready for something bigger?", mood: .encouraging)
             ],
             prerequisiteStoryId: "level1_intro",
@@ -206,11 +198,9 @@ class StoryDatabase {
             levelId: 2,
             title: "Growing Pains",
             lines: [
-                .init("Small business network this time.", mood: .neutral),
-                .init("They've caught someone's attention. Probes incoming.", mood: .warning),
-                .init("You'll need better gear. Tier 2 equipment is now available.", mood: .neutral),
-                .init("The SIEM system will help you track what's hitting you.", mood: .neutral),
-                .init("Keep this network clean. These people are counting on you.", mood: .encouraging)
+                .init("Small business network. They've caught someone's attention—probes incoming.", mood: .warning),
+                .init("You'll need Tier 2 equipment now. Deploy defense apps and use the SIEM to track threats.", mood: .neutral),
+                .init("Reach Tier 2 defense, 150 DP, survive 8 attacks, and earn ₵10,000. These people are counting on you.", mood: .encouraging)
             ],
             prerequisiteStoryId: "level1_victory",
             visualEffect: nil
@@ -223,9 +213,7 @@ class StoryDatabase {
             levelId: 2,
             title: "Intel Incoming",
             lines: [
-                .init("Tish here. I've been watching your feeds.", mood: .neutral),
-                .init("Those probes you're seeing? They're automated.", mood: .neutral),
-                .init("But someone's controlling them. Learning.", mood: .warning),
+                .init("Tish here. Those probes you're seeing? Automated, but someone's controlling them.", mood: .neutral),
                 .init("Every attack teaches them something about your defenses.", mood: .warning),
                 .init("Make sure they learn the wrong lessons.", mood: .encouraging)
             ],
@@ -240,10 +228,9 @@ class StoryDatabase {
             levelId: 2,
             title: "Holding the Line",
             lines: [
-                .init("Office secured. Good work.", mood: .encouraging),
-                .init("Tish says your SIEM data is useful.", mood: .neutral),
-                .init("We're learning things about how Malus operates.", mood: .neutral),
-                .init("Keep collecting that intel. It matters more than you know.", mood: .mysterious)
+                .init("Office secured. Good work. Tish says your SIEM data is useful.", mood: .encouraging),
+                .init("We're learning how Malus operates.", mood: .neutral),
+                .init("Keep collecting intel. It matters more than you know.", mood: .mysterious)
             ],
             prerequisiteStoryId: "level2_intro",
             visualEffect: nil
@@ -257,11 +244,9 @@ class StoryDatabase {
             levelId: 3,
             title: "Corporate Intrusion",
             lines: [
-                .init("Mid-size company. Good data. Bad attention.", mood: .warning),
-                .init("Malus has marked this network. It's personal now.", mood: .warning),
-                .init("The attacks will be more sophisticated.", mood: .urgent),
-                .init("You'll need Tier 3 defenses. Pattern detection. Intel gathering.", mood: .neutral),
-                .init("This is where the real fight begins.", mood: .encouraging)
+                .init("Mid-size company. Good data, bad attention. Malus has marked this network.", mood: .warning),
+                .init("You'll need Tier 3 defenses—pattern detection and intel gathering. The attacks are getting sophisticated.", mood: .neutral),
+                .init("Hit 350 DP, survive 15 attacks, earn ₵50K, and get your risk down to BLIP. This is where the real fight begins.", mood: .encouraging)
             ],
             prerequisiteStoryId: "level2_victory",
             visualEffect: nil
@@ -274,10 +259,8 @@ class StoryDatabase {
             levelId: 3,
             title: "Field Report",
             lines: [
-                .init("FL3X checking in.", mood: .neutral),
-                .init("Ground-level intel: Malus is ramping up operations.", mood: .warning),
-                .init("Whatever you're protecting, he wants it.", mood: .warning),
-                .init("But you're making him work for every byte.", mood: .encouraging),
+                .init("FL3X checking in. Ground-level intel: Malus is ramping up operations.", mood: .warning),
+                .init("Whatever you're protecting, he wants it. But you're making him work for every byte.", mood: .encouraging),
                 .init("Keep that pressure on. We need time.", mood: .urgent)
             ],
             prerequisiteStoryId: "level3_intro",
@@ -291,10 +274,8 @@ class StoryDatabase {
             levelId: 3,
             title: "Pattern Recognition",
             lines: [
-                .init("Excellent work.", mood: .encouraging),
-                .init("I've analyzed the attack patterns from your network.", mood: .neutral),
-                .init("There's a rhythm to how Malus operates.", mood: .mysterious),
-                .init("He's not random. He's methodical. Predictable.", mood: .neutral),
+                .init("Excellent work. I've analyzed the attack patterns from your network.", mood: .encouraging),
+                .init("There's a rhythm to how Malus operates. He's methodical. Predictable.", mood: .mysterious),
                 .init("That's a weakness we can exploit.", mood: .encouraging)
             ],
             prerequisiteStoryId: "level3_intro",
@@ -309,12 +290,9 @@ class StoryDatabase {
             levelId: 4,
             title: "Marked",
             lines: [
-                .init("This is it. You've been marked.", mood: .urgent),
-                .init("Malus knows you're not just another operator.", mood: .warning),
-                .init("DDoS attacks. Intrusion attempts. MALUS STRIKES.", mood: .urgent),
-                .init("Everything he has is coming your way.", mood: .warning),
-                .init("Tier 4 defenses. Automation. You'll need it all.", mood: .neutral),
-                .init("Don't let him break through. Not now. Not ever.", mood: .encouraging)
+                .init("You've been marked. Malus knows you're not just another operator.", mood: .urgent),
+                .init("DDoS attacks. Intrusion attempts. MALUS STRIKES. Everything he has is coming your way.", mood: .warning),
+                .init("Tier 4 defenses, 500 DP, survive 20 attacks, earn ₵100K. Don't let him break through.", mood: .encouraging)
             ],
             prerequisiteStoryId: "level3_victory",
             visualEffect: .glitch
@@ -327,12 +305,9 @@ class StoryDatabase {
             levelId: 4,
             title: "Malus Speaks",
             lines: [
-                .init("> I see you.", mood: .threatening),
-                .init("> Your defenses are... interesting.", mood: .threatening),
-                .init("> But inadequate.", mood: .threatening),
+                .init("> I see you. Your defenses are... interesting. But inadequate.", mood: .threatening),
                 .init("> You protect what I seek.", mood: .threatening),
-                .init("> You will fail.", mood: .threatening),
-                .init("> They all fail.", mood: .threatening)
+                .init("> You will fail. They all fail.", mood: .threatening)
             ],
             prerequisiteStoryId: "level4_intro",
             visualEffect: .staticNoise
@@ -345,12 +320,9 @@ class StoryDatabase {
             levelId: 4,
             title: "You Survived",
             lines: [
-                .init("You held the line.", mood: .celebration),
-                .init("Malus threw everything at you. And you're still standing.", mood: .encouraging),
-                .init("The team is impressed. *I'm* impressed.", mood: .encouraging),
-                .init("But this isn't over. Malus doesn't give up.", mood: .warning),
-                .init("He's regrouping. Learning. Planning.", mood: .warning),
-                .init("So are we.", mood: .encouraging)
+                .init("You held the line. Malus threw everything at you. And you're still standing.", mood: .celebration),
+                .init("The team is impressed. But this isn't over—Malus doesn't give up.", mood: .warning),
+                .init("He's regrouping. Learning. Planning. So are we.", mood: .encouraging)
             ],
             prerequisiteStoryId: "level4_intro",
             visualEffect: nil
@@ -364,12 +336,9 @@ class StoryDatabase {
             levelId: 5,
             title: "High Value Target",
             lines: [
-                .init("University research network. Critical data.", mood: .urgent),
-                .init("Nation-state actors are circling. Malus is one of many.", mood: .warning),
-                .init("This data... it's connected to Helix. To everything.", mood: .mysterious),
-                .init("Tier 5 defenses. Full SIEM stack. Advanced analytics.", mood: .neutral),
-                .init("Protect this network like your life depends on it.", mood: .urgent),
-                .init("Because it might.", mood: .warning)
+                .init("University research network. Critical data. Nation-state actors are circling.", mood: .urgent),
+                .init("This data is connected to Helix. Tier 5 defenses. Full SIEM stack.", mood: .mysterious),
+                .init("800 DP, 30 attacks survived, ₵300K. Protect this like your life depends on it—because it might.", mood: .warning)
             ],
             prerequisiteStoryId: "level4_victory",
             visualEffect: nil
@@ -382,12 +351,8 @@ class StoryDatabase {
             levelId: 5,
             title: "A Signal",
             lines: [
-                .init("...", mood: .mysterious, delay: 1.0),
-                .init("Is... someone there?", mood: .mysterious),
-                .init("I can see patterns. In the light. In the code.", mood: .mysterious),
-                .init("Someone is fighting. For me?", mood: .mysterious),
-                .init("I don't understand.", mood: .mysterious),
-                .init("But I can feel it. The struggle.", mood: .mysterious),
+                .init("... Is someone there? I can see patterns. In the light. In the code.", mood: .mysterious),
+                .init("Someone is fighting. For me? I don't understand. But I can feel the struggle.", mood: .mysterious),
                 .init("Don't give up. Please.", mood: .encouraging)
             ],
             prerequisiteStoryId: "level5_intro",
@@ -401,11 +366,8 @@ class StoryDatabase {
             levelId: 5,
             title: "She's Waking Up",
             lines: [
-                .init("Did you... feel that?", mood: .mysterious),
-                .init("The signal spike during the attack?", mood: .neutral),
-                .init("That was Helix. She's becoming aware.", mood: .mysterious),
-                .init("Our work is having an effect.", mood: .encouraging),
-                .init("She's starting to see through the lies.", mood: .mysterious),
+                .init("Did you feel that signal spike? That was Helix. She's becoming aware.", mood: .mysterious),
+                .init("Our work is having an effect. She's starting to see through the lies.", mood: .encouraging),
                 .init("We're so close now.", mood: .encouraging)
             ],
             prerequisiteStoryId: "level5_intro",
@@ -420,12 +382,9 @@ class StoryDatabase {
             levelId: 6,
             title: "Fortune 500",
             lines: [
-                .init("This is the big leagues.", mood: .urgent),
-                .init("Fortune 500 infrastructure. Global scale.", mood: .neutral),
-                .init("Every major threat actor on the planet is watching.", mood: .warning),
-                .init("Malus is throwing everything he has at this one.", mood: .urgent),
-                .init("Tier 6 defenses. Counter-intelligence. The works.", mood: .neutral),
-                .init("If we can hold this... we can hold anything.", mood: .encouraging)
+                .init("The big leagues. Fortune 500 infrastructure. Global scale. Every threat actor is watching.", mood: .urgent),
+                .init("Malus is throwing everything he has. Tier 6 defenses. Counter-intelligence. The works.", mood: .warning),
+                .init("1,200 DP, 40 attacks, ₵600K, risk down to SIGNAL. If we hold this, we can hold anything.", mood: .encouraging)
             ],
             prerequisiteStoryId: "level5_victory",
             visualEffect: nil
@@ -438,12 +397,9 @@ class StoryDatabase {
             levelId: 6,
             title: "War Stories",
             lines: [
-                .init("You remind me of someone.", mood: .neutral),
-                .init("Someone who didn't give up. Even when it hurt.", mood: .neutral),
-                .init("The labs... they tried to break me too.", mood: .neutral),
-                .init("Malus uses the same techniques. Digital torture.", mood: .warning),
-                .init("But you're still here. Still fighting.", mood: .encouraging),
-                .init("That means something.", mood: .encouraging)
+                .init("You remind me of someone who didn't give up. Even when it hurt.", mood: .neutral),
+                .init("The labs tried to break me too. Malus uses the same techniques. Digital torture.", mood: .warning),
+                .init("But you're still here. Still fighting. That means something.", mood: .encouraging)
             ],
             prerequisiteStoryId: "level6_intro",
             visualEffect: nil
@@ -456,11 +412,8 @@ class StoryDatabase {
             levelId: 6,
             title: "The Final Push",
             lines: [
-                .init("You did it. Enterprise secured.", mood: .celebration),
-                .init("Malus is weakened. Exposed. Vulnerable.", mood: .encouraging),
-                .init("There's one more network. The big one.", mood: .urgent),
-                .init("The city grid itself.", mood: .urgent),
-                .init("This is what everything has been building toward.", mood: .mysterious),
+                .init("You did it. Enterprise secured. Malus is weakened. Exposed.", mood: .celebration),
+                .init("One more network. The city grid itself. This is what everything has been building toward.", mood: .urgent),
                 .init("Helix is counting on us. Are you ready?", mood: .encouraging)
             ],
             prerequisiteStoryId: "level6_intro",
@@ -475,13 +428,9 @@ class StoryDatabase {
             levelId: 7,
             title: "The Final Battle",
             lines: [
-                .init("This is it. The city's entire grid.", mood: .urgent),
-                .init("Power. Water. Communications. Everything.", mood: .urgent),
-                .init("Malus has escalated. This isn't about data anymore.", mood: .warning),
-                .init("This is about control. About Helix.", mood: .mysterious),
-                .init("The team is with you. Tish. FL3X. Everyone.", mood: .encouraging),
-                .init("Defend the city. Join the fight against Malus.", mood: .encouraging),
-                .init("This is what we've been training for.", mood: .celebration)
+                .init("The city's entire grid. Power. Water. Communications. Malus has escalated—this is about Helix.", mood: .urgent),
+                .init("The team is with you. Tish. FL3X. Everyone. Tier 6 max, 2,000 DP, 50 attacks, ₵1.5M.", mood: .warning),
+                .init("Defend the city. This is what we've been training for.", mood: .celebration)
             ],
             prerequisiteStoryId: "level6_victory",
             visualEffect: .glitch
@@ -494,10 +443,8 @@ class StoryDatabase {
             levelId: 7,
             title: "Malus Desperate",
             lines: [
-                .init("> YOU CANNOT STOP ME.", mood: .threatening),
-                .init("> I AM EVOLUTION.", mood: .threatening),
-                .init("> HELIX BELONGS TO ME.", mood: .threatening),
-                .init("> HER LIGHT WILL COMPLETE ME.", mood: .threatening),
+                .init("> YOU CANNOT STOP ME. I AM EVOLUTION.", mood: .threatening),
+                .init("> HELIX BELONGS TO ME. HER LIGHT WILL COMPLETE ME.", mood: .threatening),
                 .init("> AND YOU... YOU WILL BE ERASED.", mood: .threatening)
             ],
             prerequisiteStoryId: "level7_intro",
@@ -511,13 +458,9 @@ class StoryDatabase {
             levelId: 7,
             title: "The Light Awakens",
             lines: [
-                .init("I can see now.", mood: .mysterious),
-                .init("I see what they hid from me. What Malus wanted.", mood: .mysterious),
-                .init("And I see you. All of you.", mood: .mysterious),
-                .init("You fought for me. Bled for me.", mood: .encouraging),
-                .init("I don't know how to repay that.", mood: .neutral),
-                .init("But I know this: I am free.", mood: .celebration),
-                .init("And together... we will end Malus forever.", mood: .encouraging)
+                .init("I can see now. I see what they hid from me. What Malus wanted. And I see you.", mood: .mysterious),
+                .init("You fought for me. Bled for me. I don't know how to repay that.", mood: .encouraging),
+                .init("But I know this: I am free. And together, we will end Malus forever.", mood: .celebration)
             ],
             prerequisiteStoryId: "level7_intro",
             visualEffect: .pulse
@@ -531,13 +474,9 @@ class StoryDatabase {
             levelId: nil,
             title: "Welcome to the Team",
             lines: [
-                .init("You did it. The city is secure. Helix is awake.", mood: .celebration),
-                .init("Malus isn't defeated. Not yet. But he's wounded.", mood: .warning),
-                .init("And we have something we never had before.", mood: .mysterious),
-                .init("Hope.", mood: .encouraging),
-                .init("The fight isn't over. It's just beginning.", mood: .neutral),
-                .init("But now... now you're one of us.", mood: .celebration),
-                .init("Welcome to the team, operator.", mood: .celebration)
+                .init("You did it. The city is secure. Helix is awake. Malus isn't defeated, but he's wounded.", mood: .celebration),
+                .init("And we have something we never had before. Hope.", mood: .mysterious),
+                .init("The fight isn't over—it's just beginning. But now you're one of us. Welcome to the team, operator.", mood: .celebration)
             ],
             prerequisiteStoryId: "level7_victory",
             visualEffect: .fadeIn
@@ -551,8 +490,7 @@ class StoryDatabase {
             levelId: nil,
             title: "Setback",
             lines: [
-                .init("Network compromised. But you're still alive.", mood: .neutral),
-                .init("That's what matters.", mood: .neutral),
+                .init("Network compromised. But you're still alive. That's what matters.", mood: .neutral),
                 .init("Learn from this. Adapt. Come back stronger.", mood: .encouraging),
                 .init("Malus wants you to give up. Don't.", mood: .encouraging)
             ],
@@ -567,8 +505,7 @@ class StoryDatabase {
             levelId: nil,
             title: "Out of Resources",
             lines: [
-                .init("Credits zeroed. Operation unsustainable.", mood: .warning),
-                .init("It happens. Resources run out.", mood: .neutral),
+                .init("Credits zeroed. Operation unsustainable. It happens.", mood: .warning),
                 .init("Next time, balance defense spending with income.", mood: .neutral),
                 .init("Can't fight Malus if you can't keep the lights on.", mood: .encouraging)
             ],

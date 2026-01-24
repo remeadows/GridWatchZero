@@ -67,7 +67,7 @@ class LevelDatabase {
                 requiredDefensePoints: 150,
                 requiredRiskLevel: .ghost,
                 requiredCredits: 10000,
-                requiredAttacksSurvived: 8,
+                requiredAttacksSurvived: nil,  // Removed - conflicts with keeping risk low
                 timeLimit: nil
             ),
             unlockRequirement: .previousLevel(1),

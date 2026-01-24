@@ -51,13 +51,23 @@ struct HomeView: View {
                     isInsaneCompleted: campaignState.isInsaneCompleted(levelId),
                     stats: campaignState.statsForLevel(levelId),
                     insaneStats: campaignState.statsForLevel(levelId, isInsane: true),
+                    hasCheckpoint: campaignState.hasValidCheckpoint(for: levelId, isInsane: false),
                     onStartNormal: {
+                        // Clear any existing checkpoint when starting fresh
+                        campaignState.clearCheckpoint()
                         selectedLevelId = nil
                         onStartLevel(level, false)
                     },
                     onStartInsane: {
+                        // Clear any existing checkpoint when starting insane
+                        campaignState.clearCheckpoint()
                         selectedLevelId = nil
                         onStartLevel(level, true)
+                    },
+                    onResume: {
+                        // Resume from checkpoint - don't clear it
+                        selectedLevelId = nil
+                        onStartLevel(level, false)
                     }
                 )
             }
@@ -406,8 +416,10 @@ struct LevelDetailSheet: View {
     let isInsaneCompleted: Bool
     let stats: LevelCompletionStats?
     let insaneStats: LevelCompletionStats?
+    let hasCheckpoint: Bool
     let onStartNormal: () -> Void
     let onStartInsane: () -> Void
+    let onResume: () -> Void
 
     @Environment(\.dismiss) private var dismiss
 
@@ -502,17 +514,47 @@ struct LevelDetailSheet: View {
                 // Start buttons
                 VStack(spacing: 12) {
                     if isUnlocked {
-                        Button(action: onStartNormal) {
-                            HStack {
-                                Image(systemName: "play.fill")
-                                Text(isCompleted ? "REPLAY MISSION" : "START MISSION")
+                        // Show Continue button if there's a saved checkpoint
+                        if hasCheckpoint {
+                            Button(action: onResume) {
+                                HStack {
+                                    Image(systemName: "play.circle.fill")
+                                    Text("CONTINUE MISSION")
+                                }
+                                .font(.terminalTitle)
+                                .foregroundColor(.terminalBlack)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 14)
+                                .background(Color.neonGreen)
+                                .cornerRadius(4)
                             }
-                            .font(.terminalTitle)
-                            .foregroundColor(.terminalBlack)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 14)
-                            .background(Color.neonGreen)
-                            .cornerRadius(4)
+
+                            // Option to restart fresh
+                            Button(action: onStartNormal) {
+                                HStack {
+                                    Image(systemName: "arrow.counterclockwise")
+                                    Text("RESTART MISSION")
+                                }
+                                .font(.terminalSmall)
+                                .foregroundColor(.terminalGray)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 10)
+                                .background(Color.terminalDarkGray)
+                                .cornerRadius(4)
+                            }
+                        } else {
+                            Button(action: onStartNormal) {
+                                HStack {
+                                    Image(systemName: "play.fill")
+                                    Text(isCompleted ? "REPLAY MISSION" : "START MISSION")
+                                }
+                                .font(.terminalTitle)
+                                .foregroundColor(.terminalBlack)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 14)
+                                .background(Color.neonGreen)
+                                .cornerRadius(4)
+                            }
                         }
 
                         if isCompleted {

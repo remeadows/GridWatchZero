@@ -18,7 +18,7 @@ struct LevelCheckpoint: Codable {
     let ticksElapsed: Int
     let attacksSurvived: Int
     let damageBlocked: Double
-    let defensePoints: Int
+    let creditsEarned: Double  // Track total earned for level objective
 
     // Node states (simplified for checkpoint)
     let sourceLevel: Int
@@ -26,6 +26,11 @@ struct LevelCheckpoint: Codable {
     let sinkLevel: Int
     let firewallHealth: Double?
     let firewallMaxHealth: Double?
+    let firewallLevel: Int?
+
+    // Defense applications - save the full state
+    let defenseStack: DefenseStack
+    let malusIntel: MalusIntelligence
 
     /// Check if checkpoint is recent enough to resume (within 24 hours)
     var isValid: Bool {
@@ -190,6 +195,8 @@ class CampaignSaveManager {
         do {
             let data = try JSONEncoder().encode(progress)
             UserDefaults.standard.set(data, forKey: progressKey)
+            // Force immediate write to disk (deprecated but ensures persistence)
+            UserDefaults.standard.synchronize()
         } catch {
             print("Failed to save campaign progress: \(error)")
         }
@@ -259,6 +266,7 @@ class CampaignState: ObservableObject {
     func completeCurrentLevel(stats: LevelCompletionStats) {
         guard let level = currentLevel else { return }
 
+        // CRITICAL: Complete level and add to completed set
         progress.completeLevel(level.id, stats: stats, isInsane: progress.isInsaneMode)
         levelState = .victory(stats: stats)
 
@@ -267,7 +275,15 @@ class CampaignState: ObservableObject {
             progress.unlockedTiers.insert(nextTier + 1)
         }
 
+        // Log for debugging
+        print("[CampaignState] Level \(level.id) completed. Completed levels: \(progress.completedLevels)")
+
+        // Save immediately and synchronously
         save()
+
+        // Double-check save was successful
+        let reloaded = CampaignSaveManager.shared.load()
+        print("[CampaignState] After save, reloaded completed levels: \(reloaded.completedLevels)")
     }
 
     func failCurrentLevel(reason: FailureReason) {
@@ -286,11 +302,29 @@ class CampaignState: ObservableObject {
         save()
     }
 
-    func returnToHub() {
+    func returnToHub(clearCheckpoint: Bool = false) {
         currentLevel = nil
-        progress.currentLevelId = nil
         levelState = .notStarted
-        save()
+
+        // Force a reload from disk to ensure we have latest saved state
+        // This ensures any saves from level completion are reflected
+        // CRITICAL: We must replace the entire progress struct (not just fields)
+        // to properly trigger @Published and update SwiftUI views
+        var freshProgress = CampaignSaveManager.shared.load()
+
+        // Clear the current level state on the fresh copy
+        freshProgress.currentLevelId = nil
+
+        // Only clear checkpoint if explicitly requested (e.g., level complete/fail)
+        // Keep checkpoint if user chose "Save & Exit"
+        if clearCheckpoint {
+            freshProgress.activeCheckpoint = nil
+        }
+
+        // Replace the entire struct - this properly triggers @Published
+        progress = freshProgress
+
+        print("[CampaignState] Returned to hub. Completed levels: \(progress.completedLevels), checkpoint: \(progress.activeCheckpoint != nil ? "saved" : "none")")
     }
 
     // MARK: - Queries

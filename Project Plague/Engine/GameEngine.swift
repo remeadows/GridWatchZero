@@ -271,6 +271,11 @@ final class GameEngine: ObservableObject {
     /// Whether we're in campaign mode
     var isInCampaignMode: Bool { levelConfiguration != nil }
 
+    /// Maximum tier available in current level (6 if sandbox/endless mode)
+    var maxTierAvailable: Int {
+        levelConfiguration?.level.availableTiers.max() ?? 6
+    }
+
     // MARK: - Private
 
     private var tickTimer: AnyCancellable?
@@ -996,6 +1001,45 @@ final class GameEngine: ObservableObject {
         )
     }
 
+    /// Calculate offline progress for a campaign level checkpoint
+    /// Returns the bonus credits earned while away (to be added to checkpoint credits)
+    func calculateCampaignOfflineProgress(checkpoint: LevelCheckpoint) -> OfflineProgress? {
+        let now = Date()
+        let secondsAway = Int(now.timeIntervalSince(checkpoint.savedAt))
+
+        // Only count offline progress if away for at least 60 seconds
+        guard secondsAway >= 60 else { return nil }
+
+        // Cap offline time at 4 hours for campaign (shorter than endless)
+        let maxOfflineSeconds = 14400
+        let effectiveSeconds = min(secondsAway, maxOfflineSeconds)
+
+        // Calculate ticks (1 tick per second)
+        let ticksToSimulate = effectiveSeconds
+
+        // Calculate earnings at reduced rate (30% for campaign - lower than endless)
+        let offlineEfficiency = 0.3
+
+        // Use checkpoint's node levels to estimate production
+        // Base T1 values scaled by level
+        let estimatedProduction = 10.0 * Double(checkpoint.sourceLevel)  // ~10/tick at T1
+        let effectiveBandwidth = 15.0 * Double(checkpoint.linkLevel)     // ~15/tick at T1
+        let estimatedTransfer = min(estimatedProduction, effectiveBandwidth)
+        let estimatedProcessing = min(estimatedTransfer, 12.0 * Double(checkpoint.sinkLevel))
+        let creditsPerTick = estimatedProcessing * 1.0 * offlineEfficiency  // 1.0 conversion rate
+
+        // Calculate totals
+        let totalCredits = creditsPerTick * Double(ticksToSimulate)
+        let totalData = estimatedProcessing * Double(ticksToSimulate)
+
+        return OfflineProgress(
+            secondsAway: secondsAway,
+            ticksSimulated: ticksToSimulate,
+            creditsEarned: totalCredits,
+            dataProcessed: totalData
+        )
+    }
+
     /// Dismiss offline progress notification
     func dismissOfflineProgress() {
         offlineProgress = nil
@@ -1240,6 +1284,10 @@ final class GameEngine: ObservableObject {
         // Pause any existing game
         pause()
 
+        // IMPORTANT: Clear any offline progress from endless mode
+        // Campaign levels start fresh - offline progress doesn't apply to new levels
+        offlineProgress = nil
+
         // Store configuration
         levelConfiguration = config
 
@@ -1306,12 +1354,15 @@ final class GameEngine: ObservableObject {
             ticksElapsed: currentTick - levelStartTick,
             attacksSurvived: levelAttacksSurvived,
             damageBlocked: levelDamageBlocked,
-            defensePoints: Int(defenseStack.totalDefensePoints),
+            creditsEarned: levelCreditsEarned,
             sourceLevel: source.level,
             linkLevel: link.level,
             sinkLevel: sink.level,
             firewallHealth: firewall?.currentHealth,
-            firewallMaxHealth: firewall?.maxHealth
+            firewallMaxHealth: firewall?.maxHealth,
+            firewallLevel: firewall?.level,
+            defenseStack: defenseStack,
+            malusIntel: malusIntel
         )
 
         // Save checkpoint to campaign progress
@@ -1341,17 +1392,21 @@ final class GameEngine: ObservableObject {
         // Set up the level first
         levelConfiguration = config
 
+        // Calculate offline progress earned while away from this checkpoint
+        let campaignOffline = calculateCampaignOfflineProgress(checkpoint: checkpoint)
+        let bonusCredits = campaignOffline?.creditsEarned ?? 0
+
         // Restore level tracking
         levelStartTick = 0  // We'll offset tick calculations
-        levelCreditsEarned = checkpoint.credits - config.level.startingCredits  // Credits earned so far
+        levelCreditsEarned = checkpoint.creditsEarned + bonusCredits  // Use saved credits earned + offline bonus
         levelAttacksSurvived = checkpoint.attacksSurvived
         levelDamageBlocked = checkpoint.damageBlocked
         currentTick = checkpoint.ticksElapsed
 
-        // Restore resources
+        // Restore resources (including offline bonus)
         resources = PlayerResources()
-        resources.credits = checkpoint.credits
-        resources.totalDataProcessed = checkpoint.data
+        resources.credits = checkpoint.credits + bonusCredits
+        resources.totalDataProcessed = checkpoint.data + (campaignOffline?.dataProcessed ?? 0)
 
         // Restore nodes with saved levels
         source = UnitFactory.createPublicMeshSniffer()
@@ -1372,14 +1427,22 @@ final class GameEngine: ObservableObject {
         // Restore firewall if it was present
         if let fwHealth = checkpoint.firewallHealth {
             firewall = UnitFactory.createBasicFirewall()
+            // Restore firewall level (maxHealth is computed from level, so upgrading restores it)
+            if let fwLevel = checkpoint.firewallLevel {
+                for _ in 1..<fwLevel {
+                    firewall?.upgrade()
+                }
+            }
             firewall?.currentHealth = fwHealth
         } else {
             firewall = nil
         }
 
-        // Reset other state
-        defenseStack = DefenseStack()
-        malusIntel = MalusIntelligence()
+        // Restore defense stack and malus intel (FULL STATE)
+        defenseStack = checkpoint.defenseStack
+        malusIntel = checkpoint.malusIntel
+
+        // Set threat state
         threatState = ThreatState()
         threatState.currentLevel = config.level.startingThreatLevel
 
@@ -1394,6 +1457,9 @@ final class GameEngine: ObservableObject {
         activeRandomEvent = nil
         showCriticalAlarm = false
         criticalAlarmAcknowledged = false
+
+        // Set offline progress to show the dialog (if there was progress)
+        offlineProgress = campaignOffline
 
         // Start the level
         start()

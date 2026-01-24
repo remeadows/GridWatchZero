@@ -68,9 +68,10 @@ enum ThreatLevel: Int, Codable, CaseIterable, Comparable {
     }
 
     /// Base chance of attack per tick (percentage)
+    /// Even at GHOST, there's light probing/port scanning - the network is never truly safe
     var attackChancePerTick: Double {
         switch self {
-        case .ghost: return 0.0
+        case .ghost: return 0.2     // Light probing - ~1 attack every 8+ minutes
         case .blip: return 0.5
         case .signal: return 1.0
         case .target: return 2.0
@@ -86,7 +87,7 @@ enum ThreatLevel: Int, Codable, CaseIterable, Comparable {
     /// Multiplier for attack severity
     var severityMultiplier: Double {
         switch self {
-        case .ghost: return 0.0
+        case .ghost: return 0.3     // Very light damage from probing attacks
         case .blip: return 0.5
         case .signal: return 1.0
         case .target: return 1.5

@@ -1,8 +1,8 @@
 # PROJECT_STATUS.md - Project Plague: Neural Grid
 
-## Current Version: 0.8.0-alpha
+## Current Version: 0.8.1-alpha
 
-## Last Updated: 2026-01-20
+## Last Updated: 2026-01-24
 
 ---
 
@@ -117,6 +117,8 @@
 | 2 | Corporate Leech | 20/tick | ¢7,500 |
 | 3 | Zero-Day Harvester | 50/tick | ¢32,000 |
 | 4 | Helix Fragment Scanner | 100/tick | ¢300,000 |
+| 5 | Neural Tap Array | 200/tick | ¢750,000 |
+| 6 | Helix Prime Collector | 500/tick | ¢3,500,000 |
 
 #### Links
 | Tier | Name | Bandwidth | Unlock Cost |
@@ -125,6 +127,8 @@
 | 2 | Fiber Darknet Relay | 15/tick | ¢6,000 |
 | 3 | Quantum Mesh Bridge | 40/tick | ¢26,000 |
 | 4 | Helix Conduit | 100/tick | ¢300,000 |
+| 5 | Neural Mesh Backbone | 250/tick | ¢600,000 |
+| 6 | Helix Resonance Channel | 600/tick | ¢3,000,000 |
 
 #### Sinks
 | Tier | Name | Processing | Conversion | Unlock Cost |
@@ -133,6 +137,8 @@
 | 2 | Shadow Market | 15/tick | 2.0x | ¢9,000 |
 | 3 | Corp Backdoor | 45/tick | 2.5x | ¢38,000 |
 | 4 | Helix Decoder | 80/tick | 3.0x | ¢300,000 |
+| 5 | Neural Exchange | 180/tick | 3.5x | ¢900,000 |
+| 6 | Helix Integration Core | 400/tick | 4.5x | ¢4,000,000 |
 
 #### Defense
 | Tier | Name | Base Health | Damage Reduction | Unlock Cost |
@@ -147,7 +153,7 @@
 ### Threat Thresholds
 | Level | Credits | Attack %/tick |
 |-------|---------|---------------|
-| GHOST | 0 | 0% |
+| GHOST | 0 | 0.2% |
 | BLIP | 100 | 0.5% |
 | SIGNAL | 1,000 | 1% |
 | TARGET | 10,000 | 2% |
@@ -161,31 +167,78 @@
 
 See [ISSUES.md](./ISSUES.md) for detailed tracking.
 
-**Critical**: ISSUE-006 - Campaign level completion lost on return to hub (BLOCKING)
+**Critical**: None (all closed)
 **Major**: None (all closed)
 **Minor**: None (all closed)
 
 ---
 
-## Files Changed This Session (Playtesting & Bug Fixes)
+## Session Log: 2026-01-24
+
+### Summary
+Fixed critical ISSUE-006 (campaign progress loss), added checkpoint system, expanded T5/T6 unit catalog, and improved campaign UX.
 
 ### New Files
+- `TEST_REPORT.md` - Comprehensive test and code review documentation
+
+### Modified Files (14 total, +951/-320 lines)
+
+#### Engine
+- `GameEngine.swift` - Campaign offline progress, full checkpoint state persistence
+- `NavigationCoordinator.swift` - Save-and-exit flow, redesigned VictoryProgressBar
+- `UnitFactory.swift` - Added T5/T6 sources, links, and sinks
+
+#### Models
+- `CampaignProgress.swift` - Full state checkpoint (defenseStack, malusIntel), forced sync
+- `DefenseApplication.swift` - IntelMilestone display names and bonus descriptions
+- `LevelDatabase.swift` - Removed conflicting attack requirement from Level 2
+- `StorySystem.swift` - Condensed all story dialogues (~50% shorter)
+- `ThreatSystem.swift` - GHOST now has 0.2% attack chance (light probing)
+
+#### Views
+- `CriticalAlarmView.swift` - Redesigned MalusIntelPanel with mission context
+- `DefenseApplicationView.swift` - Tier badges, inline tier upgrade buttons
+- `StatsHeaderView.swift` - Campaign level info display, exit button
+- `DashboardView.swift` - Campaign exit callback, tier restriction
+- `HomeView.swift` - Checkpoint resume/restart buttons
+- `UnitShopView.swift` - "OWNED" status, T5/T6 stat strings
+
+### Bug Fixes
+- **ISSUE-006 RESOLVED**: Campaign level completion no longer lost on hub return
+  - Root cause: Race condition between async cloud sync and level completion
+  - Fix: Multiple defensive measures (forced sync, reload verification, proper @Published triggering)
+
+### New Content
+| Tier | Source | Link | Sink |
+|------|--------|------|------|
+| T5 | Neural Tap Array (200/tick) | Neural Mesh Backbone (250 BW) | Neural Exchange (180 proc, 3.5x) |
+| T6 | Helix Prime Collector (500/tick) | Helix Resonance Channel (600 BW) | Helix Integration Core (400 proc, 4.5x) |
+
+### Balance Changes
+- GHOST threat level now has light attacks (0.2% chance, 0.3x severity)
+- Level 2: Removed "survive 8 attacks" requirement (conflicted with low-risk goal)
+
+---
+
+## Previous Session: 2026-01-20
+
+### Files Changed (Playtesting & Bug Fixes)
+
+#### New Files
 - `Engine/CloudSaveManager.swift` - iCloud sync for campaign progress
 - `Models/CosmeticSystem.swift` - UI themes and node skins
 - `Views/PlayerProfileView.swift` - Player profile UI
 - `PrivacyInfo.xcprivacy` - Privacy manifest for App Store
 - `APP_STORE_METADATA.md` - App Store submission guide
 
-### Modified Files
+#### Modified Files
 - `Models/LevelDatabase.swift` - Removed attack requirement from Level 1 tutorial
-- `Models/CampaignProgress.swift` - Added LevelCheckpoint for mid-level saves, @MainActor fixes
+- `Models/CampaignProgress.swift` - Added LevelCheckpoint for mid-level saves
 - `Engine/GameEngine.swift` - Campaign checkpoint save/load system
-- `Engine/NavigationCoordinator.swift` - Cloud sync on launch (attempted fix for ISSUE-006)
-- `PROJECT_STATUS.md` - Session updates
-- `ISSUES.md` - Documented ISSUE-006 critical bug
+- `Engine/NavigationCoordinator.swift` - Cloud sync on launch
 
-### Bug Found This Session
-**ISSUE-006**: Campaign level completion lost on return to hub. Critical bug that erases player progress. Needs further investigation - see ISSUES.md for details.
+#### Bug Found
+**ISSUE-006**: Campaign level completion lost on return to hub (fixed 2026-01-24)
 
 ---
 

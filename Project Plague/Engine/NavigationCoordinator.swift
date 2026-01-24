@@ -341,13 +341,18 @@ struct RootNavigationView: View {
                     isInsane: isInsane,
                     onExit: {
                         gameEngine.exitCampaignMode()
+                        // Ensure we return to hub state properly
+                        campaignState.returnToHub()
                         withAnimation(.easeInOut(duration: 0.3)) {
                             coordinator.returnToHome()
                         }
                     },
                     onLevelComplete: { stats in
-                        // Save progress
+                        // Save progress first - this is critical
                         campaignState.completeCurrentLevel(stats: stats)
+
+                        // Force save to persist immediately
+                        campaignState.save()
 
                         // Update campaign milestones
                         gameEngine.updateCampaignMilestones(
@@ -360,6 +365,9 @@ struct RootNavigationView: View {
                             campaignState.progress.insaneCompletedLevels.count
                         )
 
+                        // Sync to cloud after saving locally
+                        coordinator.syncToCloud(progress: campaignState.progress)
+
                         gameEngine.exitCampaignMode()
                         withAnimation(.easeInOut(duration: 0.3)) {
                             coordinator.completeLevel(stats.levelId, stats: stats)
@@ -367,6 +375,8 @@ struct RootNavigationView: View {
                     },
                     onLevelFailed: { levelId, reason in
                         campaignState.failCurrentLevel(reason: reason)
+                        // Force save on failure too
+                        campaignState.save()
                         gameEngine.exitCampaignMode()
                         withAnimation(.easeInOut(duration: 0.3)) {
                             coordinator.failLevel(levelId, reason: reason, isInsane: isInsane)
@@ -381,12 +391,16 @@ struct RootNavigationView: View {
                     isInsane: isInsane,
                     stats: coordinator.lastCompletionStats,
                     onNextLevel: {
+                        // Clear checkpoint since level is complete
+                        campaignState.returnToHub(clearCheckpoint: true)
                         // Show next level intro, then start (normal mode for next level)
                         coordinator.showStoryThenNavigate(.levelIntro, levelId: levelId + 1) {
                             coordinator.startLevel(levelId + 1, isInsane: false)
                         }
                     },
                     onReturnHome: {
+                        // Clear checkpoint since level is complete
+                        campaignState.returnToHub(clearCheckpoint: true)
                         withAnimation(.easeInOut(duration: 0.3)) {
                             coordinator.returnToHome()
                         }
@@ -405,12 +419,16 @@ struct RootNavigationView: View {
                     levelId: levelId,
                     reason: reason,
                     onRetry: {
+                        // Clear checkpoint on retry - start fresh
+                        campaignState.returnToHub(clearCheckpoint: true)
                         // Retry with same insane mode setting
                         coordinator.showStoryThenNavigate(.levelIntro, levelId: levelId) {
                             coordinator.startLevel(levelId, isInsane: isInsane)
                         }
                     },
                     onReturnHome: {
+                        // Clear checkpoint since player gave up
+                        campaignState.returnToHub(clearCheckpoint: true)
                         withAnimation(.easeInOut(duration: 0.3)) {
                             coordinator.returnToHome()
                         }
@@ -470,25 +488,20 @@ struct GameplayContainerView: View {
     var body: some View {
         ZStack {
             // Main gameplay (existing DashboardView)
-            DashboardView()
+            DashboardView(onCampaignExit: levelId != nil ? { showExitConfirm = true } : nil)
                 .environmentObject(gameEngine)
-
-            // Campaign overlay (only for campaign levels)
-            if let levelId = levelId {
-                VStack {
-                    // Top bar with level info and exit
-                    campaignTopBar(levelId: levelId)
-                    Spacer()
-
-                    // Victory progress bar at bottom
-                    if let progress = gameEngine.victoryProgress {
+                // Add bottom padding for mission objectives bar
+                .safeAreaInset(edge: .bottom) {
+                    if levelId != nil, let progress = gameEngine.victoryProgress {
                         VictoryProgressBar(progress: progress)
                             .padding(.horizontal, 16)
                             .padding(.bottom, 8)
+                            .background(Color.terminalBlack.opacity(0.95))
                     }
                 }
-            } else {
-                // Endless mode - just show exit button
+
+            // Endless mode overlay - only show exit button
+            if levelId == nil {
                 VStack {
                     endlessTopBar
                     Spacer()
@@ -497,12 +510,14 @@ struct GameplayContainerView: View {
         }
         .alert("Exit Mission?", isPresented: $showExitConfirm) {
             Button("Cancel", role: .cancel) { }
-            Button("Exit", role: .destructive) {
+            Button("Save & Exit") {
+                // Save checkpoint before exiting
+                gameEngine.saveCampaignCheckpoint()
                 gameEngine.pause()
                 onExit()
             }
         } message: {
-            Text("Your progress in this mission will be lost.")
+            Text("Your progress will be saved. You can resume this mission later.")
         }
         .onAppear {
             setupLevel()
@@ -513,8 +528,20 @@ struct GameplayContainerView: View {
         if let levelId = levelId {
             // Campaign mode - configure and start level
             if let level = LevelDatabase.shared.level(forId: levelId) {
+                // CRITICAL: Set up CampaignState tracking FIRST
+                // This sets currentLevel so completeCurrentLevel() works properly
+                campaignState.startLevel(levelId, isInsane: isInsane)
+
                 let config = LevelConfiguration(level: level, isInsane: isInsane)
-                gameEngine.startCampaignLevel(config)
+
+                // Check if we have a valid checkpoint to resume from
+                if let checkpoint = campaignState.validCheckpoint(for: levelId, isInsane: isInsane) {
+                    // Resume from saved checkpoint
+                    gameEngine.resumeFromCheckpoint(checkpoint, config: config)
+                } else {
+                    // Start fresh
+                    gameEngine.startCampaignLevel(config)
+                }
 
                 // Set up callbacks
                 gameEngine.onLevelComplete = { stats in
@@ -528,73 +555,6 @@ struct GameplayContainerView: View {
             // Endless mode - just start normally
             gameEngine.start()
         }
-    }
-
-    private func campaignTopBar(levelId: Int) -> some View {
-        HStack {
-            // Level indicator
-            VStack(alignment: .leading, spacing: 2) {
-                HStack(spacing: 4) {
-                    Text("LEVEL \(levelId)")
-                        .font(.terminalMicro)
-                        .foregroundColor(.neonCyan)
-
-                    if isInsane {
-                        Text("INSANE")
-                            .font(.system(size: 8, weight: .bold, design: .monospaced))
-                            .foregroundColor(.terminalBlack)
-                            .padding(.horizontal, 4)
-                            .padding(.vertical, 1)
-                            .background(Color.neonRed)
-                            .cornerRadius(2)
-                    }
-                }
-
-                if let level = LevelDatabase.shared.level(forId: levelId) {
-                    Text(level.name)
-                        .font(.terminalSmall)
-                        .foregroundColor(.white)
-                }
-            }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 6)
-            .background(Color.terminalBlack.opacity(0.9))
-            .cornerRadius(4)
-
-            Spacer()
-
-            // Victory progress button
-            Button {
-                showVictoryProgress.toggle()
-            } label: {
-                HStack(spacing: 4) {
-                    Image(systemName: "flag.fill")
-                    if let progress = gameEngine.victoryProgress {
-                        Text("\(Int(progress.overallProgress * 100))%")
-                            .font(.terminalMicro)
-                    }
-                }
-                .foregroundColor(.neonGreen)
-                .padding(.horizontal, 10)
-                .padding(.vertical, 6)
-                .background(Color.terminalBlack.opacity(0.9))
-                .cornerRadius(4)
-            }
-
-            // Exit button
-            Button {
-                showExitConfirm = true
-            } label: {
-                Image(systemName: "xmark.circle.fill")
-                    .font(.title2)
-                    .foregroundColor(.terminalGray)
-                    .padding(8)
-                    .background(Color.terminalBlack.opacity(0.9))
-                    .clipShape(Circle())
-            }
-        }
-        .padding(.horizontal, 16)
-        .padding(.top, 8)
     }
 
     private var endlessTopBar: some View {
@@ -635,41 +595,201 @@ struct GameplayContainerView: View {
 
 struct VictoryProgressBar: View {
     let progress: VictoryProgress
+    @State private var isExpanded = false
 
     var body: some View {
-        VStack(spacing: 6) {
-            // Progress bar
-            GeometryReader { geo in
-                ZStack(alignment: .leading) {
-                    // Background
-                    RoundedRectangle(cornerRadius: 4)
-                        .fill(Color.terminalDarkGray)
-
-                    // Fill
-                    RoundedRectangle(cornerRadius: 4)
-                        .fill(progress.allConditionsMet ? Color.neonGreen : Color.neonCyan)
-                        .frame(width: geo.size.width * progress.overallProgress)
+        VStack(spacing: 0) {
+            // Collapsed view - tap to expand
+            Button {
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                    isExpanded.toggle()
                 }
+            } label: {
+                HStack(spacing: 12) {
+                    // Overall progress indicator
+                    ZStack {
+                        Circle()
+                            .stroke(Color.terminalGray.opacity(0.3), lineWidth: 3)
+                            .frame(width: 36, height: 36)
+                        Circle()
+                            .trim(from: 0, to: progress.overallProgress)
+                            .stroke(progress.allConditionsMet ? Color.neonGreen : Color.neonCyan, lineWidth: 3)
+                            .frame(width: 36, height: 36)
+                            .rotationEffect(.degrees(-90))
+                        Text("\(Int(progress.overallProgress * 100))%")
+                            .font(.system(size: 10, weight: .bold, design: .monospaced))
+                            .foregroundColor(progress.allConditionsMet ? .neonGreen : .neonCyan)
+                    }
+
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(progress.allConditionsMet ? "VICTORY CONDITIONS MET!" : "MISSION OBJECTIVES")
+                            .font(.terminalMicro)
+                            .foregroundColor(progress.allConditionsMet ? .neonGreen : .terminalGray)
+
+                        // Quick status
+                        HStack(spacing: 8) {
+                            // Clearer tier display: shows current → required when not met
+                            ConditionPill(
+                                label: progress.defenseTierCurrent == 0 ? "No App" :
+                                       progress.defenseTierMet ? "T\(progress.defenseTierCurrent)+" :
+                                       "T\(progress.defenseTierCurrent)→T\(progress.defenseTierRequired)",
+                                met: progress.defenseTierMet
+                            )
+                            ConditionPill(label: "\(progress.defensePointsCurrent)/\(progress.defensePointsRequired)DP", met: progress.defensePointsMet)
+                            ConditionPill(label: progress.riskLevelCurrent.name, met: progress.riskLevelMet)
+                        }
+                    }
+
+                    Spacer()
+
+                    Image(systemName: isExpanded ? "chevron.down" : "chevron.up")
+                        .font(.terminalSmall)
+                        .foregroundColor(.terminalGray)
+                }
+                .padding(12)
+                .background(Color.terminalBlack.opacity(0.95))
+                .cornerRadius(8)
             }
-            .frame(height: 8)
+            .buttonStyle(.plain)
 
-            // Condition indicators
-            HStack(spacing: 12) {
-                ConditionPill(label: "T\(progress.defenseTierRequired)", met: progress.defenseTierMet)
-                ConditionPill(label: "\(progress.defensePointsRequired)DP", met: progress.defensePointsMet)
-                ConditionPill(label: progress.riskLevelRequired.name, met: progress.riskLevelMet)
+            // Expanded details
+            if isExpanded {
+                VStack(spacing: 8) {
+                    // Defense Application Tier (clarified label)
+                    GoalRow(
+                        icon: "shield.lefthalf.filled",
+                        label: "Defense App Tier",
+                        current: progress.defenseTierCurrent == 0 ? "None" : "T\(progress.defenseTierCurrent)",
+                        target: "T\(progress.defenseTierRequired)+",
+                        progress: Double(progress.defenseTierCurrent) / Double(progress.defenseTierRequired),
+                        met: progress.defenseTierMet,
+                        hint: progress.defenseTierCurrent == 0 ? "Install a defense app!" :
+                              !progress.defenseTierMet ? "Upgrade an app to Tier \(progress.defenseTierRequired)!" : nil
+                    )
 
-                if progress.creditsRequired != nil {
-                    ConditionPill(label: "₵", met: progress.creditsMet)
+                    // Defense Points
+                    GoalRow(
+                        icon: "chart.bar.fill",
+                        label: "Defense Points",
+                        current: "\(progress.defensePointsCurrent) DP",
+                        target: "\(progress.defensePointsRequired) DP",
+                        progress: Double(progress.defensePointsCurrent) / Double(progress.defensePointsRequired),
+                        met: progress.defensePointsMet,
+                        hint: nil
+                    )
+
+                    // Risk Level
+                    GoalRow(
+                        icon: "exclamationmark.triangle.fill",
+                        label: "Risk Level",
+                        current: progress.riskLevelCurrent.name,
+                        target: "≤ \(progress.riskLevelRequired.name)",
+                        progress: progress.riskLevelMet ? 1.0 : max(0, 1.0 - Double(progress.riskLevelCurrent.rawValue - progress.riskLevelRequired.rawValue) * 0.2),
+                        met: progress.riskLevelMet,
+                        hint: nil
+                    )
+
+                    // Credits (if required)
+                    if let required = progress.creditsRequired {
+                        GoalRow(
+                            icon: "creditcard.fill",
+                            label: "Credits Earned",
+                            current: "₵\(progress.creditsCurrent.formatted)",
+                            target: "₵\(required.formatted)",
+                            progress: min(1.0, progress.creditsCurrent / required),
+                            met: progress.creditsMet,
+                            hint: nil
+                        )
+                    }
+
+                    // Attacks Survived (if required)
+                    if let required = progress.attacksRequired {
+                        GoalRow(
+                            icon: "shield.checkered",
+                            label: "Attacks Survived",
+                            current: "\(progress.attacksCurrent)",
+                            target: "\(required)",
+                            progress: min(1.0, Double(progress.attacksCurrent) / Double(required)),
+                            met: progress.attacksMet,
+                            hint: nil
+                        )
+                    }
                 }
-                if progress.attacksRequired != nil {
-                    ConditionPill(label: "ATK", met: progress.attacksMet)
-                }
+                .padding(12)
+                .background(Color.terminalDarkGray.opacity(0.95))
+                .cornerRadius(8)
+                .transition(.asymmetric(
+                    insertion: .move(edge: .bottom).combined(with: .opacity),
+                    removal: .opacity
+                ))
             }
         }
-        .padding(12)
-        .background(Color.terminalBlack.opacity(0.9))
-        .cornerRadius(8)
+    }
+}
+
+struct GoalRow: View {
+    let icon: String
+    let label: String
+    let current: String
+    let target: String
+    let progress: Double
+    let met: Bool
+    let hint: String?
+
+    var body: some View {
+        HStack(spacing: 10) {
+            // Icon
+            Image(systemName: icon)
+                .font(.system(size: 14))
+                .foregroundColor(met ? .neonGreen : .neonCyan)
+                .frame(width: 20)
+
+            // Label and progress
+            VStack(alignment: .leading, spacing: 4) {
+                HStack {
+                    Text(label)
+                        .font(.terminalSmall)
+                        .foregroundColor(.white)
+                    Spacer()
+                    Text(current)
+                        .font(.terminalSmall)
+                        .foregroundColor(met ? .neonGreen : .neonAmber)
+                    Text("/")
+                        .font(.terminalMicro)
+                        .foregroundColor(.terminalGray)
+                    Text(target)
+                        .font(.terminalSmall)
+                        .foregroundColor(.terminalGray)
+                }
+
+                // Progress bar
+                GeometryReader { geo in
+                    ZStack(alignment: .leading) {
+                        RoundedRectangle(cornerRadius: 2)
+                            .fill(Color.terminalGray.opacity(0.3))
+                        RoundedRectangle(cornerRadius: 2)
+                            .fill(met ? Color.neonGreen : Color.neonCyan)
+                            .frame(width: geo.size.width * min(1.0, progress))
+                    }
+                }
+                .frame(height: 4)
+
+                // Hint text when goal not met
+                if let hint = hint, !met {
+                    Text(hint)
+                        .font(.system(size: 9, weight: .medium, design: .monospaced))
+                        .foregroundColor(.neonAmber)
+                        .padding(.top, 2)
+                }
+            }
+
+            // Checkmark
+            if met {
+                Image(systemName: "checkmark.circle.fill")
+                    .font(.system(size: 16))
+                    .foregroundColor(.neonGreen)
+            }
+        }
     }
 }
 

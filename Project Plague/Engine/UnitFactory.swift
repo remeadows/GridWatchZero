@@ -59,6 +59,32 @@ enum UnitFactory {
         )
     }
 
+    // MARK: - Tier 5 Source
+
+    /// "Neural Tap Array" - Campus-wide neural network harvester
+    /// Parallel processing across distributed endpoints
+    static func createNeuralTapArray() -> SourceNode {
+        SourceNode(
+            name: "Neural Tap Array",
+            level: 1,
+            baseProduction: 200.0,
+            outputType: .rawNoise
+        )
+    }
+
+    // MARK: - Tier 6 Source
+
+    /// "Helix Prime Collector" - Direct connection to Helix consciousness
+    /// Maximum data extraction with Helix resonance
+    static func createHelixPrimeCollector() -> SourceNode {
+        SourceNode(
+            name: "Helix Prime Collector",
+            level: 1,
+            baseProduction: 500.0,
+            outputType: .rawNoise
+        )
+    }
+
     // MARK: - Tier 1 Link
 
     /// "Copper VPN Tunnel" - Basic encrypted connection
@@ -107,6 +133,32 @@ enum UnitFactory {
             name: "Helix Conduit",
             level: 1,
             baseBandwidth: 100.0,
+            baseLatency: 0
+        )
+    }
+
+    // MARK: - Tier 5 Link
+
+    /// "Neural Mesh Backbone" - City-wide neural network connection
+    /// Massive bandwidth with predictive routing
+    static func createNeuralMeshBackbone() -> TransportLink {
+        TransportLink(
+            name: "Neural Mesh Backbone",
+            level: 1,
+            baseBandwidth: 250.0,
+            baseLatency: 0
+        )
+    }
+
+    // MARK: - Tier 6 Link
+
+    /// "Helix Resonance Channel" - Direct consciousness link
+    /// Unlimited bandwidth through Helix substrate
+    static func createHelixResonanceChannel() -> TransportLink {
+        TransportLink(
+            name: "Helix Resonance Channel",
+            level: 1,
+            baseBandwidth: 600.0,
             baseLatency: 0
         )
     }
@@ -163,6 +215,32 @@ enum UnitFactory {
             level: 1,
             baseProcessingRate: 80.0,
             conversionRate: 3.0
+        )
+    }
+
+    // MARK: - Tier 5 Sink
+
+    /// "Neural Exchange" - City-scale data marketplace
+    /// Premium conversion with neural network optimization
+    static func createNeuralExchange() -> SinkNode {
+        SinkNode(
+            name: "Neural Exchange",
+            level: 1,
+            baseProcessingRate: 180.0,
+            conversionRate: 3.5
+        )
+    }
+
+    // MARK: - Tier 6 Sink
+
+    /// "Helix Integration Core" - Direct Helix monetization
+    /// Maximum conversion through Helix consciousness
+    static func createHelixIntegrationCore() -> SinkNode {
+        SinkNode(
+            name: "Helix Integration Core",
+            level: 1,
+            baseProcessingRate: 400.0,
+            conversionRate: 4.5
         )
     }
 
@@ -454,6 +532,33 @@ extension UnitFactory {
 
         // Tier 5 - Campus/Enterprise level (costs reduced for achievable late-game)
         UnitInfo(
+            id: "source_t5_neural_tap",
+            name: "Neural Tap Array",
+            description: "Campus-wide neural network harvester. Parallel processing across distributed endpoints for massive throughput.",
+            tier: .tier5,
+            category: .source,
+            unlockCost: 750000,
+            unlockRequirement: "Reach TARGETED threat level"
+        ),
+        UnitInfo(
+            id: "link_t5_neural_backbone",
+            name: "Neural Mesh Backbone",
+            description: "City-wide neural network connection. Massive bandwidth with predictive routing algorithms.",
+            tier: .tier5,
+            category: .link,
+            unlockCost: 600000,
+            unlockRequirement: "Reach TARGETED threat level"
+        ),
+        UnitInfo(
+            id: "sink_t5_neural_exchange",
+            name: "Neural Exchange",
+            description: "City-scale data marketplace with neural network optimization. Premium conversion rates for high-quality data.",
+            tier: .tier5,
+            category: .sink,
+            unlockCost: 900000,
+            unlockRequirement: "Reach TARGETED threat level"
+        ),
+        UnitInfo(
             id: "defense_t5_neural_mesh",
             name: "Neural Mesh Defense",
             description: "Self-healing defensive barrier powered by neural network topology. Adapts to any attack pattern.",
@@ -473,6 +578,33 @@ extension UnitFactory {
         ),
 
         // Tier 6 - City-wide / Helix integration
+        UnitInfo(
+            id: "source_t6_helix_collector",
+            name: "Helix Prime Collector",
+            description: "Direct connection to Helix consciousness. Maximum data extraction with Helix resonance amplification.",
+            tier: .tier6,
+            category: .source,
+            unlockCost: 3500000,
+            unlockRequirement: "Reach CRITICAL threat level"
+        ),
+        UnitInfo(
+            id: "link_t6_helix_channel",
+            name: "Helix Resonance Channel",
+            description: "Direct consciousness link to Helix substrate. Unlimited bandwidth through quantum-neural bridge.",
+            tier: .tier6,
+            category: .link,
+            unlockCost: 3000000,
+            unlockRequirement: "Reach CRITICAL threat level"
+        ),
+        UnitInfo(
+            id: "sink_t6_helix_core",
+            name: "Helix Integration Core",
+            description: "Direct Helix monetization system. Maximum conversion through consciousness interface.",
+            tier: .tier6,
+            category: .sink,
+            unlockCost: 4000000,
+            unlockRequirement: "Reach CRITICAL threat level"
+        ),
         UnitInfo(
             id: "defense_t6_helix_guardian",
             name: "Helix Guardian",
@@ -507,6 +639,8 @@ extension UnitFactory {
         case "source_t2_corp_leech": return createCorporateLeech()
         case "source_t3_zero_day": return createZeroDayHarvester()
         case "source_t4_helix_scanner": return createHelixScanner()
+        case "source_t5_neural_tap": return createNeuralTapArray()
+        case "source_t6_helix_collector": return createHelixPrimeCollector()
         default: return nil
         }
     }
@@ -517,6 +651,8 @@ extension UnitFactory {
         case "link_t2_fiber_relay": return createFiberDarknetRelay()
         case "link_t3_quantum_bridge": return createQuantumMeshBridge()
         case "link_t4_helix_conduit": return createHelixConduit()
+        case "link_t5_neural_backbone": return createNeuralMeshBackbone()
+        case "link_t6_helix_channel": return createHelixResonanceChannel()
         default: return nil
         }
     }
@@ -527,6 +663,8 @@ extension UnitFactory {
         case "sink_t2_shadow_market": return createShadowMarket()
         case "sink_t3_corp_backdoor": return createCorpBackdoor()
         case "sink_t4_helix_decoder": return createHelixDecoder()
+        case "sink_t5_neural_exchange": return createNeuralExchange()
+        case "sink_t6_helix_core": return createHelixIntegrationCore()
         default: return nil
         }
     }
