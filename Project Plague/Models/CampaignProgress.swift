@@ -106,6 +106,13 @@ struct CampaignProgress: Codable {
         lastPlayDate = Date()
     }
 
+    // MARK: - Unit Unlocks
+
+    /// Record that a unit was unlocked (persists across campaign levels)
+    mutating func unlockUnit(_ unitId: String) {
+        unlockedUnits.insert(unitId)
+    }
+
     // MARK: - Unlock Checks
 
     func isLevelUnlocked(_ levelId: Int, database: LevelDatabase) -> Bool {
@@ -325,6 +332,14 @@ class CampaignState: ObservableObject {
         progress = freshProgress
 
         print("[CampaignState] Returned to hub. Completed levels: \(progress.completedLevels), checkpoint: \(progress.activeCheckpoint != nil ? "saved" : "none")")
+    }
+
+    // MARK: - Unit Unlocks
+
+    /// Record a unit unlock and persist it
+    func unlockUnit(_ unitId: String) {
+        progress.unlockUnit(unitId)
+        save()
     }
 
     // MARK: - Queries

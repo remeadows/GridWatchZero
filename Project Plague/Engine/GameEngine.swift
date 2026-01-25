@@ -268,6 +268,9 @@ final class GameEngine: ObservableObject {
     /// Callback when level is failed
     var onLevelFailed: ((FailureReason) -> Void)?
 
+    /// Callback when a unit is unlocked (for campaign persistence)
+    var onUnitUnlocked: ((String) -> Void)?
+
     /// Whether we're in campaign mode
     var isInCampaignMode: Bool { levelConfiguration != nil }
 
@@ -819,6 +822,10 @@ final class GameEngine: ObservableObject {
         unlockState.unlock(unitInfo.id)
         emitEvent(.unitUnlocked(unitInfo.name))
         AudioManager.shared.playSound(.milestone)
+
+        // Notify campaign system of unlock (for persistence across levels)
+        onUnitUnlocked?(unitInfo.id)
+
         saveGame()
         return true
     }
@@ -1280,7 +1287,10 @@ final class GameEngine: ObservableObject {
     // MARK: - Campaign Mode
 
     /// Start a campaign level with specific configuration
-    func startCampaignLevel(_ config: LevelConfiguration) {
+    /// - Parameters:
+    ///   - config: Level configuration
+    ///   - persistedUnlocks: Unit IDs unlocked in previous campaign levels (persisted across levels)
+    func startCampaignLevel(_ config: LevelConfiguration, persistedUnlocks: Set<String> = []) {
         // Pause any existing game
         pause()
 
@@ -1301,6 +1311,13 @@ final class GameEngine: ObservableObject {
         firewall = nil
         defenseStack = DefenseStack()
         malusIntel = MalusIntelligence()
+
+        // Restore unlocked units from campaign progress
+        // Start with base T1 units, then add persisted unlocks
+        unlockState = UnlockState()
+        for unitId in persistedUnlocks {
+            unlockState.unlock(unitId)
+        }
 
         // Set threat level
         threatState = ThreatState()
@@ -1388,7 +1405,11 @@ final class GameEngine: ObservableObject {
     }
 
     /// Resume from a saved checkpoint
-    func resumeFromCheckpoint(_ checkpoint: LevelCheckpoint, config: LevelConfiguration) {
+    /// - Parameters:
+    ///   - checkpoint: The saved checkpoint to resume from
+    ///   - config: Level configuration
+    ///   - persistedUnlocks: Unit IDs unlocked in previous campaign levels
+    func resumeFromCheckpoint(_ checkpoint: LevelCheckpoint, config: LevelConfiguration, persistedUnlocks: Set<String> = []) {
         // Set up the level first
         levelConfiguration = config
 
@@ -1407,6 +1428,12 @@ final class GameEngine: ObservableObject {
         resources = PlayerResources()
         resources.credits = checkpoint.credits + bonusCredits
         resources.totalDataProcessed = checkpoint.data + (campaignOffline?.dataProcessed ?? 0)
+
+        // Restore unlocked units from campaign progress
+        unlockState = UnlockState()
+        for unitId in persistedUnlocks {
+            unlockState.unlock(unitId)
+        }
 
         // Restore nodes with saved levels
         source = UnitFactory.createPublicMeshSniffer()

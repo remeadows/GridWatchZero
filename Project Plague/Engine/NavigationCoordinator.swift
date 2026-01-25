@@ -534,13 +534,21 @@ struct GameplayContainerView: View {
 
                 let config = LevelConfiguration(level: level, isInsane: isInsane)
 
+                // Get persisted unit unlocks from campaign progress
+                let persistedUnlocks = campaignState.progress.unlockedUnits
+
                 // Check if we have a valid checkpoint to resume from
                 if let checkpoint = campaignState.validCheckpoint(for: levelId, isInsane: isInsane) {
                     // Resume from saved checkpoint
-                    gameEngine.resumeFromCheckpoint(checkpoint, config: config)
+                    gameEngine.resumeFromCheckpoint(checkpoint, config: config, persistedUnlocks: persistedUnlocks)
                 } else {
                     // Start fresh
-                    gameEngine.startCampaignLevel(config)
+                    gameEngine.startCampaignLevel(config, persistedUnlocks: persistedUnlocks)
+                }
+
+                // Set up callback to persist unit unlocks across campaign levels
+                gameEngine.onUnitUnlocked = { unitId in
+                    campaignState.unlockUnit(unitId)
                 }
 
                 // Set up callbacks
@@ -553,6 +561,7 @@ struct GameplayContainerView: View {
             }
         } else {
             // Endless mode - just start normally
+            gameEngine.onUnitUnlocked = nil  // No persistence needed in endless mode
             gameEngine.start()
         }
     }
