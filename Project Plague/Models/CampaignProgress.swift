@@ -32,6 +32,10 @@ struct LevelCheckpoint: Codable {
     let defenseStack: DefenseStack
     let malusIntel: MalusIntelligence
 
+    // Units unlocked during THIS level (not persisted across levels)
+    // This allows checkpoint resume to restore mid-level unlock progress
+    let unlockedUnits: Set<String>
+
     /// Check if checkpoint is recent enough to resume (within 24 hours)
     var isValid: Bool {
         let hoursSinceSave = Date().timeIntervalSince(savedAt) / 3600

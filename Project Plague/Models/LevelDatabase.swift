@@ -35,15 +35,17 @@ class LevelDatabase {
                 requiredDefenseTier: 1,
                 requiredDefensePoints: 50,
                 requiredRiskLevel: .ghost,
-                requiredCredits: 2000,
+                requiredCredits: 50000,
                 requiredAttacksSurvived: nil,  // Tutorial level - no attack requirement
+                requiredReportsSent: 5,        // Send 5 intel reports to help the team
                 timeLimit: nil
             ),
             unlockRequirement: .none,
             networkSize: .smallHome,
             introStoryId: "level1_intro",
             victoryStoryId: "level1_victory",
-            insaneModifiers: .standard
+            insaneModifiers: .standard,
+            minimumAttackChance: nil  // Tutorial - no attack floor
         ),
 
         // LEVEL 2: Small Office
@@ -66,15 +68,17 @@ class LevelDatabase {
                 requiredDefenseTier: 2,
                 requiredDefensePoints: 150,
                 requiredRiskLevel: .ghost,
-                requiredCredits: 10000,
+                requiredCredits: 100000,
                 requiredAttacksSurvived: nil,  // Removed - conflicts with keeping risk low
+                requiredReportsSent: 10,       // Send 10 intel reports
                 timeLimit: nil
             ),
             unlockRequirement: .previousLevel(1),
             networkSize: .smallOffice,
             introStoryId: "level2_intro",
             victoryStoryId: "level2_victory",
-            insaneModifiers: .standard
+            insaneModifiers: .standard,
+            minimumAttackChance: 0.3  // Minimum 0.3% attack chance per tick
         ),
 
         // LEVEL 3: Office Network
@@ -98,15 +102,17 @@ class LevelDatabase {
                 requiredDefenseTier: 3,
                 requiredDefensePoints: 350,
                 requiredRiskLevel: .blip,
-                requiredCredits: 50000,
+                requiredCredits: 500000,
                 requiredAttacksSurvived: 15,
+                requiredReportsSent: 20,       // Send 20 intel reports
                 timeLimit: nil
             ),
             unlockRequirement: .previousLevel(2),
             networkSize: .office,
             introStoryId: "level3_intro",
             victoryStoryId: "level3_victory",
-            insaneModifiers: .standard
+            insaneModifiers: .standard,
+            minimumAttackChance: 0.5  // Minimum 0.5% attack chance per tick
         ),
 
         // LEVEL 4: Large Office (balanced: +50% starting, -30% credit requirement)
@@ -129,15 +135,17 @@ class LevelDatabase {
                 requiredDefenseTier: 4,
                 requiredDefensePoints: 500,
                 requiredRiskLevel: .blip,
-                requiredCredits: 100000,
+                requiredCredits: 1000000,
                 requiredAttacksSurvived: 20,
+                requiredReportsSent: 40,       // Send 40 intel reports
                 timeLimit: nil
             ),
             unlockRequirement: .previousLevel(3),
             networkSize: .largeOffice,
             introStoryId: "level4_intro",
             victoryStoryId: "level4_victory",
-            insaneModifiers: .standard
+            insaneModifiers: .standard,
+            minimumAttackChance: 1.0  // Minimum 1.0% attack chance per tick
         ),
 
         // LEVEL 5: Campus Network (balanced: +60% starting, -40% credit requirement)
@@ -160,15 +168,17 @@ class LevelDatabase {
                 requiredDefenseTier: 5,
                 requiredDefensePoints: 800,
                 requiredRiskLevel: .blip,
-                requiredCredits: 300000,
+                requiredCredits: 5000000,
                 requiredAttacksSurvived: 30,
+                requiredReportsSent: 80,       // Send 80 intel reports
                 timeLimit: nil
             ),
             unlockRequirement: .previousLevel(4),
             networkSize: .campus,
             introStoryId: "level5_intro",
             victoryStoryId: "level5_victory",
-            insaneModifiers: .standard
+            insaneModifiers: .standard,
+            minimumAttackChance: 1.5  // Minimum 1.5% attack chance per tick
         ),
 
         // LEVEL 6: Enterprise Network (balanced: +50% starting, -40% credit requirement)
@@ -191,15 +201,17 @@ class LevelDatabase {
                 requiredDefenseTier: 6,
                 requiredDefensePoints: 1200,
                 requiredRiskLevel: .signal,
-                requiredCredits: 600000,
+                requiredCredits: 10000000,
                 requiredAttacksSurvived: 40,
+                requiredReportsSent: 160,      // Send 160 intel reports
                 timeLimit: nil
             ),
             unlockRequirement: .previousLevel(5),
             networkSize: .enterprise,
             introStoryId: "level6_intro",
             victoryStoryId: "level6_victory",
-            insaneModifiers: .standard
+            insaneModifiers: .standard,
+            minimumAttackChance: 2.0  // Minimum 2.0% attack chance per tick
         ),
 
         // LEVEL 7: City Network (FINAL - balanced: +50% starting, -40% credit requirement, reduced attacks)
@@ -222,8 +234,9 @@ class LevelDatabase {
                 requiredDefenseTier: 6,
                 requiredDefensePoints: 2000,
                 requiredRiskLevel: .blip,
-                requiredCredits: 1500000,
+                requiredCredits: 25000000,
                 requiredAttacksSurvived: 50,
+                requiredReportsSent: 320,      // Send 320 intel reports - final level
                 timeLimit: nil
             ),
             unlockRequirement: .previousLevel(6),
@@ -234,7 +247,8 @@ class LevelDatabase {
                 threatFrequencyMultiplier: 2.0,  // Reduced from 2.5x for playability
                 attackDamageMultiplier: 1.5,     // Reduced from 1.75x
                 creditIncomeMultiplier: 0.7      // Increased from 0.6x
-            )
+            ),
+            minimumAttackChance: 2.5  // Minimum 2.5% attack chance per tick
         )
     ]
 

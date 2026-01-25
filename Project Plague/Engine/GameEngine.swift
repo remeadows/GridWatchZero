@@ -481,11 +481,19 @@ final class GameEngine: ObservableObject {
             damage.bandwidthReduction = min(1.0, damage.bandwidthReduction * damageMultiplier)
             damage.nodeDisableChance = min(1.0, damage.nodeDisableChance * damageMultiplier)
 
-            // Defense stack reduces damage first
+            // Defense reduces DAMAGE (not attack frequency)
+            // 1. NetDefenseLevel provides base damage reduction (8% per level, up to 72%)
+            let netDefenseReduction = threatState.riskCalculation.damageReduction
+            // 2. Defense stack and intel add additional reduction
             let stackReduction = defenseStack.totalDamageReduction + malusIntel.damageReductionBonus
-            let totalReduction = min(0.65, stackReduction)  // Cap at 65% with intel bonus
-            damage.creditDrain *= (1.0 - totalReduction)
-            damage.bandwidthReduction *= (1.0 - totalReduction)
+            // Combine reductions: apply NetDefense first, then stack reduction on remaining
+            // This creates diminishing returns rather than simple addition
+            let afterNetDefense = 1.0 - netDefenseReduction
+            let totalReduction = netDefenseReduction + (afterNetDefense * min(0.65, stackReduction))
+            // Cap total reduction at 85% to prevent complete immunity
+            let cappedReduction = min(0.85, totalReduction)
+            damage.creditDrain *= (1.0 - cappedReduction)
+            damage.bandwidthReduction *= (1.0 - cappedReduction)
 
             // Firewall absorbs remaining damage
             if var fw = firewall, !fw.isDestroyed {
@@ -566,22 +574,21 @@ final class GameEngine: ObservableObject {
             }
 
             if !attackBlocked {
-                // Calculate attack frequency reduction from defense points and intel
-                let defenseReduction = defenseStack.attackFrequencyReduction
-                let intelReduction = malusIntel.attackFrequencyReductionBonus
-                let totalFrequencyReduction = min(0.6, defenseReduction + intelReduction)  // Cap at 60%
-
                 // Get frequency multiplier from campaign mode (e.g., 2x for Insane)
                 let frequencyMultiplier = levelConfiguration?.threatMultiplier ?? 1.0
 
-                // Use effectiveRiskLevel (threat reduced by NetDefense) for attack generation
-                // But also factor in defense points reducing frequency
+                // Get minimum attack chance floor from level config
+                let minimumAttackChance = levelConfiguration?.minimumAttackChance ?? 0.0
+
+                // Use RAW threat level for attack generation (defense reduces DAMAGE, not frequency)
+                // This ensures attacks keep happening even with high defense
                 if let newAttack = AttackGenerator.tryGenerateAttack(
-                    threatLevel: threatState.effectiveRiskLevel,
+                    threatLevel: threatState.currentLevel,  // Raw threat, not effectiveRiskLevel
                     currentTick: currentTick,
                     random: &rng,
-                    frequencyReduction: totalFrequencyReduction,
-                    frequencyMultiplier: frequencyMultiplier
+                    frequencyReduction: 0.0,  // No longer reduce frequency - defense reduces damage instead
+                    frequencyMultiplier: frequencyMultiplier,
+                    minimumChance: minimumAttackChance
                 ) {
                     activeAttack = newAttack
                     emitEvent(.attackStarted(newAttack.type))
@@ -771,6 +778,8 @@ final class GameEngine: ObservableObject {
     // MARK: - Upgrades
 
     func upgradeSource() -> Bool {
+        // Check if at max level for this tier
+        guard source.canUpgrade else { return false }
         let cost = source.upgradeCost
         guard resources.spendCredits(cost) else { return false }
         source.upgrade()
@@ -780,6 +789,8 @@ final class GameEngine: ObservableObject {
     }
 
     func upgradeLink() -> Bool {
+        // Check if at max level for this tier
+        guard link.canUpgrade else { return false }
         let cost = link.upgradeCost
         guard resources.spendCredits(cost) else { return false }
         link.upgrade()
@@ -789,6 +800,8 @@ final class GameEngine: ObservableObject {
     }
 
     func upgradeSink() -> Bool {
+        // Check if at max level for this tier
+        guard sink.canUpgrade else { return false }
         let cost = sink.upgradeCost
         guard resources.spendCredits(cost) else { return false }
         sink.upgrade()
@@ -799,6 +812,8 @@ final class GameEngine: ObservableObject {
 
     func upgradeFirewall() -> Bool {
         guard var fw = firewall else { return false }
+        // Check if at max level for this tier
+        guard fw.canUpgrade else { return false }
         let cost = fw.upgradeCost
         guard resources.spendCredits(cost) else { return false }
         fw.upgrade()
@@ -810,9 +825,77 @@ final class GameEngine: ObservableObject {
 
     // MARK: - Unit Unlock/Purchase
 
+    /// Check if a unit can be unlocked (credits + tier gate)
     func canUnlock(_ unitInfo: UnitFactory.UnitInfo) -> Bool {
         guard !unlockState.isUnlocked(unitInfo.id) else { return false }
-        return resources.credits >= unitInfo.unlockCost
+        guard resources.credits >= unitInfo.unlockCost else { return false }
+
+        // Tier gate: must have previous tier at max level
+        guard isTierGateSatisfied(for: unitInfo) else { return false }
+
+        return true
+    }
+
+    /// Check if the tier gate requirement is satisfied
+    /// To unlock a T(N) unit, the player must have a T(N-1) unit at max level
+    func isTierGateSatisfied(for unitInfo: UnitFactory.UnitInfo) -> Bool {
+        let targetTier = unitInfo.tier.rawValue
+
+        // T1 units have no tier gate
+        guard targetTier > 1 else { return true }
+
+        // Check if we have the previous tier at max level for the same category
+        let previousTier = NodeTier(rawValue: targetTier - 1) ?? .tier1
+
+        switch unitInfo.category {
+        case .source:
+            // Check if current source is at max level AND is the previous tier
+            return source.tier.rawValue >= previousTier.rawValue && source.isAtMaxLevel
+        case .link:
+            return link.tier.rawValue >= previousTier.rawValue && link.isAtMaxLevel
+        case .sink:
+            return sink.tier.rawValue >= previousTier.rawValue && sink.isAtMaxLevel
+        case .defense:
+            if let fw = firewall {
+                return fw.nodeTier.rawValue >= previousTier.rawValue && fw.isAtMaxLevel
+            }
+            // If no firewall, T1 defense has no gate
+            return targetTier == 1
+        }
+    }
+
+    /// Get the tier gate reason for UI display
+    func tierGateReason(for unitInfo: UnitFactory.UnitInfo) -> String? {
+        guard !isTierGateSatisfied(for: unitInfo) else { return nil }
+
+        let targetTier = unitInfo.tier.rawValue
+        guard targetTier > 1 else { return nil }
+
+        let previousTier = NodeTier(rawValue: targetTier - 1) ?? .tier1
+
+        switch unitInfo.category {
+        case .source:
+            if source.tier.rawValue < previousTier.rawValue {
+                return "Requires T\(previousTier.rawValue) Source"
+            }
+            return "T\(previousTier.rawValue) Source must be at max level (\(previousTier.maxLevel))"
+        case .link:
+            if link.tier.rawValue < previousTier.rawValue {
+                return "Requires T\(previousTier.rawValue) Link"
+            }
+            return "T\(previousTier.rawValue) Link must be at max level (\(previousTier.maxLevel))"
+        case .sink:
+            if sink.tier.rawValue < previousTier.rawValue {
+                return "Requires T\(previousTier.rawValue) Sink"
+            }
+            return "T\(previousTier.rawValue) Sink must be at max level (\(previousTier.maxLevel))"
+        case .defense:
+            guard let fw = firewall else { return "Requires T\(previousTier.rawValue) Defense" }
+            if fw.nodeTier.rawValue < previousTier.rawValue {
+                return "Requires T\(previousTier.rawValue) Defense"
+            }
+            return "T\(previousTier.rawValue) Defense must be at max level (\(previousTier.maxLevel))"
+        }
     }
 
     func unlockUnit(_ unitInfo: UnitFactory.UnitInfo) -> Bool {
@@ -1379,7 +1462,8 @@ final class GameEngine: ObservableObject {
             firewallMaxHealth: firewall?.maxHealth,
             firewallLevel: firewall?.level,
             defenseStack: defenseStack,
-            malusIntel: malusIntel
+            malusIntel: malusIntel,
+            unlockedUnits: unlockState.unlockedUnitIds
         )
 
         // Save checkpoint to campaign progress
@@ -1408,7 +1492,7 @@ final class GameEngine: ObservableObject {
     /// - Parameters:
     ///   - checkpoint: The saved checkpoint to resume from
     ///   - config: Level configuration
-    ///   - persistedUnlocks: Unit IDs unlocked in previous campaign levels
+    ///   - persistedUnlocks: Unused (kept for API compatibility) - unlocks are restored from checkpoint
     func resumeFromCheckpoint(_ checkpoint: LevelCheckpoint, config: LevelConfiguration, persistedUnlocks: Set<String> = []) {
         // Set up the level first
         levelConfiguration = config
@@ -1429,9 +1513,10 @@ final class GameEngine: ObservableObject {
         resources.credits = checkpoint.credits + bonusCredits
         resources.totalDataProcessed = checkpoint.data + (campaignOffline?.dataProcessed ?? 0)
 
-        // Restore unlocked units from campaign progress
+        // Restore unlocked units from checkpoint (includes units unlocked during this level)
+        // Note: Unit unlocks do NOT persist across campaign levels
         unlockState = UnlockState()
-        for unitId in persistedUnlocks {
+        for unitId in checkpoint.unlockedUnits {
             unlockState.unlock(unitId)
         }
 
@@ -1517,6 +1602,7 @@ final class GameEngine: ObservableObject {
             riskLevel: threatState.effectiveRiskLevel,
             totalCredits: levelCreditsEarned,
             attacksSurvived: levelAttacksSurvived,
+            reportsSent: malusIntel.reportsSent,
             currentTick: currentTick - levelStartTick
         ) {
             handleLevelComplete()
@@ -1573,7 +1659,9 @@ final class GameEngine: ObservableObject {
             creditsRequired: conditions.requiredCredits,
             creditsCurrent: levelCreditsEarned,
             attacksRequired: conditions.requiredAttacksSurvived,
-            attacksCurrent: levelAttacksSurvived
+            attacksCurrent: levelAttacksSurvived,
+            reportsRequired: conditions.requiredReportsSent,
+            reportsCurrent: malusIntel.reportsSent
         )
     }
 
@@ -1598,6 +1686,8 @@ struct VictoryProgress {
     let creditsCurrent: Double
     let attacksRequired: Int?
     let attacksCurrent: Int
+    let reportsRequired: Int?
+    let reportsCurrent: Int
 
     var defenseTierMet: Bool { defenseTierCurrent >= defenseTierRequired }
     var defensePointsMet: Bool { defensePointsCurrent >= defensePointsRequired }
@@ -1613,8 +1703,13 @@ struct VictoryProgress {
         return attacksCurrent >= required
     }
 
+    var reportsMet: Bool {
+        guard let required = reportsRequired else { return true }
+        return reportsCurrent >= required
+    }
+
     var allConditionsMet: Bool {
-        defenseTierMet && defensePointsMet && riskLevelMet && creditsMet && attacksMet
+        defenseTierMet && defensePointsMet && riskLevelMet && creditsMet && attacksMet && reportsMet
     }
 
     var overallProgress: Double {
@@ -1644,6 +1739,12 @@ struct VictoryProgress {
         if let required = attacksRequired {
             progress += min(1.0, Double(attacksCurrent) / Double(required))
             count += 1
+        }
+
+        // Intel Reports (weighted heavily - main objective)
+        if let required = reportsRequired {
+            progress += min(1.0, Double(reportsCurrent) / Double(required)) * 2
+            count += 2
         }
 
         return progress / count

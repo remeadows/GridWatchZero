@@ -69,18 +69,20 @@ enum ThreatLevel: Int, Codable, CaseIterable, Comparable {
 
     /// Base chance of attack per tick (percentage)
     /// Even at GHOST, there's light probing/port scanning - the network is never truly safe
+    /// NOTE: Defense no longer reduces attack frequency - it reduces DAMAGE instead
+    /// These values are 1.5x the original to increase game intensity
     var attackChancePerTick: Double {
         switch self {
-        case .ghost: return 0.2     // Light probing - ~1 attack every 8+ minutes
-        case .blip: return 0.5
-        case .signal: return 1.0
-        case .target: return 2.0
-        case .priority: return 3.5
-        case .hunted: return 5.0
-        case .marked: return 8.0
-        case .targeted: return 12.0
-        case .hammered: return 18.0
-        case .critical: return 25.0
+        case .ghost: return 0.3     // Light probing - more frequent than before
+        case .blip: return 0.8
+        case .signal: return 1.5
+        case .target: return 3.0
+        case .priority: return 5.0
+        case .hunted: return 7.5
+        case .marked: return 12.0
+        case .targeted: return 18.0
+        case .hammered: return 25.0
+        case .critical: return 35.0
         }
     }
 
@@ -165,9 +167,18 @@ enum NetDefenseLevel: Int, Codable, CaseIterable, Comparable {
         }
     }
 
-    /// How many threat levels this defense can reduce
+    /// How many threat levels this defense can reduce (for risk display only)
+    /// NOTE: This no longer affects attack FREQUENCY - only used for risk level display
     var threatReduction: Int {
         return rawValue
+    }
+
+    /// Damage reduction multiplier from defense level
+    /// Higher defense = attacks hurt less (but still happen at same frequency)
+    /// Formula: 8% reduction per level, max 72% at HELIX (level 9)
+    var damageReductionMultiplier: Double {
+        let reduction = Double(rawValue) * 0.08
+        return min(0.72, reduction)  // Cap at 72% reduction
     }
 
     /// Calculate defense level based on firewall stats
@@ -201,19 +212,29 @@ enum NetDefenseLevel: Int, Codable, CaseIterable, Comparable {
 // MARK: - Risk Level (Effective Threat)
 
 /// Actual risk = Threat - NetDefense (clamped to minimum GHOST)
+/// NOTE: Defense now reduces DAMAGE, not attack frequency
+/// - effectiveRiskLevel is used for UI display (shows risk reduction)
+/// - attackChancePerTick uses RAW threat (attacks still happen)
+/// - damageReduction reduces how much attacks hurt
 struct RiskCalculation {
     let threatLevel: ThreatLevel
     let netDefenseLevel: NetDefenseLevel
     let effectiveRiskLevel: ThreatLevel
 
-    /// Attack chance uses effective risk, not raw threat
+    /// Attack chance uses RAW threat level, not effective risk
+    /// Defense reduces damage, not frequency - attacks keep coming!
     var attackChancePerTick: Double {
-        effectiveRiskLevel.attackChancePerTick
+        threatLevel.attackChancePerTick
     }
 
-    /// Severity uses effective risk
+    /// Severity uses raw threat level (damage reduction applied separately)
     var severityMultiplier: Double {
-        effectiveRiskLevel.severityMultiplier
+        threatLevel.severityMultiplier
+    }
+
+    /// Damage reduction from defense level (applied to all attack damage)
+    var damageReduction: Double {
+        netDefenseLevel.damageReductionMultiplier
     }
 
     init(threat: ThreatLevel, defense: NetDefenseLevel) {
@@ -221,6 +242,7 @@ struct RiskCalculation {
         self.netDefenseLevel = defense
 
         // Calculate effective risk: threat level - defense reduction
+        // This is now primarily for UI display purposes
         let effectiveRawValue = max(1, threat.rawValue - defense.threatReduction)
         self.effectiveRiskLevel = ThreatLevel(rawValue: effectiveRawValue) ?? .ghost
     }
@@ -509,23 +531,27 @@ struct ThreatState: Codable {
 struct AttackGenerator {
     /// Attempt to generate an attack based on threat level
     /// - Parameters:
-    ///   - threatLevel: Current effective threat level
+    ///   - threatLevel: Current RAW threat level (not effective risk)
     ///   - currentTick: Game tick for attack timing
     ///   - random: Random number generator
-    ///   - frequencyReduction: Reduction to attack chance from defense points (0.0 - 1.0)
+    ///   - frequencyReduction: Reduction to attack chance (legacy, now unused - defense reduces damage instead)
     ///   - frequencyMultiplier: Multiplier for attack frequency (e.g., 2.0 for Insane mode)
+    ///   - minimumChance: Minimum attack chance per tick (from level config)
     static func tryGenerateAttack(
         threatLevel: ThreatLevel,
         currentTick: Int,
         random: inout RandomNumberGenerator,
         frequencyReduction: Double = 0,
-        frequencyMultiplier: Double = 1.0
+        frequencyMultiplier: Double = 1.0,
+        minimumChance: Double = 0.0
     ) -> Attack? {
-        // Roll for attack chance (reduced by defense points, multiplied by insane mode)
+        // Roll for attack chance (multiplied by insane mode, with minimum floor)
         let baseChance = threatLevel.attackChancePerTick * frequencyMultiplier
         let reducedChance = baseChance * (1.0 - frequencyReduction)
+        // Apply minimum attack chance floor (ensures attacks keep happening)
+        let effectiveChance = max(reducedChance, minimumChance)
         let roll = Double.random(in: 0...100, using: &random)
-        guard roll < reducedChance else { return nil }
+        guard roll < effectiveChance else { return nil }
 
         // Select attack type based on threat level and weights
         let availableTypes = AttackType.allCases.filter {

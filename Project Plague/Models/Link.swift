@@ -72,8 +72,10 @@ struct TransportLink: LinkProtocol {
         max(0.8, 1.0 - (Double(level) * 0.02))
     }
 
+    /// Upgrade cost uses exponential scaling (1.18^level)
+    /// This makes upgrades increasingly expensive, creating meaningful progression
     var upgradeCost: Double {
-        Double(level) * 30.0
+        30.0 * pow(1.18, Double(level))
     }
 
     var throughputEfficiency: Double {
@@ -107,5 +109,36 @@ struct TransportLink: LinkProtocol {
         lastTickDropped = dropped
 
         return (transferred, dropped)
+    }
+}
+
+// MARK: - TransportLink Tier Extensions
+
+extension TransportLink {
+    /// Tier of this link based on base bandwidth
+    var tier: NodeTier {
+        switch baseBandwidth {
+        case 0..<10: return .tier1
+        case 10..<30: return .tier2
+        case 30..<80: return .tier3
+        case 80..<200: return .tier4
+        case 200..<500: return .tier5
+        default: return .tier6
+        }
+    }
+
+    /// Maximum level this link can be upgraded to
+    var maxLevel: Int {
+        tier.maxLevel
+    }
+
+    /// Whether this link can be upgraded further
+    var canUpgrade: Bool {
+        level < maxLevel
+    }
+
+    /// Whether this link is at its tier's max level (required to unlock next tier)
+    var isAtMaxLevel: Bool {
+        tier.isAtMaxLevel(level)
     }
 }

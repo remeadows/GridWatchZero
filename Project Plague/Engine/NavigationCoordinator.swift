@@ -534,22 +534,21 @@ struct GameplayContainerView: View {
 
                 let config = LevelConfiguration(level: level, isInsane: isInsane)
 
-                // Get persisted unit unlocks from campaign progress
-                let persistedUnlocks = campaignState.progress.unlockedUnits
+                // Unit unlocks do NOT persist across campaign levels
+                // Each level is a fresh economic challenge - players must re-unlock units
+                // Only base T1 units are available at the start of each level
 
                 // Check if we have a valid checkpoint to resume from
                 if let checkpoint = campaignState.validCheckpoint(for: levelId, isInsane: isInsane) {
-                    // Resume from saved checkpoint
-                    gameEngine.resumeFromCheckpoint(checkpoint, config: config, persistedUnlocks: persistedUnlocks)
+                    // Resume from saved checkpoint (checkpoint stores unlocks earned THIS level)
+                    gameEngine.resumeFromCheckpoint(checkpoint, config: config, persistedUnlocks: [])
                 } else {
-                    // Start fresh
-                    gameEngine.startCampaignLevel(config, persistedUnlocks: persistedUnlocks)
+                    // Start fresh with no persisted unlocks
+                    gameEngine.startCampaignLevel(config, persistedUnlocks: [])
                 }
 
-                // Set up callback to persist unit unlocks across campaign levels
-                gameEngine.onUnitUnlocked = { unitId in
-                    campaignState.unlockUnit(unitId)
-                }
+                // Unit unlocks are no longer persisted across campaign levels
+                gameEngine.onUnitUnlocked = nil
 
                 // Set up callbacks
                 gameEngine.onLevelComplete = { stats in
@@ -721,6 +720,19 @@ struct VictoryProgressBar: View {
                             progress: min(1.0, Double(progress.attacksCurrent) / Double(required)),
                             met: progress.attacksMet,
                             hint: nil
+                        )
+                    }
+
+                    // Intel Reports Sent (if required) - MAIN OBJECTIVE
+                    if let required = progress.reportsRequired {
+                        GoalRow(
+                            icon: "doc.text.magnifyingglass",
+                            label: "Intel Reports",
+                            current: "\(progress.reportsCurrent)",
+                            target: "\(required)",
+                            progress: min(1.0, Double(progress.reportsCurrent) / Double(required)),
+                            met: progress.reportsMet,
+                            hint: progress.reportsCurrent == 0 ? "Send intel to help stop Malus!" : nil
                         )
                     }
                 }

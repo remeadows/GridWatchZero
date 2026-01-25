@@ -466,11 +466,36 @@ struct DefenseApplication: Identifiable, Codable {
 
     // MARK: - Upgrade
 
+    /// Upgrade cost uses exponential scaling like other units
     var upgradeCost: Double {
-        Double(level) * 25.0 * Double(tier.tierNumber)
+        25.0 * Double(tier.tierNumber) * pow(1.18, Double(level))
+    }
+
+    /// Maximum level for this tier (same as unit tiers)
+    var maxLevel: Int {
+        switch tier.tierNumber {
+        case 1: return 10
+        case 2: return 15
+        case 3: return 20
+        case 4: return 25
+        case 5: return 30
+        case 6: return 40
+        default: return 10
+        }
+    }
+
+    /// Whether this app can be upgraded further
+    var canUpgrade: Bool {
+        level < maxLevel
+    }
+
+    /// Whether this app is at its tier's max level (required to unlock next tier)
+    var isAtMaxLevel: Bool {
+        level >= maxLevel
     }
 
     mutating func upgrade() {
+        guard canUpgrade else { return }
         level += 1
     }
 }
@@ -525,13 +550,38 @@ struct DefenseStack: Codable {
         unlockedTiers.contains(tier)
     }
 
-    /// Check if can unlock a tier (prereq met)
+    /// Check if can unlock a tier (prereq met AND current tier at max level)
     func canUnlock(_ tier: DefenseAppTier) -> Bool {
         guard !isUnlocked(tier) else { return false }
+
+        // Check if prerequisite tier is unlocked
         if let prereq = tier.prerequisite {
-            return isUnlocked(prereq)
+            guard isUnlocked(prereq) else { return false }
+
+            // Must have current tier at max level before unlocking next
+            if let currentApp = applications[tier.category] {
+                guard currentApp.isAtMaxLevel else { return false }
+            }
         }
-        return true // No prereq, can unlock
+        return true
+    }
+
+    /// Get the reason why a tier can't be unlocked (for UI display)
+    func tierGateReason(for tier: DefenseAppTier) -> String? {
+        guard !isUnlocked(tier) else { return nil }
+
+        if let prereq = tier.prerequisite {
+            if !isUnlocked(prereq) {
+                return "Unlock T\(prereq.tierNumber) first"
+            }
+
+            if let currentApp = applications[tier.category] {
+                if !currentApp.isAtMaxLevel {
+                    return "Max level T\(currentApp.tier.tierNumber) first (\(currentApp.level)/\(currentApp.maxLevel))"
+                }
+            }
+        }
+        return nil
     }
 
     /// Unlock a tier
@@ -545,9 +595,10 @@ struct DefenseStack: Codable {
         applications[tier.category] = DefenseApplication(tier: tier)
     }
 
-    /// Upgrade deployed application
+    /// Upgrade deployed application (returns false if at max level)
     mutating func upgrade(_ category: DefenseCategory) -> Bool {
         guard var app = applications[category] else { return false }
+        guard app.canUpgrade else { return false }
         app.upgrade()
         applications[category] = app
         return true

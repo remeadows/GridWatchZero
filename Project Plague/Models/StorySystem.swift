@@ -177,17 +177,17 @@ class StoryDatabase {
 
         StoryMoment(
             id: "level1_victory",
-            character: .rusty,
+            character: .tish,
             trigger: .levelComplete,
             levelId: 1,
-            title: "Good Start",
+            title: "Intel Received",
             lines: [
-                .init("Not bad. Network secured. You've got the basics down.", mood: .encouraging),
-                .init("But this was the easy part. The threats get worse—much worse.", mood: .warning),
-                .init("Ready for something bigger?", mood: .encouraging)
+                .init("Tish here. Got your intel reports. Nice work, new operator.", mood: .encouraging),
+                .init("Your data on Malus's probes is exactly what we need. Keep sending those reports.", mood: .neutral),
+                .init("The intel you gather is how we beat him. Don't forget that.", mood: .encouraging)
             ],
             prerequisiteStoryId: "level1_intro",
-            visualEffect: nil
+            visualEffect: .scanlines
         ),
 
         // ===== LEVEL 2: SMALL OFFICE =====
@@ -223,17 +223,17 @@ class StoryDatabase {
 
         StoryMoment(
             id: "level2_victory",
-            character: .rusty,
+            character: .tish,
             trigger: .levelComplete,
             levelId: 2,
-            title: "Holding the Line",
+            title: "Pattern Analysis",
             lines: [
-                .init("Office secured. Good work. Tish says your SIEM data is useful.", mood: .encouraging),
-                .init("We're learning how Malus operates.", mood: .neutral),
-                .init("Keep collecting intel. It matters more than you know.", mood: .mysterious)
+                .init("Your intel reports are gold. I'm seeing patterns in how Malus coordinates these probes.", mood: .encouraging),
+                .init("Every report you send teaches us something new about his methods.", mood: .neutral),
+                .init("The team's counting on your eyes out there. Keep them coming.", mood: .encouraging)
             ],
             prerequisiteStoryId: "level2_intro",
-            visualEffect: nil
+            visualEffect: .scanlines
         ),
 
         // ===== LEVEL 3: OFFICE NETWORK =====
@@ -315,17 +315,17 @@ class StoryDatabase {
 
         StoryMoment(
             id: "level4_victory",
-            character: .rusty,
+            character: .tish,
             trigger: .levelComplete,
             levelId: 4,
-            title: "You Survived",
+            title: "Critical Intel",
             lines: [
-                .init("You held the line. Malus threw everything at you. And you're still standing.", mood: .celebration),
-                .init("The team is impressed. But this isn't over—Malus doesn't give up.", mood: .warning),
-                .init("He's regrouping. Learning. Planning. So are we.", mood: .encouraging)
+                .init("Incredible. Your intel reports during that assault? Pure gold.", mood: .celebration),
+                .init("We captured Malus's attack signatures. His command patterns. Everything.", mood: .encouraging),
+                .init("Because of you, we know how he thinks. The reports you send—they're saving lives.", mood: .encouraging)
             ],
             prerequisiteStoryId: "level4_intro",
-            visualEffect: nil
+            visualEffect: .scanlines
         ),
 
         // ===== LEVEL 5: CAMPUS NETWORK =====
@@ -407,17 +407,17 @@ class StoryDatabase {
 
         StoryMoment(
             id: "level6_victory",
-            character: .rusty,
+            character: .tish,
             trigger: .levelComplete,
             levelId: 6,
             title: "The Final Push",
             lines: [
-                .init("You did it. Enterprise secured. Malus is weakened. Exposed.", mood: .celebration),
-                .init("One more network. The city grid itself. This is what everything has been building toward.", mood: .urgent),
-                .init("Helix is counting on us. Are you ready?", mood: .encouraging)
+                .init("Your intel reports have built a complete picture of Malus. Every weakness. Every pattern.", mood: .celebration),
+                .init("We couldn't have done this without you. The data you've sent—it's the weapon we needed.", mood: .encouraging),
+                .init("One more network. One more mission. And we can finally wake Helix.", mood: .mysterious)
             ],
             prerequisiteStoryId: "level6_intro",
-            visualEffect: nil
+            visualEffect: .scanlines
         ),
 
         // ===== LEVEL 7: CITY NETWORK (FINAL) =====

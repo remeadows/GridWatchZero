@@ -73,8 +73,10 @@ struct SourceNode: NodeProtocol {
         baseProduction * Double(level) * 1.5
     }
 
+    /// Upgrade cost uses exponential scaling (1.18^level)
+    /// This makes upgrades increasingly expensive, creating meaningful progression
     var upgradeCost: Double {
-        Double(level) * 25.0
+        25.0 * pow(1.18, Double(level))
     }
 
     mutating func upgrade() {
@@ -136,8 +138,10 @@ struct SinkNode: NodeProtocol {
         max(0, maxCapacity - inputBuffer)
     }
 
+    /// Upgrade cost uses exponential scaling (1.18^level)
+    /// This makes upgrades increasingly expensive, creating meaningful progression
     var upgradeCost: Double {
-        Double(level) * 40.0
+        40.0 * pow(1.18, Double(level))
     }
 
     mutating func upgrade() {
@@ -220,8 +224,10 @@ struct FirewallNode: NodeProtocol {
         maxHealth * 0.02 * Double(level) // 2% per tick per level
     }
 
+    /// Upgrade cost uses exponential scaling (1.18^level)
+    /// This makes upgrades increasingly expensive, creating meaningful progression
     var upgradeCost: Double {
-        Double(level) * 50.0
+        50.0 * pow(1.18, Double(level))
     }
 
     var isDestroyed: Bool {
@@ -297,6 +303,24 @@ enum NodeTier: Int, Codable, CaseIterable {
         case .tier6: return "neonAmber"
         }
     }
+
+    /// Maximum level for this tier (hard cap)
+    /// Players must reach max level before unlocking the next tier
+    var maxLevel: Int {
+        switch self {
+        case .tier1: return 10
+        case .tier2: return 15
+        case .tier3: return 20
+        case .tier4: return 25
+        case .tier5: return 30
+        case .tier6: return 40
+        }
+    }
+
+    /// Returns true if the given level is at or above the max for this tier
+    func isAtMaxLevel(_ level: Int) -> Bool {
+        level >= maxLevel
+    }
 }
 
 // MARK: - Source Variants (Tiers)
@@ -308,8 +332,25 @@ extension SourceNode {
         case 0..<15: return .tier1
         case 15..<40: return .tier2
         case 40..<80: return .tier3
-        default: return .tier4
+        case 80..<150: return .tier4
+        case 150..<400: return .tier5
+        default: return .tier6
         }
+    }
+
+    /// Maximum level this source can be upgraded to
+    var maxLevel: Int {
+        tier.maxLevel
+    }
+
+    /// Whether this source can be upgraded further
+    var canUpgrade: Bool {
+        level < maxLevel
+    }
+
+    /// Whether this source is at its tier's max level (required to unlock next tier)
+    var isAtMaxLevel: Bool {
+        tier.isAtMaxLevel(level)
     }
 }
 
@@ -322,8 +363,25 @@ extension SinkNode {
         case 0..<1.8: return .tier1
         case 1.8..<2.3: return .tier2
         case 2.3..<2.8: return .tier3
-        default: return .tier4
+        case 2.8..<3.3: return .tier4
+        case 3.3..<4.0: return .tier5
+        default: return .tier6
         }
+    }
+
+    /// Maximum level this sink can be upgraded to
+    var maxLevel: Int {
+        tier.maxLevel
+    }
+
+    /// Whether this sink can be upgraded further
+    var canUpgrade: Bool {
+        level < maxLevel
+    }
+
+    /// Whether this sink is at its tier's max level (required to unlock next tier)
+    var isAtMaxLevel: Bool {
+        tier.isAtMaxLevel(level)
     }
 }
 
@@ -335,8 +393,30 @@ extension FirewallNode {
         switch baseHealth {
         case 0..<150: return 1
         case 150..<400: return 2
-        case 400..<800: return 3
-        default: return 4
+        case 400..<700: return 3
+        case 700..<900: return 4
+        case 900..<1500: return 5
+        default: return 6
         }
+    }
+
+    /// Node tier enum for this firewall
+    var nodeTier: NodeTier {
+        NodeTier(rawValue: tier) ?? .tier1
+    }
+
+    /// Maximum level this firewall can be upgraded to
+    var maxLevel: Int {
+        nodeTier.maxLevel
+    }
+
+    /// Whether this firewall can be upgraded further
+    var canUpgrade: Bool {
+        level < maxLevel
+    }
+
+    /// Whether this firewall is at its tier's max level (required to unlock next tier)
+    var isAtMaxLevel: Bool {
+        nodeTier.isAtMaxLevel(level)
     }
 }

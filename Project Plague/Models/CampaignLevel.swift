@@ -33,6 +33,10 @@ struct CampaignLevel: Identifiable, Codable, Equatable {
     // Insane mode modifier
     let insaneModifiers: InsaneModifiers?
 
+    // Balance tuning: minimum attack chance per tick (regardless of defense)
+    // This ensures attacks keep happening even with high defense
+    let minimumAttackChance: Double?
+
     static func == (lhs: CampaignLevel, rhs: CampaignLevel) -> Bool {
         lhs.id == rhs.id
     }
@@ -49,6 +53,7 @@ struct VictoryConditions: Codable {
     // Optional requirements
     let requiredCredits: Double?          // Must accumulate this many credits
     let requiredAttacksSurvived: Int?     // Must survive this many attacks
+    let requiredReportsSent: Int?         // Must send this many intel reports to team
     let timeLimit: Int?                   // Optional tick limit (nil = no limit)
 
     // Check if conditions are met
@@ -57,6 +62,7 @@ struct VictoryConditions: Codable {
         riskLevel: ThreatLevel,
         totalCredits: Double,
         attacksSurvived: Int,
+        reportsSent: Int,
         currentTick: Int
     ) -> Bool {
         // Check defense tier
@@ -76,6 +82,11 @@ struct VictoryConditions: Codable {
 
         // Check optional attacks survived
         if let required = requiredAttacksSurvived, attacksSurvived < required {
+            return false
+        }
+
+        // Check intel reports sent (main objective - helping team stop Malus)
+        if let required = requiredReportsSent, reportsSent < required {
             return false
         }
 
@@ -254,5 +265,10 @@ struct LevelConfiguration {
 
     var maxTier: Int {
         level.availableTiers.max() ?? 1
+    }
+
+    /// Minimum attack chance per tick (ensures attacks keep happening)
+    var minimumAttackChance: Double {
+        level.minimumAttackChance ?? 0.0
     }
 }

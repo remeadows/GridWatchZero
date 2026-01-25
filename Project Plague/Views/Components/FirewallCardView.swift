@@ -141,24 +141,35 @@ struct FirewallCardView: View {
                     .accessibilityHint(credits >= repairCost ? "Restores firewall to full health" : "Not enough credits")
                 }
 
-                // Upgrade button
-                Button(action: onUpgrade) {
-                    HStack(spacing: 2) {
-                        Image(systemName: "arrow.up.circle.fill")
-                            .font(.system(size: 9))
-                        Text("¢\(fw.upgradeCost.formatted)")
-                            .font(.terminalMicro)
+                // Upgrade button or MAX badge
+                if fw.isAtMaxLevel {
+                    Text("MAX")
+                        .font(.terminalMicro)
+                        .foregroundColor(.terminalBlack)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 5)
+                        .background(Color.neonGreen.opacity(0.8))
+                        .cornerRadius(2)
+                        .accessibilityLabel("Firewall at maximum level")
+                } else {
+                    Button(action: onUpgrade) {
+                        HStack(spacing: 2) {
+                            Image(systemName: "arrow.up.circle.fill")
+                                .font(.system(size: 9))
+                            Text("¢\(fw.upgradeCost.formatted)")
+                                .font(.terminalMicro)
+                        }
+                        .foregroundColor(credits >= fw.upgradeCost ? .terminalBlack : .terminalGray)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 5)
+                        .background(credits >= fw.upgradeCost ? Color.neonGreen : Color.terminalGray.opacity(0.3))
+                        .cornerRadius(2)
                     }
-                    .foregroundColor(credits >= fw.upgradeCost ? .terminalBlack : .terminalGray)
-                    .padding(.horizontal, 6)
-                    .padding(.vertical, 5)
-                    .background(credits >= fw.upgradeCost ? Color.neonGreen : Color.terminalGray.opacity(0.3))
-                    .cornerRadius(2)
+                    .disabled(credits < fw.upgradeCost)
+                    .accessibilityLabel("Upgrade firewall")
+                    .accessibilityValue("Cost \(fw.upgradeCost.formatted) credits")
+                    .accessibilityHint(credits >= fw.upgradeCost ? "Increases firewall level to \(fw.level + 1)" : "Not enough credits")
                 }
-                .disabled(credits < fw.upgradeCost)
-                .accessibilityLabel("Upgrade firewall")
-                .accessibilityValue("Cost \(fw.upgradeCost.formatted) credits")
-                .accessibilityHint(credits >= fw.upgradeCost ? "Increases firewall level to \(fw.level + 1)" : "Not enough credits")
             }
         }
     }

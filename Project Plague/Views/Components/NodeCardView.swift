@@ -129,23 +129,33 @@ struct SourceCardView: View {
 
                 Spacer()
 
-                // Upgrade button
-                Button(action: onUpgrade) {
-                    HStack(spacing: 4) {
-                        Image(systemName: "arrow.up.circle.fill")
-                            .font(.system(size: 10))
-                        Text("+\(outputGain.formatted)")
-                            .font(.terminalMicro)
-                        Text("¢\(source.upgradeCost.formatted)")
-                            .font(.terminalSmall)
+                // Upgrade button or MAX badge
+                if source.isAtMaxLevel {
+                    Text("MAX")
+                        .font(.terminalSmall)
+                        .foregroundColor(.terminalBlack)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 5)
+                        .background(Color.neonGreen.opacity(0.8))
+                        .cornerRadius(2)
+                } else {
+                    Button(action: onUpgrade) {
+                        HStack(spacing: 4) {
+                            Image(systemName: "arrow.up.circle.fill")
+                                .font(.system(size: 10))
+                            Text("+\(outputGain.formatted)")
+                                .font(.terminalMicro)
+                            Text("¢\(source.upgradeCost.formatted)")
+                                .font(.terminalSmall)
+                        }
+                        .foregroundColor(credits >= source.upgradeCost ? .terminalBlack : .terminalGray)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 5)
+                        .background(credits >= source.upgradeCost ? Color.neonGreen : Color.terminalGray.opacity(0.3))
+                        .cornerRadius(2)
                     }
-                    .foregroundColor(credits >= source.upgradeCost ? .terminalBlack : .terminalGray)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 5)
-                    .background(credits >= source.upgradeCost ? Color.neonGreen : Color.terminalGray.opacity(0.3))
-                    .cornerRadius(2)
+                    .disabled(credits < source.upgradeCost)
                 }
-                .disabled(credits < source.upgradeCost)
             }
         }
         .terminalCard(borderColor: .neonGreen)
@@ -259,23 +269,33 @@ struct LinkCardView: View {
 
                 Spacer()
 
-                // Upgrade button
-                Button(action: onUpgrade) {
-                    HStack(spacing: 4) {
-                        Image(systemName: "arrow.up.circle.fill")
-                            .font(.system(size: 10))
-                        Text("+\(bandwidthGain.formatted)")
-                            .font(.terminalMicro)
-                        Text("¢\(link.upgradeCost.formatted)")
-                            .font(.terminalSmall)
+                // Upgrade button or MAX badge
+                if link.isAtMaxLevel {
+                    Text("MAX")
+                        .font(.terminalSmall)
+                        .foregroundColor(.terminalBlack)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 5)
+                        .background(Color.neonCyan.opacity(0.8))
+                        .cornerRadius(2)
+                } else {
+                    Button(action: onUpgrade) {
+                        HStack(spacing: 4) {
+                            Image(systemName: "arrow.up.circle.fill")
+                                .font(.system(size: 10))
+                            Text("+\(bandwidthGain.formatted)")
+                                .font(.terminalMicro)
+                            Text("¢\(link.upgradeCost.formatted)")
+                                .font(.terminalSmall)
+                        }
+                        .foregroundColor(credits >= link.upgradeCost ? .terminalBlack : .terminalGray)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 5)
+                        .background(credits >= link.upgradeCost ? Color.neonCyan : Color.terminalGray.opacity(0.3))
+                        .cornerRadius(2)
                     }
-                    .foregroundColor(credits >= link.upgradeCost ? .terminalBlack : .terminalGray)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 5)
-                    .background(credits >= link.upgradeCost ? Color.neonCyan : Color.terminalGray.opacity(0.3))
-                    .cornerRadius(2)
+                    .disabled(credits < link.upgradeCost)
                 }
-                .disabled(credits < link.upgradeCost)
             }
         }
         .terminalCard(borderColor: .neonCyan)
@@ -381,23 +401,33 @@ struct SinkCardView: View {
 
                 Spacer()
 
-                // Upgrade button
-                Button(action: onUpgrade) {
-                    HStack(spacing: 4) {
-                        Image(systemName: "arrow.up.circle.fill")
-                            .font(.system(size: 10))
-                        Text("+\(processingGain.formatted)")
-                            .font(.terminalMicro)
-                        Text("¢\(sink.upgradeCost.formatted)")
-                            .font(.terminalSmall)
+                // Upgrade button or MAX badge
+                if sink.isAtMaxLevel {
+                    Text("MAX")
+                        .font(.terminalSmall)
+                        .foregroundColor(.terminalBlack)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 5)
+                        .background(Color.neonAmber.opacity(0.8))
+                        .cornerRadius(2)
+                } else {
+                    Button(action: onUpgrade) {
+                        HStack(spacing: 4) {
+                            Image(systemName: "arrow.up.circle.fill")
+                                .font(.system(size: 10))
+                            Text("+\(processingGain.formatted)")
+                                .font(.terminalMicro)
+                            Text("¢\(sink.upgradeCost.formatted)")
+                                .font(.terminalSmall)
+                        }
+                        .foregroundColor(credits >= sink.upgradeCost ? .terminalBlack : .terminalGray)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 5)
+                        .background(credits >= sink.upgradeCost ? Color.neonAmber : Color.terminalGray.opacity(0.3))
+                        .cornerRadius(2)
                     }
-                    .foregroundColor(credits >= sink.upgradeCost ? .terminalBlack : .terminalGray)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 5)
-                    .background(credits >= sink.upgradeCost ? Color.neonAmber : Color.terminalGray.opacity(0.3))
-                    .cornerRadius(2)
+                    .disabled(credits < sink.upgradeCost)
                 }
-                .disabled(credits < sink.upgradeCost)
             }
         }
         .terminalCard(borderColor: .neonAmber)

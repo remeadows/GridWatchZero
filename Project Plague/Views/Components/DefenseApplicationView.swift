@@ -225,27 +225,38 @@ struct DefenseAppCard: View {
 
                         Spacer()
 
-                        // Level upgrade button
-                        Button(action: onUpgrade) {
-                            HStack(spacing: 2) {
-                                Image(systemName: "arrow.up")
-                                    .font(.system(size: 7))
-                                Text("¢\(app.upgradeCost.formatted)")
-                                    .font(.system(size: 8, design: .monospaced))
+                        // Level upgrade button or MAX badge
+                        if app.isAtMaxLevel {
+                            Text("MAX")
+                                .font(.system(size: 8, weight: .bold, design: .monospaced))
+                                .foregroundColor(.terminalBlack)
+                                .padding(.horizontal, 6)
+                                .padding(.vertical, 3)
+                                .background(Color.neonGreen.opacity(0.8))
+                                .cornerRadius(2)
+                        } else {
+                            Button(action: onUpgrade) {
+                                HStack(spacing: 2) {
+                                    Image(systemName: "arrow.up")
+                                        .font(.system(size: 7))
+                                    Text("¢\(app.upgradeCost.formatted)")
+                                        .font(.system(size: 8, design: .monospaced))
+                                }
+                                .foregroundColor(credits >= app.upgradeCost ? .terminalBlack : .terminalGray)
+                                .padding(.horizontal, 4)
+                                .padding(.vertical, 3)
+                                .background(credits >= app.upgradeCost ? Color.neonGreen : Color.terminalGray.opacity(0.3))
+                                .cornerRadius(2)
                             }
-                            .foregroundColor(credits >= app.upgradeCost ? .terminalBlack : .terminalGray)
-                            .padding(.horizontal, 4)
-                            .padding(.vertical, 3)
-                            .background(credits >= app.upgradeCost ? Color.neonGreen : Color.terminalGray.opacity(0.3))
-                            .cornerRadius(2)
+                            .disabled(credits < app.upgradeCost)
                         }
-                        .disabled(credits < app.upgradeCost)
                     }
 
                     // Tier upgrade section - show if higher tier is available
                     if let nextTier = app.tier.nextTier, nextTier.tierNumber <= maxTierAvailable {
                         let isNextUnlocked = stack.isUnlocked(nextTier)
                         let canUnlockNext = stack.canUnlock(nextTier)
+                        let gateReason = stack.tierGateReason(for: nextTier)
 
                         Divider()
                             .background(Color.terminalGray.opacity(0.3))
@@ -266,7 +277,7 @@ struct DefenseAppCard: View {
                                 .cornerRadius(2)
                             }
                         } else if canUnlockNext {
-                            // Need to unlock first
+                            // Need to unlock first (current tier is at max)
                             Button(action: { onUnlock(nextTier) }) {
                                 HStack(spacing: 4) {
                                     Image(systemName: "lock.open.fill")
@@ -281,6 +292,13 @@ struct DefenseAppCard: View {
                                 .cornerRadius(2)
                             }
                             .disabled(credits < nextTier.unlockCost)
+                        } else if let reason = gateReason {
+                            // Show why can't unlock (need to max current tier)
+                            Text(reason)
+                                .font(.system(size: 7, design: .monospaced))
+                                .foregroundColor(.terminalGray)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 4)
                         }
                     }
                 }

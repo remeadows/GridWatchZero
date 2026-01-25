@@ -104,12 +104,16 @@ open "/Volumes/DEV/Code/dev/Games/ProjectPlague/ProjectPlague/Project Plague/Pro
 - Credit multiplier: 1.0 + (prestigeLevel × 0.15)
 
 ### Unit Tiers
-| Tier | Name | Unlock Requirement |
-|------|------|-------------------|
-| 1 | Basic | Free (starting) |
-| 2 | Advanced | SIGNAL threat + credits |
-| 3 | Elite | PRIORITY threat + credits |
-| 4 | Helix | Story unlock + 500K credits |
+| Tier | Name | Max Level | Unlock Requirement |
+|------|------|-----------|-------------------|
+| 1 | Basic | 10 | Free (starting) |
+| 2 | Advanced | 15 | SIGNAL threat + credits |
+| 3 | Elite | 20 | PRIORITY threat + credits |
+| 4 | Helix | 25 | Story unlock + 500K credits |
+| 5 | Neural | 30 | Campaign Level 5+ |
+| 6 | Quantum | 40 | Campaign Level 6+ |
+
+**Tier Gate System**: Units and Defense Apps must reach max level before the next tier can be unlocked. Shows "MAX" badge when at tier's level cap.
 
 ### Defense System
 - FirewallNode absorbs attack damage before credits
@@ -134,16 +138,31 @@ Each deployed app adds:
 - Detection Bonus (SIEM/IDS categories)
 - Automation Level (SOAR/AI tiers)
 
-### Malus Intelligence
+**Defense App Tier Gates**: Same as units - must max current tier before unlocking next tier in the progression chain.
+
+### Malus Intelligence & Intel Reports
 - Collect footprint data from survived attacks
 - Identify attack patterns
-- Send reports to team (costs 250 data, earns story progress)
-- Goal: Learn Malus behavior, report to team
+- **Send Intel Reports** to team (costs 250 data, earns story progress)
+- Intel Reports are a **primary victory objective** - required to complete campaign levels
+- Report requirements double each level: L1=5, L2=10, L3=20, L4=40, L5=80, L6=160, L7=320
+- Tish (Intel Analyst) provides victory dialogue acknowledging reports received
 
 ### Critical Alarm
 - Full-screen overlay when risk = HUNTED or MARKED
 - Must acknowledge or boost defenses
 - Includes glitch/pulse effects
+
+### Campaign Level Requirements
+| Level | Credits Required | Reports Required | Available Tiers |
+|-------|-----------------|------------------|-----------------|
+| 1 | 50K | 5 | T1 |
+| 2 | 100K | 10 | T1-T2 |
+| 3 | 500K | 20 | T1-T3 |
+| 4 | 1M | 40 | T1-T4 |
+| 5 | 5M | 80 | T1-T5 |
+| 6 | 10M | 160 | T1-T6 |
+| 7 | 25M | 320 | T1-T6 |
 
 ## Characters
 
