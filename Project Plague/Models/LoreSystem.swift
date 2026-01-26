@@ -60,6 +60,11 @@ struct LoreState: Codable {
         unlockedFragmentIds.subtracting(readFragmentIds).count
     }
 
+    /// Returns all unlocked fragments in the order they appear in the database
+    var unlockedFragments: [LoreFragment] {
+        LoreDatabase.allFragments.filter { unlockedFragmentIds.contains($0.id) }
+    }
+
     func isUnlocked(_ fragmentId: String) -> Bool {
         unlockedFragmentIds.contains(fragmentId)
     }

@@ -20,6 +20,39 @@ struct DashboardView: View {
     // Campaign exit callback (nil for endless mode)
     var onCampaignExit: (() -> Void)? = nil
 
+    // iPad layout breakpoints
+    private enum IPadLayoutStyle {
+        case compact    // iPad Mini, iPad in slide-over
+        case regular    // Standard iPad (10.9", 11")
+        case expanded   // iPad Pro 12.9" and larger
+
+        var sidebarWidth: CGFloat {
+            switch self {
+            case .compact: return 340
+            case .regular: return 380
+            case .expanded: return 400
+            }
+        }
+
+        var showsThirdColumn: Bool {
+            self == .expanded
+        }
+
+        var thirdColumnWidth: CGFloat {
+            320
+        }
+    }
+
+    private func determineIPadLayout(for width: CGFloat) -> IPadLayoutStyle {
+        if width >= 1200 {
+            return .expanded  // iPad Pro 12.9" landscape
+        } else if width >= 1000 {
+            return .regular   // Standard iPad landscape
+        } else {
+            return .compact   // iPad portrait or smaller
+        }
+    }
+
     var body: some View {
         ZStack {
             // Background
@@ -122,57 +155,93 @@ struct DashboardView: View {
     // MARK: - iPad Layout (Side-by-side panels)
 
     private var iPadLayout: some View {
-        HStack(spacing: 0) {
-            // Left sidebar - Stats, Defense, Intel
-            VStack(spacing: 0) {
-                // Alert banner
-                AlertBannerView(event: showingEvent)
-                    .zIndex(100)
+        GeometryReader { geo in
+            let layoutMode = determineIPadLayout(for: geo.size.width)
 
-                // Header with stats
-                iPadHeaderView
+            HStack(spacing: 0) {
+                // Left sidebar - Stats, Defense
+                iPadLeftSidebar(layoutMode: layoutMode)
+                    .frame(width: layoutMode.sidebarWidth)
+                    .background(Color.terminalDarkGray.opacity(0.5))
 
-                // Threat bar
-                ThreatBarView(
-                    threatState: engine.threatState,
-                    activeAttack: engine.activeAttack,
-                    attacksSurvived: engine.threatState.attacksSurvived
-                )
+                // Divider
+                Rectangle()
+                    .fill(Color.neonGreen.opacity(0.3))
+                    .frame(width: 1)
 
-                // Sidebar content
-                ScrollView {
-                    VStack(spacing: 16) {
-                        // Quick stats panel
-                        iPadQuickStatsPanel
+                // Center main area - Network Map
+                iPadCenterPanel(layoutMode: layoutMode)
+                    .frame(maxWidth: .infinity)
 
-                        // Defense section
-                        sectionHeader("PERIMETER DEFENSE")
+                // Third column for expanded layout (Intel/Milestones)
+                if layoutMode.showsThirdColumn {
+                    // Divider
+                    Rectangle()
+                        .fill(Color.neonCyan.opacity(0.3))
+                        .frame(width: 1)
 
-                        FirewallCardView(
-                            firewall: engine.firewall,
-                            credits: engine.resources.credits,
-                            damageAbsorbed: engine.lastTickStats.damageAbsorbed,
-                            onUpgrade: { _ = engine.upgradeFirewall() },
-                            onRepair: { _ = engine.repairFirewall() },
-                            onPurchase: { _ = engine.purchaseFirewall() }
-                        )
+                    iPadRightSidebar
+                        .frame(width: layoutMode.thirdColumnWidth)
+                        .background(Color.terminalDarkGray.opacity(0.5))
+                }
+            }
+        }
+        .offset(x: reduceMotion ? 0 : screenShake)
+    }
 
-                        DefenseStackView(
-                            stack: engine.defenseStack,
-                            credits: engine.resources.credits,
-                            maxTierAvailable: engine.maxTierAvailable,
-                            onUpgrade: { category in
-                                _ = engine.upgradeDefenseApp(category)
-                            },
-                            onDeploy: { tier in
-                                _ = engine.deployDefenseApp(tier)
-                            },
-                            onUnlock: { tier in
-                                _ = engine.unlockDefenseTier(tier)
-                            }
-                        )
+    // MARK: - iPad Left Sidebar
 
-                        // Malus Intel
+    private func iPadLeftSidebar(layoutMode: IPadLayoutStyle) -> some View {
+        VStack(spacing: 0) {
+            // Alert banner
+            AlertBannerView(event: showingEvent)
+                .zIndex(100)
+
+            // Header with stats
+            iPadHeaderView
+
+            // Threat bar
+            ThreatBarView(
+                threatState: engine.threatState,
+                activeAttack: engine.activeAttack,
+                attacksSurvived: engine.threatState.attacksSurvived
+            )
+
+            // Sidebar content
+            ScrollView {
+                VStack(spacing: 16) {
+                    // Quick stats panel
+                    iPadQuickStatsPanel
+
+                    // Defense section
+                    sectionHeader("PERIMETER DEFENSE")
+
+                    FirewallCardView(
+                        firewall: engine.firewall,
+                        credits: engine.resources.credits,
+                        damageAbsorbed: engine.lastTickStats.damageAbsorbed,
+                        onUpgrade: { _ = engine.upgradeFirewall() },
+                        onRepair: { _ = engine.repairFirewall() },
+                        onPurchase: { _ = engine.purchaseFirewall() }
+                    )
+
+                    DefenseStackView(
+                        stack: engine.defenseStack,
+                        credits: engine.resources.credits,
+                        maxTierAvailable: engine.maxTierAvailable,
+                        onUpgrade: { category in
+                            _ = engine.upgradeDefenseApp(category)
+                        },
+                        onDeploy: { tier in
+                            _ = engine.deployDefenseApp(tier)
+                        },
+                        onUnlock: { tier in
+                            _ = engine.unlockDefenseTier(tier)
+                        }
+                    )
+
+                    // Malus Intel (only in 2-column mode; 3-column puts this in right sidebar)
+                    if !layoutMode.showsThirdColumn {
                         MalusIntelPanel(
                             intel: engine.malusIntel,
                             onSendReport: {
@@ -192,111 +261,222 @@ struct DashboardView: View {
                             )
                         }
                     }
-                    .padding()
+                }
+                .padding()
+            }
+        }
+    }
+
+    // MARK: - iPad Center Panel (Network Map)
+
+    private func iPadCenterPanel(layoutMode: IPadLayoutStyle) -> some View {
+        VStack(spacing: 0) {
+            sectionHeader("NETWORK MAP")
+                .padding(.top, 16)
+                .padding(.horizontal)
+
+            // Network map with wider cards
+            ScrollView {
+                VStack(spacing: 0) {
+                    // Network Topology at top for iPad
+                    NetworkTopologyView(
+                        source: engine.source,
+                        link: engine.link,
+                        sink: engine.sink,
+                        stack: engine.defenseStack,
+                        isRunning: engine.isRunning,
+                        tickStats: engine.lastTickStats,
+                        threatLevel: engine.threatState.currentLevel,
+                        activeAttack: engine.activeAttack,
+                        malusIntel: engine.malusIntel
+                    )
+                    .padding(.horizontal, layoutMode == .expanded ? 60 : 40)
+                    .padding(.top, 16)
+
+                    // Node cards in a wider layout
+                    HStack(alignment: .top, spacing: 20) {
+                        // Source
+                        VStack(spacing: 0) {
+                            SourceCardView(
+                                source: engine.source,
+                                credits: engine.resources.credits,
+                                onUpgrade: { _ = engine.upgradeSource() }
+                            )
+                            ConnectionLineView(
+                                isActive: engine.isRunning,
+                                throughput: engine.lastTickStats.dataGenerated,
+                                maxThroughput: engine.source.productionPerTick
+                            )
+                            .frame(height: 40)
+                        }
+                        .frame(maxWidth: .infinity)
+
+                        // Link
+                        VStack(spacing: 0) {
+                            ZStack {
+                                LinkCardView(
+                                    link: engine.link,
+                                    credits: engine.resources.credits,
+                                    onUpgrade: { _ = engine.upgradeLink() }
+                                )
+                                if let attack = engine.activeAttack,
+                                   attack.type == .ddos && attack.isActive {
+                                    DDoSOverlay()
+                                }
+                            }
+                            ConnectionLineView(
+                                isActive: engine.isRunning,
+                                throughput: engine.lastTickStats.dataTransferred,
+                                maxThroughput: engine.link.bandwidth
+                            )
+                            .frame(height: 40)
+                        }
+                        .frame(maxWidth: .infinity)
+
+                        // Sink
+                        VStack(spacing: 0) {
+                            SinkCardView(
+                                sink: engine.sink,
+                                credits: engine.resources.credits,
+                                onUpgrade: { _ = engine.upgradeSink() }
+                            )
+                            Spacer()
+                                .frame(height: 40)
+                        }
+                        .frame(maxWidth: .infinity)
+                    }
+                    .padding(.horizontal, layoutMode == .expanded ? 60 : 40)
+                    .padding(.top, 24)
+
+                    // Network stats at bottom
+                    ThreatStatsView(
+                        threatState: engine.threatState,
+                        totalGenerated: engine.totalDataGenerated,
+                        totalTransferred: engine.totalDataTransferred,
+                        totalDropped: engine.totalDataDropped,
+                        totalProcessed: engine.resources.totalDataProcessed
+                    )
+                    .padding(layoutMode == .expanded ? 60 : 40)
                 }
             }
-            .frame(width: 380)
-            .background(Color.terminalDarkGray.opacity(0.5))
+        }
+    }
 
-            // Divider
-            Rectangle()
-                .fill(Color.neonGreen.opacity(0.3))
-                .frame(width: 1)
+    // MARK: - iPad Right Sidebar (Intel/Milestones - 3-column only)
 
-            // Right main area - Network Map
-            VStack(spacing: 0) {
-                sectionHeader("NETWORK MAP")
-                    .padding(.top, 16)
-                    .padding(.horizontal)
+    private var iPadRightSidebar: some View {
+        VStack(spacing: 0) {
+            // Section header
+            sectionHeader("INTEL & PROGRESS")
+                .padding(.horizontal)
+                .padding(.top, 16)
 
-                // Network map with wider cards
-                ScrollView {
-                    VStack(spacing: 0) {
-                        // Network Topology at top for iPad
-                        NetworkTopologyView(
-                            source: engine.source,
-                            link: engine.link,
-                            sink: engine.sink,
-                            stack: engine.defenseStack,
-                            isRunning: engine.isRunning,
-                            tickStats: engine.lastTickStats,
-                            threatLevel: engine.threatState.currentLevel,
-                            activeAttack: engine.activeAttack,
-                            malusIntel: engine.malusIntel
-                        )
-                        .padding(.horizontal, 40)
-                        .padding(.top, 16)
-
-                        // Node cards in a wider layout
-                        HStack(alignment: .top, spacing: 20) {
-                            // Source
-                            VStack(spacing: 0) {
-                                SourceCardView(
-                                    source: engine.source,
-                                    credits: engine.resources.credits,
-                                    onUpgrade: { _ = engine.upgradeSource() }
-                                )
-                                ConnectionLineView(
-                                    isActive: engine.isRunning,
-                                    throughput: engine.lastTickStats.dataGenerated,
-                                    maxThroughput: engine.source.productionPerTick
-                                )
-                                .frame(height: 40)
-                            }
-                            .frame(maxWidth: .infinity)
-
-                            // Link
-                            VStack(spacing: 0) {
-                                ZStack {
-                                    LinkCardView(
-                                        link: engine.link,
-                                        credits: engine.resources.credits,
-                                        onUpgrade: { _ = engine.upgradeLink() }
-                                    )
-                                    if let attack = engine.activeAttack,
-                                       attack.type == .ddos && attack.isActive {
-                                        DDoSOverlay()
-                                    }
-                                }
-                                ConnectionLineView(
-                                    isActive: engine.isRunning,
-                                    throughput: engine.lastTickStats.dataTransferred,
-                                    maxThroughput: engine.link.bandwidth
-                                )
-                                .frame(height: 40)
-                            }
-                            .frame(maxWidth: .infinity)
-
-                            // Sink
-                            VStack(spacing: 0) {
-                                SinkCardView(
-                                    sink: engine.sink,
-                                    credits: engine.resources.credits,
-                                    onUpgrade: { _ = engine.upgradeSink() }
-                                )
-                                Spacer()
-                                    .frame(height: 40)
-                            }
-                            .frame(maxWidth: .infinity)
+            ScrollView {
+                VStack(spacing: 16) {
+                    // Malus Intel
+                    MalusIntelPanel(
+                        intel: engine.malusIntel,
+                        onSendReport: {
+                            _ = engine.sendMalusReport()
                         }
-                        .padding(.horizontal, 40)
-                        .padding(.top, 24)
+                    )
 
-                        // Network stats at bottom
-                        ThreatStatsView(
-                            threatState: engine.threatState,
-                            totalGenerated: engine.totalDataGenerated,
-                            totalTransferred: engine.totalDataTransferred,
-                            totalDropped: engine.totalDataDropped,
-                            totalProcessed: engine.resources.totalDataProcessed
+                    // Recent lore/intel teaser
+                    iPadRecentIntelPanel
+
+                    // Prestige (only in endless mode)
+                    if !engine.isInCampaignMode {
+                        PrestigeCardView(
+                            prestigeState: engine.prestigeState,
+                            totalCredits: engine.threatState.totalCreditsEarned,
+                            canPrestige: engine.canPrestige,
+                            creditsRequired: engine.creditsRequiredForPrestige,
+                            helixCoresReward: engine.helixCoresFromPrestige,
+                            onPrestige: { showingPrestige = true }
                         )
-                        .padding(40)
                     }
                 }
+                .padding()
             }
-            .frame(maxWidth: .infinity)
         }
-        .offset(x: reduceMotion ? 0 : screenShake)
+    }
+
+    // MARK: - iPad Recent Intel Panel (for 3-column layout)
+
+    private var iPadRecentIntelPanel: some View {
+        VStack(spacing: 12) {
+            HStack {
+                Text("[ RECENT INTEL ]")
+                    .font(.terminalSmall)
+                    .foregroundColor(.terminalGray)
+
+                Spacer()
+
+                if engine.loreState.unreadCount > 0 {
+                    Text("\(engine.loreState.unreadCount) NEW")
+                        .font(.terminalMicro)
+                        .foregroundColor(.neonAmber)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(Color.neonAmber.opacity(0.2))
+                        .cornerRadius(2)
+                }
+            }
+
+            // Show last unlocked lore fragment preview
+            if let lastFragment = engine.loreState.unlockedFragments.last {
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Image(systemName: lastFragment.category.icon)
+                            .font(.system(size: 12))
+                            .foregroundColor(loreCategoryColor(lastFragment.category))
+
+                        Text(lastFragment.title)
+                            .font(.terminalSmall)
+                            .foregroundColor(.white)
+                            .lineLimit(1)
+                    }
+
+                    Text(String(lastFragment.content.prefix(80)) + (lastFragment.content.count > 80 ? "..." : ""))
+                        .font(.terminalMicro)
+                        .foregroundColor(.terminalGray)
+                        .lineLimit(2)
+                }
+                .padding(10)
+                .background(Color.terminalDarkGray)
+                .cornerRadius(4)
+            }
+
+            Button(action: { showingLore = true }) {
+                HStack {
+                    Image(systemName: "book.fill")
+                    Text("VIEW ALL INTEL")
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                }
+                .font(.terminalSmall)
+                .foregroundColor(.neonCyan)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 10)
+                .background(Color.terminalDarkGray)
+                .cornerRadius(4)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 4)
+                        .stroke(Color.neonCyan.opacity(0.3), lineWidth: 1)
+                )
+            }
+        }
+        .terminalCard(borderColor: .terminalGray)
+    }
+
+    private func loreCategoryColor(_ category: LoreCategory) -> Color {
+        switch category {
+        case .world: return .terminalGray
+        case .helix: return .neonCyan
+        case .malus: return .neonRed
+        case .team: return .neonGreen
+        case .intel: return .neonAmber
+        }
     }
 
     // MARK: - iPhone Layout (Original stacked layout)
@@ -505,104 +685,191 @@ struct DashboardView: View {
     }
 
     private var iPadHeaderView: some View {
-        HStack(spacing: 12) {
-            // Title
-            Text("PROJECT PLAGUE")
-                .font(.terminalTitle)
-                .foregroundColor(.neonGreen)
-                .glow(.neonGreen, radius: 4)
-                .accessibilityAddTraits(.isHeader)
-
-            Spacer()
-
-            // Credits
-            HStack(spacing: 4) {
-                Text("¢")
-                    .font(.terminalBody)
-                    .foregroundColor(.neonAmber)
-                Text(engine.resources.credits.formatted)
-                    .font(.terminalTitle)
-                    .foregroundColor(.neonAmber)
-                    .glow(.neonAmber, radius: 3)
-            }
-            .accessibilityElement(children: .combine)
-            .accessibilityLabel("\(engine.resources.credits.formatted) credits")
-
-            // Control buttons
-            HStack(spacing: 4) {
-                Button(action: { showingLore = true }) {
-                    ZStack(alignment: .topTrailing) {
-                        Image(systemName: "book.fill")
-                            .font(.system(size: 14))
+        VStack(spacing: 0) {
+            // Campaign level bar (if in campaign mode)
+            if let config = engine.levelConfiguration {
+                HStack(spacing: 8) {
+                    // Back button
+                    if let exitAction = onCampaignExit {
+                        Button(action: exitAction) {
+                            HStack(spacing: 4) {
+                                Image(systemName: "chevron.left")
+                                    .font(.system(size: 12, weight: .semibold))
+                                Text("EXIT")
+                                    .font(.terminalMicro)
+                            }
                             .foregroundColor(.neonCyan)
-                            .frame(width: 36, height: 36)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
                             .background(Color.terminalDarkGray)
                             .cornerRadius(4)
                             .overlay(
                                 RoundedRectangle(cornerRadius: 4)
                                     .stroke(Color.neonCyan.opacity(0.5), lineWidth: 1)
                             )
+                        }
+                        .accessibilityLabel("Exit to campaign menu")
+                    }
 
-                        if engine.loreState.unreadCount > 0 {
-                            Circle()
-                                .fill(Color.neonAmber)
-                                .frame(width: 12, height: 12)
-                                .overlay(
-                                    Text("\(min(engine.loreState.unreadCount, 9))")
-                                        .font(.system(size: 8, weight: .bold))
-                                        .foregroundColor(.terminalBlack)
-                                )
-                                .offset(x: 3, y: -3)
+                    // Level info
+                    HStack(spacing: 6) {
+                        Text("LEVEL \(config.level.id)")
+                            .font(.terminalMicro)
+                            .foregroundColor(.neonCyan)
+
+                        Text("•")
+                            .foregroundColor(.terminalGray)
+
+                        Text(config.level.name.uppercased())
+                            .font(.terminalMicro)
+                            .foregroundColor(.white)
+                            .lineLimit(1)
+
+                        if config.isInsane {
+                            Text("INSANE")
+                                .font(.terminalMicro)
+                                .foregroundColor(.terminalBlack)
+                                .padding(.horizontal, 6)
+                                .padding(.vertical, 2)
+                                .background(Color.neonRed)
+                                .cornerRadius(2)
+                        }
+                    }
+
+                    Spacer()
+
+                    // Campaign objective progress
+                    HStack(spacing: 12) {
+                        // Credits progress (if required)
+                        if let creditsRequired = config.level.victoryConditions.requiredCredits {
+                            HStack(spacing: 4) {
+                                Image(systemName: "creditcard.fill")
+                                    .font(.system(size: 10))
+                                    .foregroundColor(.neonAmber)
+                                Text("\(engine.resources.credits.formatted)/\(creditsRequired.formatted)")
+                                    .font(.terminalMicro)
+                                    .foregroundColor(engine.resources.credits >= creditsRequired ? .neonGreen : .terminalGray)
+                            }
+                        }
+
+                        // Intel reports progress (if required)
+                        if let reportsRequired = config.level.victoryConditions.requiredReportsSent {
+                            HStack(spacing: 4) {
+                                Image(systemName: "doc.text.fill")
+                                    .font(.system(size: 10))
+                                    .foregroundColor(.neonCyan)
+                                Text("\(engine.malusIntel.reportsSent)/\(reportsRequired)")
+                                    .font(.terminalMicro)
+                                    .foregroundColor(engine.malusIntel.reportsSent >= reportsRequired ? .neonGreen : .terminalGray)
+                            }
                         }
                     }
                 }
-                .accessibilityLabel("Intel. \(engine.loreState.unreadCount) unread")
-
-                Button(action: { showingMilestones = true }) {
-                    Image(systemName: "trophy.fill")
-                        .font(.system(size: 14))
-                        .foregroundColor(.neonAmber)
-                        .frame(width: 36, height: 36)
-                        .background(Color.terminalDarkGray)
-                        .cornerRadius(4)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 4)
-                                .stroke(Color.neonAmber.opacity(0.5), lineWidth: 1)
-                        )
-                }
-                .accessibilityLabel("Milestones")
-
-                Button(action: { showingShop = true }) {
-                    Image(systemName: "cart.fill")
-                        .font(.system(size: 14))
-                        .foregroundColor(.neonAmber)
-                        .frame(width: 36, height: 36)
-                        .background(Color.terminalDarkGray)
-                        .cornerRadius(4)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 4)
-                                .stroke(Color.neonAmber.opacity(0.5), lineWidth: 1)
-                        )
-                }
-                .accessibilityLabel("Shop")
-
-                Button(action: { engine.toggle() }) {
-                    Image(systemName: engine.isRunning ? "pause.fill" : "play.fill")
-                        .font(.system(size: 16))
-                        .foregroundColor(.neonGreen)
-                        .frame(width: 36, height: 36)
-                        .background(Color.terminalDarkGray)
-                        .cornerRadius(4)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 4)
-                                .stroke(Color.neonGreen.opacity(0.5), lineWidth: 1)
-                        )
-                }
-                .accessibilityLabel(engine.isRunning ? "Pause game" : "Resume game")
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+                .background(Color.neonCyan.opacity(0.1))
             }
+
+            // Main header row
+            HStack(spacing: 12) {
+                // Title
+                Text("PROJECT PLAGUE")
+                    .font(.terminalTitle)
+                    .foregroundColor(.neonGreen)
+                    .glow(.neonGreen, radius: 4)
+                    .accessibilityAddTraits(.isHeader)
+
+                Spacer()
+
+                // Credits
+                HStack(spacing: 4) {
+                    Text("¢")
+                        .font(.terminalBody)
+                        .foregroundColor(.neonAmber)
+                    Text(engine.resources.credits.formatted)
+                        .font(.terminalTitle)
+                        .foregroundColor(.neonAmber)
+                        .glow(.neonAmber, radius: 3)
+                }
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel("\(engine.resources.credits.formatted) credits")
+
+                // Control buttons
+                HStack(spacing: 4) {
+                    Button(action: { showingLore = true }) {
+                        ZStack(alignment: .topTrailing) {
+                            Image(systemName: "book.fill")
+                                .font(.system(size: 14))
+                                .foregroundColor(.neonCyan)
+                                .frame(width: 36, height: 36)
+                                .background(Color.terminalDarkGray)
+                                .cornerRadius(4)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 4)
+                                        .stroke(Color.neonCyan.opacity(0.5), lineWidth: 1)
+                                )
+
+                            if engine.loreState.unreadCount > 0 {
+                                Circle()
+                                    .fill(Color.neonAmber)
+                                    .frame(width: 12, height: 12)
+                                    .overlay(
+                                        Text("\(min(engine.loreState.unreadCount, 9))")
+                                            .font(.system(size: 8, weight: .bold))
+                                            .foregroundColor(.terminalBlack)
+                                    )
+                                    .offset(x: 3, y: -3)
+                            }
+                        }
+                    }
+                    .accessibilityLabel("Intel. \(engine.loreState.unreadCount) unread")
+
+                    Button(action: { showingMilestones = true }) {
+                        Image(systemName: "trophy.fill")
+                            .font(.system(size: 14))
+                            .foregroundColor(.neonAmber)
+                            .frame(width: 36, height: 36)
+                            .background(Color.terminalDarkGray)
+                            .cornerRadius(4)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 4)
+                                    .stroke(Color.neonAmber.opacity(0.5), lineWidth: 1)
+                            )
+                    }
+                    .accessibilityLabel("Milestones")
+
+                    Button(action: { showingShop = true }) {
+                        Image(systemName: "cart.fill")
+                            .font(.system(size: 14))
+                            .foregroundColor(.neonAmber)
+                            .frame(width: 36, height: 36)
+                            .background(Color.terminalDarkGray)
+                            .cornerRadius(4)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 4)
+                                    .stroke(Color.neonAmber.opacity(0.5), lineWidth: 1)
+                            )
+                    }
+                    .accessibilityLabel("Shop")
+
+                    Button(action: { engine.toggle() }) {
+                        Image(systemName: engine.isRunning ? "pause.fill" : "play.fill")
+                            .font(.system(size: 16))
+                            .foregroundColor(.neonGreen)
+                            .frame(width: 36, height: 36)
+                            .background(Color.terminalDarkGray)
+                            .cornerRadius(4)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 4)
+                                    .stroke(Color.neonGreen.opacity(0.5), lineWidth: 1)
+                            )
+                    }
+                    .accessibilityLabel(engine.isRunning ? "Pause game" : "Resume game")
+                }
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 10)
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 10)
         .background(Color.terminalDarkGray)
     }
 

@@ -19,8 +19,30 @@ struct StoryDialogueView: View {
     @State private var typewriterTimer: Timer?
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
     private let typewriterSpeed: Double = 0.03
+
+    // Responsive sizing based on device
+    private var isIPad: Bool {
+        horizontalSizeClass == .regular
+    }
+
+    private var portraitSize: CGFloat {
+        isIPad ? 160 : 80
+    }
+
+    private var portraitInnerSize: CGFloat {
+        isIPad ? 152 : 76
+    }
+
+    private var horizontalPadding: CGFloat {
+        isIPad ? 60 : 24
+    }
+
+    private var dialogueMinHeight: CGFloat {
+        isIPad ? 200 : 150
+    }
 
     var body: some View {
         ZStack {
@@ -60,59 +82,59 @@ struct StoryDialogueView: View {
     // MARK: - Character Header
 
     private var characterHeader: some View {
-        HStack(spacing: 16) {
+        HStack(spacing: isIPad ? 24 : 16) {
             // Character portrait
             characterPortrait
 
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: isIPad ? 8 : 4) {
                 Text(storyMoment.character.displayName)
-                    .font(.terminalLarge)
+                    .font(isIPad ? .system(size: 32, weight: .bold, design: .monospaced) : .terminalLarge)
                     .foregroundColor(characterColor)
-                    .glow(characterColor, radius: 10)
+                    .glow(characterColor, radius: isIPad ? 12 : 10)
 
                 Text(storyMoment.character.role)
-                    .font(.terminalSmall)
+                    .font(isIPad ? .system(size: 16, weight: .regular, design: .monospaced) : .terminalSmall)
                     .foregroundColor(.terminalGray)
 
                 if !storyMoment.title.isEmpty {
                     Text(storyMoment.title)
-                        .font(.terminalBody)
+                        .font(isIPad ? .system(size: 18, weight: .medium, design: .monospaced) : .terminalBody)
                         .foregroundColor(.white)
-                        .padding(.top, 4)
+                        .padding(.top, isIPad ? 8 : 4)
                 }
             }
 
             Spacer()
         }
-        .padding(.horizontal, 24)
+        .padding(.horizontal, horizontalPadding)
     }
 
     private var characterPortrait: some View {
         ZStack {
             // Portrait background
-            RoundedRectangle(cornerRadius: 8)
+            RoundedRectangle(cornerRadius: isIPad ? 12 : 8)
                 .fill(Color.terminalDarkGray)
-                .frame(width: 80, height: 80)
+                .frame(width: portraitSize, height: portraitSize)
 
             // Character image or fallback
             if let imageName = storyMoment.character.imageName {
                 Image(imageName)
                     .resizable()
                     .aspectRatio(contentMode: .fill)
-                    .frame(width: 76, height: 76)
-                    .clipShape(RoundedRectangle(cornerRadius: 6))
+                    .frame(width: portraitInnerSize, height: portraitInnerSize)
+                    .clipShape(RoundedRectangle(cornerRadius: isIPad ? 10 : 6))
             } else {
                 // System character fallback
                 Image(systemName: "terminal.fill")
-                    .font(.system(size: 30))
+                    .font(.system(size: isIPad ? 60 : 30))
                     .foregroundColor(characterColor)
             }
 
             // Border glow
-            RoundedRectangle(cornerRadius: 8)
-                .stroke(characterColor.opacity(0.8), lineWidth: 2)
-                .frame(width: 80, height: 80)
-                .glow(characterColor, radius: 8)
+            RoundedRectangle(cornerRadius: isIPad ? 12 : 8)
+                .stroke(characterColor.opacity(0.8), lineWidth: isIPad ? 3 : 2)
+                .frame(width: portraitSize, height: portraitSize)
+                .glow(characterColor, radius: isIPad ? 12 : 8)
         }
         .offset(x: glitchOffset)
     }
@@ -120,14 +142,14 @@ struct StoryDialogueView: View {
     // MARK: - Dialogue Content
 
     private var dialogueContent: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: isIPad ? 24 : 16) {
             // Dialogue box
-            VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: isIPad ? 16 : 12) {
                 // Current line with typewriter effect
                 Text(displayedText)
-                    .font(.terminalReadable)
+                    .font(isIPad ? .system(size: 20, weight: .regular, design: .monospaced) : .terminalReadable)
                     .foregroundColor(.white)
-                    .lineSpacing(6)
+                    .lineSpacing(isIPad ? 10 : 6)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .fixedSize(horizontal: false, vertical: true)
 
@@ -135,53 +157,53 @@ struct StoryDialogueView: View {
                 if isTyping {
                     Rectangle()
                         .fill(characterColor)
-                        .frame(width: 8, height: 16)
+                        .frame(width: isIPad ? 12 : 8, height: isIPad ? 24 : 16)
                         .opacity(cursorOpacity)
                 }
             }
-            .padding(20)
-            .frame(maxWidth: .infinity, minHeight: 150)
+            .padding(isIPad ? 32 : 20)
+            .frame(maxWidth: isIPad ? 800 : .infinity, minHeight: dialogueMinHeight)
             .background(Color.terminalDarkGray.opacity(0.9))
-            .cornerRadius(8)
+            .cornerRadius(isIPad ? 12 : 8)
             .overlay(
-                RoundedRectangle(cornerRadius: 8)
-                    .stroke(characterColor.opacity(0.5), lineWidth: 1)
+                RoundedRectangle(cornerRadius: isIPad ? 12 : 8)
+                    .stroke(characterColor.opacity(0.5), lineWidth: isIPad ? 2 : 1)
             )
 
             // Line progress indicator
-            HStack(spacing: 8) {
+            HStack(spacing: isIPad ? 12 : 8) {
                 ForEach(0..<storyMoment.lines.count, id: \.self) { index in
                     Circle()
                         .fill(index <= currentLineIndex ? characterColor : Color.terminalGray.opacity(0.3))
-                        .frame(width: 8, height: 8)
+                        .frame(width: isIPad ? 12 : 8, height: isIPad ? 12 : 8)
                 }
             }
         }
-        .padding(.horizontal, 24)
+        .padding(.horizontal, horizontalPadding)
     }
 
     // MARK: - Continue Indicator
 
     private var continueIndicator: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: isIPad ? 12 : 8) {
             if showContinue {
                 if currentLineIndex < storyMoment.lines.count - 1 {
                     Text("TAP TO CONTINUE")
-                        .font(.terminalSmall)
+                        .font(isIPad ? .system(size: 14, weight: .medium, design: .monospaced) : .terminalSmall)
                         .foregroundColor(.terminalGray)
                 } else {
                     Text("TAP TO CLOSE")
-                        .font(.terminalSmall)
+                        .font(isIPad ? .system(size: 14, weight: .medium, design: .monospaced) : .terminalSmall)
                         .foregroundColor(characterColor)
                 }
 
                 Image(systemName: "chevron.down")
-                    .font(.terminalSmall)
+                    .font(isIPad ? .system(size: 16) : .terminalSmall)
                     .foregroundColor(characterColor)
                     .opacity(pulseOpacity)
             } else if isTyping {
                 Text("TAP TO SKIP")
-                    .font(.terminalSmall)
+                    .font(isIPad ? .system(size: 14, weight: .medium, design: .monospaced) : .terminalSmall)
                     .foregroundColor(.terminalGray.opacity(0.5))
             }
         }
