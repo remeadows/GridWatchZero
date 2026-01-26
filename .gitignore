@@ -33,3 +33,9 @@ fastlane/test_output
 
 # Code Injection
 iOSInjectionProject/
+
+# AI/Claude Code local files
+.agents/
+.claude/
+.codex/
+SPRINT_BALANCE.md
