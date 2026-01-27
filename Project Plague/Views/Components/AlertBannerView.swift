@@ -67,13 +67,14 @@ struct AlertBannerView: View {
 struct AttackBanner: View {
     let attackType: AttackType
     @State private var isFlashing = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         HStack(spacing: 12) {
             Image(systemName: attackType.icon)
                 .font(.system(size: 20, weight: .bold))
                 .foregroundColor(.neonRed)
-                .opacity(isFlashing ? 0.5 : 1.0)
+                .opacity(reduceMotion ? 1.0 : (isFlashing ? 0.5 : 1.0))
 
             VStack(alignment: .leading, spacing: 2) {
                 Text("⚠ INCOMING \(attackType.rawValue)")
@@ -94,11 +95,12 @@ struct AttackBanner: View {
                 .overlay(
                     RoundedRectangle(cornerRadius: 4)
                         .stroke(Color.neonRed, lineWidth: 2)
-                        .opacity(isFlashing ? 0.5 : 1.0)
+                        .opacity(reduceMotion ? 1.0 : (isFlashing ? 0.5 : 1.0))
                 )
         )
         .padding(.horizontal)
         .onAppear {
+            guard !reduceMotion else { return }
             withAnimation(
                 Animation.easeInOut(duration: 0.2)
                     .repeatForever(autoreverses: true)
@@ -108,6 +110,7 @@ struct AttackBanner: View {
         }
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Warning: Incoming \(attackType.rawValue) attack. \(attackType.description)")
+        .accessibilityAddTraits(.updatesFrequently)
     }
 }
 
@@ -119,6 +122,7 @@ struct MalusBanner: View {
     @State private var displayedText: String = ""
     @State private var isGlitching = false
     @State private var glitchTimer: Timer?
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         HStack(spacing: 12) {
@@ -126,7 +130,7 @@ struct MalusBanner: View {
             Image(systemName: "exclamationmark.triangle.fill")
                 .font(.system(size: 24, weight: .bold))
                 .foregroundColor(.neonRed)
-                .offset(x: glitchOffset)
+                .offset(x: reduceMotion ? 0 : glitchOffset)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text("MALUS")
@@ -137,7 +141,7 @@ struct MalusBanner: View {
                 Text(displayedText)
                     .font(.terminalBody)
                     .foregroundColor(.neonGreen)
-                    .offset(x: isGlitching ? CGFloat.random(in: -2...2) : 0)
+                    .offset(x: reduceMotion ? 0 : (isGlitching ? CGFloat.random(in: -2...2) : 0))
             }
 
             Spacer()
@@ -152,23 +156,31 @@ struct MalusBanner: View {
                 )
         )
         .overlay(
-            // Scanline effect
-            ScanlineOverlay()
-                .opacity(0.3)
-                .clipShape(RoundedRectangle(cornerRadius: 4))
+            // Scanline effect (skip if reduce motion)
+            Group {
+                if !reduceMotion {
+                    ScanlineOverlay()
+                        .opacity(0.3)
+                        .clipShape(RoundedRectangle(cornerRadius: 4))
+                }
+            }
         )
         .padding(.horizontal)
         .onAppear {
-            typewriterEffect()
-            startGlitch()
+            if reduceMotion {
+                displayedText = message
+            } else {
+                typewriterEffect()
+                startGlitch()
+            }
         }
         .onDisappear {
-            // Invalidate timer to prevent memory leak
             glitchTimer?.invalidate()
             glitchTimer = nil
         }
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Malus message: \(message)")
+        .accessibilityAddTraits(.updatesFrequently)
     }
 
     private func typewriterEffect() {
@@ -188,7 +200,6 @@ struct MalusBanner: View {
             glitchOffset = CGFloat.random(in: -3...3)
         }
 
-        // Periodic heavy glitch - store timer reference for cleanup
         glitchTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { _ in
             withAnimation(.easeInOut(duration: 0.1)) {
                 isGlitching = true
@@ -227,6 +238,8 @@ struct SystemAlertBanner: View {
                 )
         )
         .padding(.horizontal)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("System alert: \(message)")
     }
 }
 
@@ -235,13 +248,14 @@ struct SystemAlertBanner: View {
 struct MilestoneBanner: View {
     let message: String
     @State private var isGlowing = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         HStack(spacing: 12) {
             Image(systemName: "star.fill")
                 .font(.system(size: 20))
                 .foregroundColor(.neonAmber)
-                .glow(.neonAmber, radius: isGlowing ? 8 : 2)
+                .glow(.neonAmber, radius: reduceMotion ? 4 : (isGlowing ? 8 : 2))
 
             Text(message)
                 .font(.terminalBody)
@@ -260,6 +274,7 @@ struct MilestoneBanner: View {
         )
         .padding(.horizontal)
         .onAppear {
+            guard !reduceMotion else { return }
             withAnimation(
                 Animation.easeInOut(duration: 0.5)
                     .repeatForever(autoreverses: true)
@@ -267,6 +282,8 @@ struct MilestoneBanner: View {
                 isGlowing = true
             }
         }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Milestone: \(message)")
     }
 }
 
@@ -318,6 +335,8 @@ struct RandomEventBanner: View {
                 )
         )
         .padding(.horizontal)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(isPositive ? "Event" : "Warning"): \(title). \(message)")
     }
 }
 
@@ -326,13 +345,14 @@ struct RandomEventBanner: View {
 struct LoreUnlockedBanner: View {
     let title: String
     @State private var isPulsing = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         HStack(spacing: 12) {
             Image(systemName: "book.fill")
                 .font(.system(size: 18))
                 .foregroundColor(.neonCyan)
-                .glow(.neonCyan, radius: isPulsing ? 6 : 2)
+                .glow(.neonCyan, radius: reduceMotion ? 4 : (isPulsing ? 6 : 2))
 
             VStack(alignment: .leading, spacing: 2) {
                 Text("INTEL ACQUIRED")
@@ -361,6 +381,7 @@ struct LoreUnlockedBanner: View {
         )
         .padding(.horizontal)
         .onAppear {
+            guard !reduceMotion else { return }
             withAnimation(
                 Animation.easeInOut(duration: 0.6)
                     .repeatForever(autoreverses: true)
@@ -368,6 +389,8 @@ struct LoreUnlockedBanner: View {
                 isPulsing = true
             }
         }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Intel acquired: \(title). Tap to read.")
     }
 }
 
@@ -376,13 +399,14 @@ struct LoreUnlockedBanner: View {
 struct MilestoneCompletedBanner: View {
     let title: String
     @State private var isGlowing = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         HStack(spacing: 12) {
             Image(systemName: "trophy.fill")
                 .font(.system(size: 20))
                 .foregroundColor(.neonAmber)
-                .glow(.neonAmber, radius: isGlowing ? 8 : 2)
+                .glow(.neonAmber, radius: reduceMotion ? 4 : (isGlowing ? 8 : 2))
 
             VStack(alignment: .leading, spacing: 2) {
                 Text("MILESTONE COMPLETE")
@@ -407,6 +431,7 @@ struct MilestoneCompletedBanner: View {
         )
         .padding(.horizontal)
         .onAppear {
+            guard !reduceMotion else { return }
             withAnimation(
                 Animation.easeInOut(duration: 0.5)
                     .repeatForever(autoreverses: true)
@@ -414,6 +439,8 @@ struct MilestoneCompletedBanner: View {
                 isGlowing = true
             }
         }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Milestone complete: \(title)")
     }
 }
 

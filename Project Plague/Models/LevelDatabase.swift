@@ -35,7 +35,7 @@ class LevelDatabase {
                 requiredDefenseTier: 1,
                 requiredDefensePoints: 50,
                 requiredRiskLevel: .ghost,
-                requiredCredits: 50000,
+                requiredCredits: 100000,
                 requiredAttacksSurvived: nil,  // Tutorial level - no attack requirement
                 requiredReportsSent: 5,        // Send 5 intel reports to help the team
                 timeLimit: nil
@@ -68,7 +68,7 @@ class LevelDatabase {
                 requiredDefenseTier: 2,
                 requiredDefensePoints: 150,
                 requiredRiskLevel: .ghost,
-                requiredCredits: 100000,
+                requiredCredits: 250000,
                 requiredAttacksSurvived: nil,  // Removed - conflicts with keeping risk low
                 requiredReportsSent: 10,       // Send 10 intel reports
                 timeLimit: nil
@@ -102,7 +102,7 @@ class LevelDatabase {
                 requiredDefenseTier: 3,
                 requiredDefensePoints: 350,
                 requiredRiskLevel: .blip,
-                requiredCredits: 500000,
+                requiredCredits: 750000,
                 requiredAttacksSurvived: 15,
                 requiredReportsSent: 20,       // Send 20 intel reports
                 timeLimit: nil
@@ -135,7 +135,7 @@ class LevelDatabase {
                 requiredDefenseTier: 4,
                 requiredDefensePoints: 500,
                 requiredRiskLevel: .blip,
-                requiredCredits: 1000000,
+                requiredCredits: 2000000,
                 requiredAttacksSurvived: 20,
                 requiredReportsSent: 40,       // Send 40 intel reports
                 timeLimit: nil
@@ -148,7 +148,7 @@ class LevelDatabase {
             minimumAttackChance: 1.0  // Minimum 1.0% attack chance per tick
         ),
 
-        // LEVEL 5: Campus Network (balanced: +60% starting, -40% credit requirement)
+        // LEVEL 5: Campus Network (balanced for smooth T5 progression)
         CampaignLevel(
             id: 5,
             name: "Campus Network",
@@ -161,15 +161,15 @@ class LevelDatabase {
 
             Deploy Quantum Firewall and Predictive SIEM to survive.
             """,
-            startingCredits: 80000,
+            startingCredits: 120000,
             startingThreatLevel: .targeted,
             availableTiers: [1, 2, 3, 4, 5],
             victoryConditions: VictoryConditions(
                 requiredDefenseTier: 5,
                 requiredDefensePoints: 800,
                 requiredRiskLevel: .blip,
-                requiredCredits: 5000000,
-                requiredAttacksSurvived: 30,
+                requiredCredits: 6000000,
+                requiredAttacksSurvived: 25,
                 requiredReportsSent: 80,       // Send 80 intel reports
                 timeLimit: nil
             ),
@@ -181,7 +181,7 @@ class LevelDatabase {
             minimumAttackChance: 1.5  // Minimum 1.5% attack chance per tick
         ),
 
-        // LEVEL 6: Enterprise Network (balanced: +50% starting, -40% credit requirement)
+        // LEVEL 6: Enterprise Network (balanced for T6 acquisition)
         CampaignLevel(
             id: 6,
             name: "Enterprise Network",
@@ -194,15 +194,15 @@ class LevelDatabase {
 
             Neural Mesh Defense and Helix integration are your only hope.
             """,
-            startingCredits: 200000,
+            startingCredits: 300000,
             startingThreatLevel: .hammered,
             availableTiers: [1, 2, 3, 4, 5, 6],
             victoryConditions: VictoryConditions(
                 requiredDefenseTier: 6,
                 requiredDefensePoints: 1200,
                 requiredRiskLevel: .signal,
-                requiredCredits: 10000000,
-                requiredAttacksSurvived: 40,
+                requiredCredits: 15000000,
+                requiredAttacksSurvived: 35,
                 requiredReportsSent: 160,      // Send 160 intel reports
                 timeLimit: nil
             ),
@@ -234,7 +234,7 @@ class LevelDatabase {
                 requiredDefenseTier: 6,
                 requiredDefensePoints: 2000,
                 requiredRiskLevel: .blip,
-                requiredCredits: 25000000,
+                requiredCredits: 40000000,
                 requiredAttacksSurvived: 50,
                 requiredReportsSent: 320,      // Send 320 intel reports - final level
                 timeLimit: nil

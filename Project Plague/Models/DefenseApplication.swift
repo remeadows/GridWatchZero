@@ -318,15 +318,15 @@ enum DefenseAppTier: String, Codable, CaseIterable {
         }
     }
 
-    /// Cost to unlock this tier
+    /// Cost to unlock this tier (balanced with unit costs)
     var unlockCost: Double {
         switch tierNumber {
         case 1: return 500
         case 2: return 5_000
-        case 3: return 50_000
-        case 4: return 250_000
-        case 5: return 1_000_000
-        case 6: return 5_000_000
+        case 3: return 40_000
+        case 4: return 120_000
+        case 5: return 500_000
+        case 6: return 2_000_000
         default: return 0
         }
     }

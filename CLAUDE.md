@@ -172,8 +172,10 @@ The game features 5 main characters with art assets in `AppPhoto/`:
 |-----------|------|------------|
 | **Malus** | Antagonist AI - adaptive threat hunting the player | `Malus.png` |
 | **Helix** | Benevolent AI - mythical consciousness, player's goal | `Helix_Portrait.png` |
+| **Helix** (Dormant) | Helix before awakening - cinematic use | `Helixv2.png` |
+| **Helix** (Awakened) | Helix after awakening - looking upward | `Helix_The_Light.png` |
 | **Rusty** | Team Lead - player's handler, human coordinator | `Rusty.jpg` |
-| **Tish** | Hacker/Intel - technical analyst, decodes Helix | `TishRaw.webp` |
+| **Tish** | Hacker/Intel - technical analyst, decodes Helix | `TishRaw.webp` / `Tish3.jpg` |
 | **Fl3x** | Field Operative - tactical support, ground intel | `FL3X_3000x3000.jpg` |
 
 See `DESIGN.md` for detailed character profiles and visual descriptions.

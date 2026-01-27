@@ -70,23 +70,24 @@ enum ThreatLevel: Int, Codable, CaseIterable, Comparable {
     /// Base chance of attack per tick (percentage)
     /// Even at GHOST, there's light probing/port scanning - the network is never truly safe
     /// NOTE: Defense no longer reduces attack frequency - it reduces DAMAGE instead
-    /// These values are 1.5x the original to increase game intensity
+    /// Balanced for challenging but fair progression through all threat levels
     var attackChancePerTick: Double {
         switch self {
-        case .ghost: return 0.3     // Light probing - more frequent than before
-        case .blip: return 0.8
-        case .signal: return 1.5
-        case .target: return 3.0
-        case .priority: return 5.0
-        case .hunted: return 7.5
-        case .marked: return 12.0
-        case .targeted: return 18.0
-        case .hammered: return 25.0
-        case .critical: return 35.0
+        case .ghost: return 0.2     // Light probing
+        case .blip: return 0.5
+        case .signal: return 1.0
+        case .target: return 2.0
+        case .priority: return 3.5
+        case .hunted: return 5.0
+        case .marked: return 8.0
+        case .targeted: return 12.0
+        case .hammered: return 18.0
+        case .critical: return 25.0
         }
     }
 
-    /// Multiplier for attack severity
+    /// Multiplier for attack severity (damage scaling)
+    /// Balanced so late-game is challenging but survivable with proper defense
     var severityMultiplier: Double {
         switch self {
         case .ghost: return 0.3     // Very light damage from probing attacks
@@ -94,11 +95,11 @@ enum ThreatLevel: Int, Codable, CaseIterable, Comparable {
         case .signal: return 1.0
         case .target: return 1.5
         case .priority: return 2.0
-        case .hunted: return 3.0
-        case .marked: return 5.0
-        case .targeted: return 7.0
-        case .hammered: return 10.0
-        case .critical: return 15.0
+        case .hunted: return 2.5
+        case .marked: return 4.0
+        case .targeted: return 5.5
+        case .hammered: return 7.5
+        case .critical: return 10.0
         }
     }
 

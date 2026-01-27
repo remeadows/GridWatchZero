@@ -173,6 +173,85 @@ See [ISSUES.md](./ISSUES.md) for detailed tracking.
 
 ---
 
+## Session Log: 2026-01-27
+
+### Summary
+Phase 8 Platform & Polish sprint - iPad layout improvements, game balance tuning, center panel visibility enhancements.
+
+### Completed This Session
+1. **iPad Layout Fixes**
+   - Reduced sidebar widths (compact 300, regular 320, expanded 340)
+   - Added `useVerticalCardLayout` for compact mode
+   - Created `iPadNodeCards` function with horizontal/vertical layouts
+   - Fixed truncated node card names with lineLimit(2) + minimumScaleFactor(0.8)
+
+2. **Game Balance Tuning**
+   - Increased level credit requirements for 30-60 min completion times:
+     - L1: 50K→100K, L2: 100K→250K, L3: 500K→750K
+     - L4: 1M→2M, L5: 3M→6M, L6: 8M→15M, L7: 25M→40M
+   - Reduced T4-T6 unit costs 30-40%
+   - Reduced attack frequencies at high threat levels
+   - Reduced defense app unlock costs for T3-T6
+
+3. **Center Panel Visibility (Partial)**
+   - Increased `terminalDarkGray` and `terminalGray` brightness
+   - Added thicker borders (1.5px, 0.7 opacity) and subtle glow to cards
+   - Added background to iPad center panel
+   - Improved NetworkTopologyView contrast (larger fonts, brighter borders)
+   - Simplified node card stat layouts to horizontal inline format
+
+4. **Accessibility**
+   - Added Reduce Motion support to AlertBannerView components
+   - Added accessibility labels to all banner types
+
+### iPhone Layout Fix (COMPLETED)
+**iPhone Layout Cramped**: The simplified node card layouts looked cramped on iPhone. The horizontal stat layout didn't fit well in narrow widths.
+
+**Fix Applied**:
+- Added `@Environment(\.horizontalSizeClass)` to SourceCardView, LinkCardView, SinkCardView
+- Created responsive layouts using `isCompact` boolean:
+  - iPhone (compact): Vertical stat layout with full-width upgrade buttons
+  - iPad (regular): Horizontal inline stat layout (preserved existing design)
+- Improved button tap targets on iPhone (larger padding, full-width)
+- Added buffer percentage display to SinkCardView compact layout
+
+### Helix Awakening Cinematic (COMPLETED)
+15-second cinematic sequence triggered after Level 7 completion:
+
+**Animation Phases:**
+1. **Dormant (0-3s)** - Dark background, minimal glow
+2. **Power Build (3-8s)** - Cyan aura intensifies, pulse animation, text appears
+3. **Awakening (8-12s)** - Eye glow effect, environment shifts to blue
+4. **Revealed (12-15s)** - Crossfade from Helixv2 to Helix_Awakened image
+
+**Features:**
+- Procedural cyberpunk audio (bass drone + harmonics that build intensity)
+- Skip button (appears after 2s)
+- Reduce motion support (simplified 5s sequence)
+- Particle field effects
+- Haptic feedback on awakening moment
+
+**New Assets:**
+- `Helixv2.imageset` - Dormant Helix portrait (706KB)
+- `Helix_Awakened.imageset` - Awakened Helix looking upward
+
+### Modified Files
+- `Views/Theme.swift` - Brighter colors, thicker card borders, card shadows
+- `Views/DashboardView.swift` - iPad layout improvements, center panel background
+- `Views/Components/NodeCardView.swift` - Responsive layouts for iPhone/iPad
+- `Views/Components/AlertBannerView.swift` - Reduce Motion support, accessibility
+- `Views/Components/DefenseApplicationView.swift` - Larger topology fonts/icons
+- `Models/LevelDatabase.swift` - Increased credit requirements for pacing
+- `Engine/NavigationCoordinator.swift` - Added helixAwakening screen and flow
+
+### New Files
+- `Views/HelixAwakeningView.swift` - Level 7 completion cinematic with CinematicAudioManager
+- `Models/ThreatSystem.swift` - Reduced attack frequencies (documented earlier)
+- `Engine/UnitFactory.swift` - Reduced T4-T6 costs (documented earlier)
+- `Models/DefenseApplication.swift` - Reduced defense unlock costs (documented earlier)
+
+---
+
 ## Session Log: 2026-01-24
 
 ### Summary

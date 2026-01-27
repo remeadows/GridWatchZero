@@ -224,18 +224,18 @@ struct HomeView: View {
                 showTeamSheet = true
             } label: {
                 HStack(spacing: 12) {
-                    // Team avatars
+                    // Team avatars - show all 5 members
                     HStack(spacing: -8) {
-                        TeamAvatarCircle(name: "R", color: .neonGreen)
-                        TeamAvatarCircle(name: "T", color: .neonCyan)
-                        TeamAvatarCircle(name: "F", color: .neonAmber)
+                        ForEach(TeamMember.allMembers) { member in
+                            TeamAvatarCircle(member: member)
+                        }
                     }
 
                     VStack(alignment: .leading, spacing: 2) {
                         Text("View Team Roster")
                             .font(.terminalBody)
                             .foregroundColor(.white)
-                        Text("Rusty • Tish • Fl3x")
+                        Text("5 Operators")
                             .font(.terminalMicro)
                             .foregroundColor(.terminalGray)
                     }
@@ -389,21 +389,33 @@ struct LevelRowView: View {
 // MARK: - Team Avatar
 
 struct TeamAvatarCircle: View {
-    let name: String
-    let color: Color
+    let member: TeamMember
 
     var body: some View {
         ZStack {
-            Circle()
-                .fill(Color.terminalDarkGray)
-                .frame(width: 32, height: 32)
-            Circle()
-                .stroke(color, lineWidth: 2)
-                .frame(width: 32, height: 32)
-            Text(name)
-                .font(.terminalSmall)
-                .foregroundColor(color)
+            if let imageName = member.imageName {
+                Image(imageName)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(width: 32, height: 32)
+                    .clipShape(Circle())
+                    .overlay(
+                        Circle()
+                            .stroke(member.color, lineWidth: 2)
+                    )
+            } else {
+                Circle()
+                    .fill(Color.terminalDarkGray)
+                    .frame(width: 32, height: 32)
+                Circle()
+                    .stroke(member.color, lineWidth: 2)
+                    .frame(width: 32, height: 32)
+                Text(member.initial)
+                    .font(.terminalSmall)
+                    .foregroundColor(member.color)
+            }
         }
+        .frame(width: 32, height: 32)
     }
 }
 
@@ -692,16 +704,71 @@ struct LevelStatRow: View {
     }
 }
 
+// MARK: - Team Member Model
+
+struct TeamMember: Identifiable {
+    let id: String
+    let name: String
+    let role: String
+    let initial: String
+    let color: Color
+    let imageName: String?  // Asset catalog image name, nil if not available
+    let loreFragmentId: String  // Links to bio in LoreSystem
+
+    static let allMembers: [TeamMember] = [
+        TeamMember(
+            id: "ronin",
+            name: "Neon Ronin",
+            role: "Team Leader",
+            initial: "R",
+            color: .neonRed,
+            imageName: "Ronin",
+            loreFragmentId: "team_ronin"
+        ),
+        TeamMember(
+            id: "tish",
+            name: "Tish",
+            role: "Sniper / Overwatch",
+            initial: "T",
+            color: .neonCyan,
+            imageName: "Tish",
+            loreFragmentId: "team_tish"
+        ),
+        TeamMember(
+            id: "flex",
+            name: "FL3X",
+            role: "Close-Quarters Muscle",
+            initial: "F",
+            color: .neonAmber,
+            imageName: "FL3X",
+            loreFragmentId: "team_flex"
+        ),
+        TeamMember(
+            id: "tee",
+            name: "Tee",
+            role: "Street Hacker",
+            initial: "T",
+            color: .neonGreen,
+            imageName: nil,  // No image asset yet
+            loreFragmentId: "team_tee"
+        ),
+        TeamMember(
+            id: "rusty",
+            name: "Rusty",
+            role: "Engineer / Comms",
+            initial: "R",
+            color: .neonGreen,
+            imageName: "Rusty",
+            loreFragmentId: "team_rusty"
+        )
+    ]
+}
+
 // MARK: - Team Roster Sheet
 
 struct TeamRosterSheet: View {
     @Environment(\.dismiss) private var dismiss
-
-    private let teamMembers: [(name: String, role: String, initial: String, color: Color)] = [
-        ("Rusty", "Team Lead", "R", .neonGreen),
-        ("Tish", "Hacker / Intel", "T", .neonCyan),
-        ("Fl3x", "Field Operative", "F", .neonAmber)
-    ]
+    @State private var selectedMember: TeamMember?
 
     var body: some View {
         ZStack {
@@ -725,40 +792,18 @@ struct TeamRosterSheet: View {
                 }
 
                 // Team members
-                VStack(spacing: 16) {
-                    ForEach(teamMembers, id: \.name) { member in
-                        HStack(spacing: 16) {
-                            // Avatar placeholder
-                            ZStack {
-                                Circle()
-                                    .fill(Color.terminalDarkGray)
-                                    .frame(width: 60, height: 60)
-                                Circle()
-                                    .stroke(member.color, lineWidth: 2)
-                                    .frame(width: 60, height: 60)
-                                Text(member.initial)
-                                    .font(.terminalLarge)
-                                    .foregroundColor(member.color)
+                ScrollView {
+                    VStack(spacing: 12) {
+                        ForEach(TeamMember.allMembers) { member in
+                            Button {
+                                selectedMember = member
+                            } label: {
+                                TeamMemberRow(member: member)
                             }
-
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(member.name)
-                                    .font(.terminalTitle)
-                                    .foregroundColor(.white)
-                                Text(member.role)
-                                    .font(.terminalSmall)
-                                    .foregroundColor(.terminalGray)
-                            }
-
-                            Spacer()
+                            .buttonStyle(.plain)
                         }
-                        .padding(12)
-                        .background(Color.terminalDarkGray)
-                        .cornerRadius(4)
                     }
                 }
-
-                Spacer()
 
                 // Note about Helix/Malus
                 VStack(spacing: 8) {
@@ -774,6 +819,195 @@ struct TeamRosterSheet: View {
             .padding(20)
         }
         .presentationDetents([.medium, .large])
+        .sheet(item: $selectedMember) { member in
+            TeamMemberDetailView(member: member)
+        }
+    }
+}
+
+// MARK: - Team Member Row
+
+struct TeamMemberRow: View {
+    let member: TeamMember
+
+    var body: some View {
+        HStack(spacing: 16) {
+            // Avatar with image or initial fallback
+            TeamMemberAvatar(member: member, size: 60)
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(member.name)
+                    .font(.terminalTitle)
+                    .foregroundColor(.white)
+                Text(member.role)
+                    .font(.terminalSmall)
+                    .foregroundColor(.terminalGray)
+            }
+
+            Spacer()
+
+            Image(systemName: "chevron.right")
+                .font(.terminalSmall)
+                .foregroundColor(.terminalGray)
+        }
+        .padding(12)
+        .background(Color.terminalDarkGray)
+        .cornerRadius(4)
+        .overlay(
+            RoundedRectangle(cornerRadius: 4)
+                .stroke(member.color.opacity(0.3), lineWidth: 1)
+        )
+    }
+}
+
+// MARK: - Team Member Avatar
+
+struct TeamMemberAvatar: View {
+    let member: TeamMember
+    let size: CGFloat
+
+    var body: some View {
+        ZStack {
+            if let imageName = member.imageName {
+                Image(imageName)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(width: size, height: size)
+                    .clipShape(Circle())
+                    .overlay(
+                        Circle()
+                            .stroke(member.color, lineWidth: 2)
+                    )
+            } else {
+                // Fallback to initial
+                Circle()
+                    .fill(Color.terminalDarkGray)
+                    .frame(width: size, height: size)
+                Circle()
+                    .stroke(member.color, lineWidth: 2)
+                    .frame(width: size, height: size)
+                Text(member.initial)
+                    .font(size > 50 ? .terminalLarge : .terminalBody)
+                    .foregroundColor(member.color)
+            }
+        }
+        .frame(width: size, height: size)
+    }
+}
+
+// MARK: - Team Member Detail View
+
+struct TeamMemberDetailView: View {
+    let member: TeamMember
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+
+    private var isIPad: Bool {
+        horizontalSizeClass == .regular
+    }
+
+    private var bio: String {
+        if let fragment = LoreDatabase.fragment(withId: member.loreFragmentId) {
+            return fragment.content
+        }
+        return "Intel file not found."
+    }
+
+    var body: some View {
+        ZStack {
+            Color.terminalBlack
+                .ignoresSafeArea()
+
+            VStack(spacing: 0) {
+                // Header with close button
+                HStack {
+                    Spacer()
+                    Button {
+                        dismiss()
+                    } label: {
+                        Image(systemName: "xmark")
+                            .font(.title3)
+                            .foregroundColor(.terminalGray)
+                            .padding(16)
+                    }
+                }
+
+                ScrollView {
+                    VStack(spacing: isIPad ? 32 : 24) {
+                        // Character portrait
+                        characterPortrait
+
+                        // Name and role
+                        VStack(spacing: 8) {
+                            Text(member.name.uppercased())
+                                .font(isIPad ? .system(size: 32, weight: .bold, design: .monospaced) : .terminalLarge)
+                                .foregroundColor(member.color)
+                                .glow(member.color, radius: 8)
+
+                            Text(member.role)
+                                .font(isIPad ? .system(size: 18, weight: .regular, design: .monospaced) : .terminalBody)
+                                .foregroundColor(.terminalGray)
+                        }
+
+                        // Divider
+                        Rectangle()
+                            .fill(member.color.opacity(0.3))
+                            .frame(height: 1)
+                            .padding(.horizontal, isIPad ? 60 : 40)
+
+                        // Bio content
+                        Text(bio)
+                            .font(isIPad ? .system(size: 16, weight: .regular, design: .monospaced) : .terminalReadable)
+                            .foregroundColor(.white)
+                            .lineSpacing(isIPad ? 8 : 6)
+                            .multilineTextAlignment(.leading)
+                            .frame(maxWidth: isIPad ? 600 : .infinity, alignment: .leading)
+                            .padding(.horizontal, isIPad ? 40 : 20)
+                    }
+                    .padding(.bottom, 40)
+                }
+            }
+        }
+        .presentationDetents([.large])
+    }
+
+    private var characterPortrait: some View {
+        ZStack {
+            // Background glow
+            Circle()
+                .fill(member.color.opacity(0.1))
+                .frame(width: isIPad ? 220 : 160, height: isIPad ? 220 : 160)
+                .blur(radius: 20)
+
+            if let imageName = member.imageName {
+                Image(imageName)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(width: isIPad ? 180 : 140, height: isIPad ? 180 : 140)
+                    .clipShape(Circle())
+                    .overlay(
+                        Circle()
+                            .stroke(member.color, lineWidth: isIPad ? 4 : 3)
+                    )
+                    .shadow(color: member.color.opacity(0.5), radius: 20)
+            } else {
+                // Large initial fallback
+                ZStack {
+                    Circle()
+                        .fill(Color.terminalDarkGray)
+                        .frame(width: isIPad ? 180 : 140, height: isIPad ? 180 : 140)
+
+                    Circle()
+                        .stroke(member.color, lineWidth: isIPad ? 4 : 3)
+                        .frame(width: isIPad ? 180 : 140, height: isIPad ? 180 : 140)
+
+                    Text(member.initial)
+                        .font(.system(size: isIPad ? 72 : 56, weight: .bold, design: .monospaced))
+                        .foregroundColor(member.color)
+                }
+                .shadow(color: member.color.opacity(0.5), radius: 20)
+            }
+        }
     }
 }
 

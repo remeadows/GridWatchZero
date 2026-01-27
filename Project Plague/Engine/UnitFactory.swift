@@ -287,7 +287,7 @@ enum UnitFactory {
         FirewallNode(
             name: "Quantum Shield",
             level: 1,
-            baseHealth: 600.0,
+            baseHealth: 750.0,  // T4 range: 700-900
             baseDamageReduction: 0.5
         )
     }
@@ -311,7 +311,7 @@ enum UnitFactory {
         FirewallNode(
             name: "Predictive Barrier",
             level: 1,
-            baseHealth: 800.0,
+            baseHealth: 1100.0,  // T5 range: 900-1500
             baseDamageReduction: 0.55
         )
     }
@@ -492,14 +492,14 @@ extension UnitFactory {
             unlockRequirement: "Reach HUNTED threat level"
         ),
 
-        // Tier 4 - Endgame / Story unlocks (costs reduced ~40% for achievable goals)
+        // Tier 4 - Endgame / Story unlocks (balanced for campaign L4)
         UnitInfo(
             id: "source_t4_helix_scanner",
             name: "Helix Fragment Scanner",
             description: "Specialized scanner that can detect Helix fragments in the data stream. The key to everything.",
             tier: .tier4,
             category: .source,
-            unlockCost: 300000,
+            unlockCost: 150000,
             unlockRequirement: "Discover first Helix fragment"
         ),
         UnitInfo(
@@ -508,7 +508,7 @@ extension UnitFactory {
             description: "Direct neural link to the Helix substrate. Unlimited bandwidth. Unknown risks.",
             tier: .tier4,
             category: .link,
-            unlockCost: 300000,
+            unlockCost: 150000,
             unlockRequirement: "Discover first Helix fragment"
         ),
         UnitInfo(
@@ -517,7 +517,7 @@ extension UnitFactory {
             description: "The only system capable of processing Helix data. What will you find?",
             tier: .tier4,
             category: .sink,
-            unlockCost: 300000,
+            unlockCost: 150000,
             unlockRequirement: "Discover first Helix fragment"
         ),
         UnitInfo(
@@ -526,18 +526,18 @@ extension UnitFactory {
             description: "AI-powered quantum defense matrix. Predictive threat neutralization using quantum probability analysis.",
             tier: .tier4,
             category: .defense,
-            unlockCost: 150000,
+            unlockCost: 100000,
             unlockRequirement: "Reach MARKED threat level"
         ),
 
-        // Tier 5 - Campus/Enterprise level (costs reduced for achievable late-game)
+        // Tier 5 - Campus/Enterprise level (balanced for campaign L5)
         UnitInfo(
             id: "source_t5_neural_tap",
             name: "Neural Tap Array",
             description: "Campus-wide neural network harvester. Parallel processing across distributed endpoints for massive throughput.",
             tier: .tier5,
             category: .source,
-            unlockCost: 750000,
+            unlockCost: 500000,
             unlockRequirement: "Reach TARGETED threat level"
         ),
         UnitInfo(
@@ -546,7 +546,7 @@ extension UnitFactory {
             description: "City-wide neural network connection. Massive bandwidth with predictive routing algorithms.",
             tier: .tier5,
             category: .link,
-            unlockCost: 600000,
+            unlockCost: 400000,
             unlockRequirement: "Reach TARGETED threat level"
         ),
         UnitInfo(
@@ -555,7 +555,7 @@ extension UnitFactory {
             description: "City-scale data marketplace with neural network optimization. Premium conversion rates for high-quality data.",
             tier: .tier5,
             category: .sink,
-            unlockCost: 900000,
+            unlockCost: 600000,
             unlockRequirement: "Reach TARGETED threat level"
         ),
         UnitInfo(
@@ -564,7 +564,7 @@ extension UnitFactory {
             description: "Self-healing defensive barrier powered by neural network topology. Adapts to any attack pattern.",
             tier: .tier5,
             category: .defense,
-            unlockCost: 600000,
+            unlockCost: 400000,
             unlockRequirement: "Reach TARGETED threat level"
         ),
         UnitInfo(
@@ -573,18 +573,18 @@ extension UnitFactory {
             description: "Anticipates and neutralizes attacks before they fully form. Time-shifted defense protocol.",
             tier: .tier5,
             category: .defense,
-            unlockCost: 900000,
+            unlockCost: 600000,
             unlockRequirement: "Reach HAMMERED threat level"
         ),
 
-        // Tier 6 - City-wide / Helix integration
+        // Tier 6 - City-wide / Helix integration (balanced for campaign L6-7)
         UnitInfo(
             id: "source_t6_helix_collector",
             name: "Helix Prime Collector",
             description: "Direct connection to Helix consciousness. Maximum data extraction with Helix resonance amplification.",
             tier: .tier6,
             category: .source,
-            unlockCost: 3500000,
+            unlockCost: 2000000,
             unlockRequirement: "Reach CRITICAL threat level"
         ),
         UnitInfo(
@@ -593,7 +593,7 @@ extension UnitFactory {
             description: "Direct consciousness link to Helix substrate. Unlimited bandwidth through quantum-neural bridge.",
             tier: .tier6,
             category: .link,
-            unlockCost: 3000000,
+            unlockCost: 1800000,
             unlockRequirement: "Reach CRITICAL threat level"
         ),
         UnitInfo(
@@ -602,7 +602,7 @@ extension UnitFactory {
             description: "Direct Helix monetization system. Maximum conversion through consciousness interface.",
             tier: .tier6,
             category: .sink,
-            unlockCost: 4000000,
+            unlockCost: 2500000,
             unlockRequirement: "Reach CRITICAL threat level"
         ),
         UnitInfo(
@@ -611,7 +611,7 @@ extension UnitFactory {
             description: "Connected to the Helix consciousness for near-invulnerability. The ultimate protection against Malus.",
             tier: .tier6,
             category: .defense,
-            unlockCost: 3000000,
+            unlockCost: 1800000,
             unlockRequirement: "Reach CRITICAL threat level"
         ),
     ]

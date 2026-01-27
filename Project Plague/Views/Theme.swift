@@ -9,8 +9,8 @@ import SwiftUI
 extension Color {
     // Primary colors
     static let terminalBlack = Color(red: 0.05, green: 0.05, blue: 0.08)
-    static let terminalDarkGray = Color(red: 0.1, green: 0.1, blue: 0.12)
-    static let terminalGray = Color(red: 0.5, green: 0.5, blue: 0.55)
+    static let terminalDarkGray = Color(red: 0.12, green: 0.12, blue: 0.15)  // Lighter for better card contrast
+    static let terminalGray = Color(red: 0.55, green: 0.55, blue: 0.6)  // Slightly brighter for readability
 
     // Accent colors
     static let neonGreen = Color(red: 0.2, green: 1.0, blue: 0.4)
@@ -55,8 +55,9 @@ struct TerminalCardModifier: ViewModifier {
             .cornerRadius(4)
             .overlay(
                 RoundedRectangle(cornerRadius: 4)
-                    .stroke(borderColor.opacity(0.5), lineWidth: 1)
+                    .stroke(borderColor.opacity(0.7), lineWidth: 1.5)  // Brighter, thicker border
             )
+            .shadow(color: borderColor.opacity(0.15), radius: 4, x: 0, y: 2)  // Subtle glow
     }
 }
 

@@ -25,6 +25,27 @@ Then press **Cmd+R** to build and run.
 
 ## Current Sprint: Phase 8 - Platform & Polish
 
+### ✅ Completed: iPhone Layout Fix (2026-01-27)
+Added responsive layouts to NodeCardView for iPhone vs iPad:
+- SourceCardView, LinkCardView, SinkCardView now detect `horizontalSizeClass`
+- iPhone (compact): Vertical stat layout with full-width upgrade buttons
+- iPad (regular): Horizontal inline stat layout (preserved)
+
+### ✅ Completed: Helix Awakening Cinematic (2026-01-27)
+15-second cinematic sequence after Level 7 completion:
+- Dormant Helix (Helixv2) with pulsing aura and eye glow effect
+- Crossfade to awakened Helix (Helix_The_Light) looking upward
+- Procedural cyberpunk ambient audio (bass drone + harmonics)
+- Skip button, reduce motion support, particle effects
+
+### Completed in Phase 8 (2026-01-27)
+- ✅ iPad Layout - Side-by-side panels, horizontal card layout
+- ✅ Accessibility - Reduce Motion support, VoiceOver labels
+- ✅ Game Balance - Level pacing (30-60 min), unit cost reductions
+- ✅ Center Panel Visibility - Brighter colors, thicker borders, larger fonts
+- ✅ iPhone Layout - Responsive card layouts for narrow screens
+- ✅ Helix Awakening - Cinematic sequence for Level 7 completion
+
 ### Completed in Phase 7: Security Systems
 - Defense Application System (6 categories with progression chains)
 - Network Topology visualization
@@ -32,16 +53,14 @@ Then press **Cmd+R** to build and run.
 - Malus Intelligence tracking
 - Title changed to "PROJECT PLAGUE"
 
-### Priority Tasks
-1. **iPad Layout** - Optimize layout for iPad with side-by-side panels
-2. **Accessibility** - VoiceOver labels, Dynamic Type, reduce motion
-3. **Game Balance** - Tuning based on playtesting feedback
-4. **App Store Prep** - Screenshots, metadata, TestFlight
+### Remaining Tasks
+1. **App Store Prep** - Screenshots, metadata, TestFlight
 
 ### New Files Added
 - `Models/DefenseApplication.swift` - Security app model
 - `Views/Components/DefenseApplicationView.swift` - Security app cards, topology
 - `Views/Components/CriticalAlarmView.swift` - Full-screen alarm
+- `Views/HelixAwakeningView.swift` - Level 7 completion cinematic
 
 ### Files to Modify
 - `Views/DashboardView.swift` - iPad layout with NavigationSplitView

@@ -532,19 +532,19 @@ struct NetworkTopologyView: View {
                     if let stats = tickStats, isRunning {
                         // Source → Link flow
                         Text("\(stats.dataGenerated.formatted)")
-                            .font(.system(size: 7, weight: .bold, design: .monospaced))
-                            .foregroundColor(.neonGreen.opacity(0.8))
+                            .font(.system(size: 9, weight: .bold, design: .monospaced))
+                            .foregroundColor(.neonGreen)
                             .position(x: width * 0.26, y: height * 0.42)
 
                         // Link → Sink flow
                         Text("\(stats.dataTransferred.formatted)")
-                            .font(.system(size: 7, weight: .bold, design: .monospaced))
-                            .foregroundColor(.neonCyan.opacity(0.8))
+                            .font(.system(size: 9, weight: .bold, design: .monospaced))
+                            .foregroundColor(.neonCyan)
                             .position(x: width * 0.54, y: height * 0.42)
 
                         // Credits earned
                         Text("+₵\(stats.creditsEarned.formatted)")
-                            .font(.system(size: 7, weight: .bold, design: .monospaced))
+                            .font(.system(size: 9, weight: .bold, design: .monospaced))
                             .foregroundColor(.neonAmber)
                             .position(x: width * 0.78, y: height * 0.70)
                     }
@@ -552,11 +552,11 @@ struct NetworkTopologyView: View {
             }
             .frame(height: 120)
             .padding(8)
-            .background(Color.terminalDarkGray.opacity(0.5))
+            .background(Color.terminalDarkGray.opacity(0.7))
             .cornerRadius(4)
             .overlay(
                 RoundedRectangle(cornerRadius: 4)
-                    .stroke(activeAttack != nil ? Color.neonRed.opacity(0.5) : Color.terminalGray.opacity(0.3), lineWidth: activeAttack != nil ? 2 : 1)
+                    .stroke(activeAttack != nil ? Color.neonRed.opacity(0.7) : Color.neonGreen.opacity(0.4), lineWidth: activeAttack != nil ? 2 : 1)
             )
             .onAppear {
                 if isRunning {
@@ -761,46 +761,46 @@ struct EnhancedTopologyNode: View {
     var showDropWarning: Bool = false
 
     var body: some View {
-        VStack(spacing: 1) {
+        VStack(spacing: 2) {
             ZStack {
                 // Outer ring (pulses if bottleneck)
                 Circle()
-                    .stroke(color.opacity(isBottleneck ? 0.8 : 0.3), lineWidth: isBottleneck ? 2 : 1)
-                    .frame(width: 32, height: 32)
+                    .stroke(color.opacity(isBottleneck ? 0.9 : 0.5), lineWidth: isBottleneck ? 2 : 1.5)
+                    .frame(width: 36, height: 36)
 
                 // Inner fill
                 Circle()
                     .fill(Color.terminalDarkGray)
-                    .frame(width: 28, height: 28)
+                    .frame(width: 32, height: 32)
 
                 // Icon
                 Image(systemName: icon)
-                    .font(.system(size: 12))
+                    .font(.system(size: 14, weight: .medium))
                     .foregroundColor(color)
 
                 // Drop warning indicator
                 if showDropWarning {
                     Image(systemName: "exclamationmark.triangle.fill")
-                        .font(.system(size: 8))
+                        .font(.system(size: 10))
                         .foregroundColor(.neonRed)
-                        .offset(x: 12, y: -12)
+                        .offset(x: 14, y: -14)
                 }
             }
 
             // Label
             Text(label)
-                .font(.system(size: 7, weight: .bold, design: .monospaced))
+                .font(.system(size: 8, weight: .bold, design: .monospaced))
                 .foregroundColor(color)
 
             // Primary stat
             Text(primaryStat)
-                .font(.system(size: 8, weight: .semibold, design: .monospaced))
+                .font(.system(size: 9, weight: .semibold, design: .monospaced))
                 .foregroundColor(.white)
 
             // Secondary stat
             if !secondaryStat.isEmpty {
                 Text(secondaryStat)
-                    .font(.system(size: 6, design: .monospaced))
+                    .font(.system(size: 7, design: .monospaced))
                     .foregroundColor(secondaryStat.contains("-") ? .neonRed : .terminalGray)
             }
         }
@@ -974,19 +974,22 @@ struct TopologyStatPill: View {
     let label: String
     let value: String
     let color: Color
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+
+    private var isIPad: Bool { horizontalSizeClass == .regular }
 
     var body: some View {
-        HStack(spacing: 3) {
+        HStack(spacing: isIPad ? 4 : 3) {
             Image(systemName: icon)
-                .font(.system(size: 8))
-                .foregroundColor(color.opacity(0.7))
+                .font(.system(size: isIPad ? 10 : 8))
+                .foregroundColor(color.opacity(0.8))
 
             Text(label)
-                .font(.system(size: 7, design: .monospaced))
+                .font(.system(size: isIPad ? 9 : 7, design: .monospaced))
                 .foregroundColor(.terminalGray)
 
             Text(value)
-                .font(.system(size: 8, weight: .bold, design: .monospaced))
+                .font(.system(size: isIPad ? 10 : 8, weight: .bold, design: .monospaced))
                 .foregroundColor(color)
         }
     }
@@ -1004,7 +1007,7 @@ struct TopologyGrid: View {
                         p.move(to: CGPoint(x: x, y: 0))
                         p.addLine(to: CGPoint(x: x, y: size.height))
                     }
-                    context.stroke(path, with: .color(.terminalGray.opacity(0.1)), lineWidth: 0.5)
+                    context.stroke(path, with: .color(.terminalGray.opacity(0.15)), lineWidth: 0.5)
                 }
                 // Horizontal lines
                 for y in stride(from: 0, to: size.height, by: 20) {
@@ -1012,7 +1015,7 @@ struct TopologyGrid: View {
                         p.move(to: CGPoint(x: 0, y: y))
                         p.addLine(to: CGPoint(x: size.width, y: y))
                     }
-                    context.stroke(path, with: .color(.terminalGray.opacity(0.1)), lineWidth: 0.5)
+                    context.stroke(path, with: .color(.terminalGray.opacity(0.15)), lineWidth: 0.5)
                 }
             }
         }

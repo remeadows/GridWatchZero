@@ -28,9 +28,9 @@ struct DashboardView: View {
 
         var sidebarWidth: CGFloat {
             switch self {
-            case .compact: return 340
-            case .regular: return 380
-            case .expanded: return 400
+            case .compact: return 300
+            case .regular: return 320
+            case .expanded: return 340
             }
         }
 
@@ -39,7 +39,12 @@ struct DashboardView: View {
         }
 
         var thirdColumnWidth: CGFloat {
-            320
+            280
+        }
+
+        // Use vertical card layout when center panel is narrow
+        var useVerticalCardLayout: Bool {
+            self == .compact
         }
     }
 
@@ -172,6 +177,7 @@ struct DashboardView: View {
                 // Center main area - Network Map
                 iPadCenterPanel(layoutMode: layoutMode)
                     .frame(maxWidth: .infinity)
+                    .background(Color.terminalDarkGray.opacity(0.3))
 
                 // Third column for expanded layout (Intel/Milestones)
                 if layoutMode.showsThirdColumn {
@@ -193,10 +199,6 @@ struct DashboardView: View {
 
     private func iPadLeftSidebar(layoutMode: IPadLayoutStyle) -> some View {
         VStack(spacing: 0) {
-            // Alert banner
-            AlertBannerView(event: showingEvent)
-                .zIndex(100)
-
             // Header with stats
             iPadHeaderView
 
@@ -216,14 +218,8 @@ struct DashboardView: View {
                     // Defense section
                     sectionHeader("PERIMETER DEFENSE")
 
-                    FirewallCardView(
-                        firewall: engine.firewall,
-                        credits: engine.resources.credits,
-                        damageAbsorbed: engine.lastTickStats.damageAbsorbed,
-                        onUpgrade: { _ = engine.upgradeFirewall() },
-                        onRepair: { _ = engine.repairFirewall() },
-                        onPurchase: { _ = engine.purchaseFirewall() }
-                    )
+                    // Compact firewall card matching Source/Link/Sink design
+                    iPadCompactFirewallCard
 
                     DefenseStackView(
                         stack: engine.defenseStack,
@@ -240,26 +236,16 @@ struct DashboardView: View {
                         }
                     )
 
-                    // Malus Intel (only in 2-column mode; 3-column puts this in right sidebar)
-                    if !layoutMode.showsThirdColumn {
-                        MalusIntelPanel(
-                            intel: engine.malusIntel,
-                            onSendReport: {
-                                _ = engine.sendMalusReport()
-                            }
+                    // Prestige (only in endless mode, and only in 2-column)
+                    if !layoutMode.showsThirdColumn && !engine.isInCampaignMode {
+                        PrestigeCardView(
+                            prestigeState: engine.prestigeState,
+                            totalCredits: engine.threatState.totalCreditsEarned,
+                            canPrestige: engine.canPrestige,
+                            creditsRequired: engine.creditsRequiredForPrestige,
+                            helixCoresReward: engine.helixCoresFromPrestige,
+                            onPrestige: { showingPrestige = true }
                         )
-
-                        // Prestige (only in endless mode)
-                        if !engine.isInCampaignMode {
-                            PrestigeCardView(
-                                prestigeState: engine.prestigeState,
-                                totalCredits: engine.threatState.totalCreditsEarned,
-                                canPrestige: engine.canPrestige,
-                                creditsRequired: engine.creditsRequiredForPrestige,
-                                helixCoresReward: engine.helixCoresFromPrestige,
-                                onPrestige: { showingPrestige = true }
-                            )
-                        }
                     }
                 }
                 .padding()
@@ -290,63 +276,13 @@ struct DashboardView: View {
                         activeAttack: engine.activeAttack,
                         malusIntel: engine.malusIntel
                     )
-                    .padding(.horizontal, layoutMode == .expanded ? 60 : 40)
+                    .padding(.horizontal, layoutMode == .expanded ? 40 : 24)
                     .padding(.top, 16)
 
-                    // Node cards in a wider layout
-                    HStack(alignment: .top, spacing: 20) {
-                        // Source
-                        VStack(spacing: 0) {
-                            SourceCardView(
-                                source: engine.source,
-                                credits: engine.resources.credits,
-                                onUpgrade: { _ = engine.upgradeSource() }
-                            )
-                            ConnectionLineView(
-                                isActive: engine.isRunning,
-                                throughput: engine.lastTickStats.dataGenerated,
-                                maxThroughput: engine.source.productionPerTick
-                            )
-                            .frame(height: 40)
-                        }
-                        .frame(maxWidth: .infinity)
-
-                        // Link
-                        VStack(spacing: 0) {
-                            ZStack {
-                                LinkCardView(
-                                    link: engine.link,
-                                    credits: engine.resources.credits,
-                                    onUpgrade: { _ = engine.upgradeLink() }
-                                )
-                                if let attack = engine.activeAttack,
-                                   attack.type == .ddos && attack.isActive {
-                                    DDoSOverlay()
-                                }
-                            }
-                            ConnectionLineView(
-                                isActive: engine.isRunning,
-                                throughput: engine.lastTickStats.dataTransferred,
-                                maxThroughput: engine.link.bandwidth
-                            )
-                            .frame(height: 40)
-                        }
-                        .frame(maxWidth: .infinity)
-
-                        // Sink
-                        VStack(spacing: 0) {
-                            SinkCardView(
-                                sink: engine.sink,
-                                credits: engine.resources.credits,
-                                onUpgrade: { _ = engine.upgradeSink() }
-                            )
-                            Spacer()
-                                .frame(height: 40)
-                        }
-                        .frame(maxWidth: .infinity)
-                    }
-                    .padding(.horizontal, layoutMode == .expanded ? 60 : 40)
-                    .padding(.top, 24)
+                    // Node cards - use horizontal layout with proper sizing
+                    iPadNodeCards(layoutMode: layoutMode)
+                        .padding(.horizontal, layoutMode == .expanded ? 40 : 24)
+                        .padding(.top, 24)
 
                     // Network stats at bottom
                     ThreatStatsView(
@@ -356,9 +292,516 @@ struct DashboardView: View {
                         totalDropped: engine.totalDataDropped,
                         totalProcessed: engine.resources.totalDataProcessed
                     )
-                    .padding(layoutMode == .expanded ? 60 : 40)
+                    .padding(.horizontal, layoutMode == .expanded ? 40 : 24)
+                    .padding(.top, 24)
+
+                    // Malus Intelligence - in center for 2-column, right sidebar for 3-column
+                    if !layoutMode.showsThirdColumn {
+                        MalusIntelPanel(
+                            intel: engine.malusIntel,
+                            onSendReport: {
+                                _ = engine.sendMalusReport()
+                            }
+                        )
+                        .padding(.horizontal, layoutMode == .expanded ? 40 : 24)
+                        .padding(.top, 16)
+
+                        // Alert banner - moved here for stability
+                        AlertBannerView(event: showingEvent)
+                            .padding(.horizontal, layoutMode == .expanded ? 40 : 24)
+                            .padding(.bottom, 24)
+                    }
                 }
             }
+        }
+    }
+
+    // MARK: - iPad Node Cards Layout
+
+    @ViewBuilder
+    private func iPadNodeCards(layoutMode: IPadLayoutStyle) -> some View {
+        if layoutMode.useVerticalCardLayout {
+            // Vertical stack for compact mode (portrait)
+            VStack(spacing: 0) {
+                SourceCardView(
+                    source: engine.source,
+                    credits: engine.resources.credits,
+                    onUpgrade: { _ = engine.upgradeSource() }
+                )
+
+                ConnectionLineView(
+                    isActive: engine.isRunning,
+                    throughput: engine.lastTickStats.dataGenerated,
+                    maxThroughput: engine.source.productionPerTick
+                )
+                .frame(height: 30)
+
+                ZStack {
+                    LinkCardView(
+                        link: engine.link,
+                        credits: engine.resources.credits,
+                        onUpgrade: { _ = engine.upgradeLink() }
+                    )
+                    if let attack = engine.activeAttack,
+                       attack.type == .ddos && attack.isActive {
+                        DDoSOverlay()
+                    }
+                }
+
+                ConnectionLineView(
+                    isActive: engine.isRunning,
+                    throughput: engine.lastTickStats.dataTransferred,
+                    maxThroughput: engine.link.bandwidth
+                )
+                .frame(height: 30)
+
+                SinkCardView(
+                    sink: engine.sink,
+                    credits: engine.resources.credits,
+                    onUpgrade: { _ = engine.upgradeSink() }
+                )
+            }
+        } else {
+            // Horizontal layout for regular/expanded mode (landscape)
+            // Use compact inline cards that stack stats vertically
+            HStack(alignment: .top, spacing: 12) {
+                // Source Card - Compact
+                iPadCompactSourceCard
+                    .frame(minWidth: 180, maxWidth: .infinity)
+
+                // Link Card - Compact
+                iPadCompactLinkCard
+                    .frame(minWidth: 180, maxWidth: .infinity)
+
+                // Sink Card - Compact
+                iPadCompactSinkCard
+                    .frame(minWidth: 180, maxWidth: .infinity)
+            }
+        }
+    }
+
+    // MARK: - Compact iPad Cards
+
+    private var iPadCompactSourceCard: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            // Header row
+            HStack {
+                Text(engine.source.name)
+                    .font(.terminalSmall)
+                    .foregroundColor(.neonGreen)
+                    .lineLimit(1)
+                Spacer()
+                Text("L\(engine.source.level)")
+                    .font(.terminalMicro)
+                    .foregroundColor(.terminalBlack)
+                    .padding(.horizontal, 5)
+                    .padding(.vertical, 2)
+                    .background(Color.neonGreen)
+                    .cornerRadius(2)
+            }
+
+            // Stats
+            HStack(spacing: 4) {
+                Text("OUT:")
+                    .font(.terminalMicro)
+                    .foregroundColor(.terminalGray)
+                Text("\(engine.source.productionPerTick.formatted)/t")
+                    .font(.terminalSmall)
+                    .foregroundColor(.neonGreen)
+            }
+
+            // Upgrade button
+            if engine.source.isAtMaxLevel {
+                Text("MAX")
+                    .font(.terminalMicro)
+                    .foregroundColor(.terminalBlack)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 6)
+                    .background(Color.neonGreen.opacity(0.8))
+                    .cornerRadius(2)
+            } else {
+                Button(action: { _ = engine.upgradeSource() }) {
+                    HStack {
+                        Text("+\((engine.source.baseProduction * Double(engine.source.level + 1) * 1.5 - engine.source.productionPerTick).formatted)")
+                            .font(.terminalMicro)
+                        Spacer()
+                        Text("¢\(engine.source.upgradeCost.formatted)")
+                            .font(.terminalMicro)
+                    }
+                    .foregroundColor(engine.resources.credits >= engine.source.upgradeCost ? .terminalBlack : .terminalGray)
+                    .frame(maxWidth: .infinity)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 6)
+                    .background(engine.resources.credits >= engine.source.upgradeCost ? Color.neonGreen : Color.terminalGray.opacity(0.3))
+                    .cornerRadius(2)
+                }
+                .disabled(engine.resources.credits < engine.source.upgradeCost)
+            }
+        }
+        .padding(10)
+        .background(Color.terminalDarkGray)
+        .cornerRadius(4)
+        .overlay(
+            RoundedRectangle(cornerRadius: 4)
+                .stroke(Color.neonGreen.opacity(0.5), lineWidth: 1)
+        )
+    }
+
+    private var iPadCompactLinkCard: some View {
+        let efficiencyColor: Color = engine.link.throughputEfficiency >= 0.9 ? .neonGreen :
+            (engine.link.throughputEfficiency >= 0.5 ? .neonAmber : .neonRed)
+
+        return VStack(alignment: .leading, spacing: 6) {
+            // Header row
+            HStack {
+                Text(engine.link.name)
+                    .font(.terminalSmall)
+                    .foregroundColor(.neonCyan)
+                    .lineLimit(1)
+                Spacer()
+                Text("L\(engine.link.level)")
+                    .font(.terminalMicro)
+                    .foregroundColor(.terminalBlack)
+                    .padding(.horizontal, 5)
+                    .padding(.vertical, 2)
+                    .background(Color.neonCyan)
+                    .cornerRadius(2)
+            }
+
+            // Stats - two rows
+            HStack(spacing: 8) {
+                HStack(spacing: 4) {
+                    Text("BW:")
+                        .font(.terminalMicro)
+                        .foregroundColor(.terminalGray)
+                    Text("\(engine.link.bandwidth.formatted)/t")
+                        .font(.terminalSmall)
+                        .foregroundColor(.neonCyan)
+                }
+                Spacer()
+                HStack(spacing: 4) {
+                    Text("EFF:")
+                        .font(.terminalMicro)
+                        .foregroundColor(.terminalGray)
+                    Text(engine.link.throughputEfficiency.percentFormatted)
+                        .font(.terminalSmall)
+                        .foregroundColor(efficiencyColor)
+                }
+            }
+
+            // Upgrade button
+            if engine.link.isAtMaxLevel {
+                Text("MAX")
+                    .font(.terminalMicro)
+                    .foregroundColor(.terminalBlack)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 6)
+                    .background(Color.neonCyan.opacity(0.8))
+                    .cornerRadius(2)
+            } else {
+                Button(action: { _ = engine.upgradeLink() }) {
+                    HStack {
+                        Text("+\((engine.link.baseBandwidth * Double(engine.link.level + 1) * 1.4 - engine.link.bandwidth).formatted)")
+                            .font(.terminalMicro)
+                        Spacer()
+                        Text("¢\(engine.link.upgradeCost.formatted)")
+                            .font(.terminalMicro)
+                    }
+                    .foregroundColor(engine.resources.credits >= engine.link.upgradeCost ? .terminalBlack : .terminalGray)
+                    .frame(maxWidth: .infinity)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 6)
+                    .background(engine.resources.credits >= engine.link.upgradeCost ? Color.neonCyan : Color.terminalGray.opacity(0.3))
+                    .cornerRadius(2)
+                }
+                .disabled(engine.resources.credits < engine.link.upgradeCost)
+            }
+
+            // DDoS overlay indicator
+            if let attack = engine.activeAttack, attack.type == .ddos && attack.isActive {
+                HStack(spacing: 4) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .font(.system(size: 10))
+                    Text("DDOS ATTACK")
+                        .font(.terminalMicro)
+                }
+                .foregroundColor(.neonRed)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 4)
+                .background(Color.neonRed.opacity(0.2))
+                .cornerRadius(2)
+            }
+        }
+        .padding(10)
+        .background(Color.terminalDarkGray)
+        .cornerRadius(4)
+        .overlay(
+            RoundedRectangle(cornerRadius: 4)
+                .stroke(Color.neonCyan.opacity(0.5), lineWidth: 1)
+        )
+    }
+
+    private var iPadCompactSinkCard: some View {
+        let bufferColor: Color = engine.sink.loadPercentage >= 0.9 ? .neonRed :
+            (engine.sink.loadPercentage >= 0.6 ? .neonAmber : .neonAmber)
+
+        return VStack(alignment: .leading, spacing: 6) {
+            // Header row
+            HStack {
+                Text(engine.sink.name)
+                    .font(.terminalSmall)
+                    .foregroundColor(.neonAmber)
+                    .lineLimit(1)
+                Spacer()
+                Text("L\(engine.sink.level)")
+                    .font(.terminalMicro)
+                    .foregroundColor(.terminalBlack)
+                    .padding(.horizontal, 5)
+                    .padding(.vertical, 2)
+                    .background(Color.neonAmber)
+                    .cornerRadius(2)
+            }
+
+            // Stats - two rows
+            HStack(spacing: 8) {
+                HStack(spacing: 4) {
+                    Text("PROC:")
+                        .font(.terminalMicro)
+                        .foregroundColor(.terminalGray)
+                    Text("\(engine.sink.processingPerTick.formatted)/t")
+                        .font(.terminalSmall)
+                        .foregroundColor(.neonAmber)
+                }
+                Spacer()
+                HStack(spacing: 4) {
+                    Text("¢")
+                        .font(.terminalMicro)
+                        .foregroundColor(.terminalGray)
+                    Text(engine.sink.conversionRate.formatted)
+                        .font(.terminalSmall)
+                        .foregroundColor(.neonGreen)
+                }
+            }
+
+            // Buffer bar
+            HStack(spacing: 4) {
+                Text("BUF:")
+                    .font(.terminalMicro)
+                    .foregroundColor(.terminalGray)
+                GeometryReader { geo in
+                    ZStack(alignment: .leading) {
+                        Rectangle()
+                            .fill(Color.terminalGray.opacity(0.3))
+                        Rectangle()
+                            .fill(bufferColor)
+                            .frame(width: geo.size.width * engine.sink.loadPercentage)
+                    }
+                }
+                .frame(height: 6)
+                .cornerRadius(2)
+                Text(engine.sink.loadPercentage.percentFormatted)
+                    .font(.terminalMicro)
+                    .foregroundColor(bufferColor)
+            }
+
+            // Upgrade button
+            if engine.sink.isAtMaxLevel {
+                Text("MAX")
+                    .font(.terminalMicro)
+                    .foregroundColor(.terminalBlack)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 6)
+                    .background(Color.neonAmber.opacity(0.8))
+                    .cornerRadius(2)
+            } else {
+                Button(action: { _ = engine.upgradeSink() }) {
+                    HStack {
+                        Text("+\((engine.sink.baseProcessingRate * Double(engine.sink.level + 1) * 1.3 - engine.sink.processingPerTick).formatted)")
+                            .font(.terminalMicro)
+                        Spacer()
+                        Text("¢\(engine.sink.upgradeCost.formatted)")
+                            .font(.terminalMicro)
+                    }
+                    .foregroundColor(engine.resources.credits >= engine.sink.upgradeCost ? .terminalBlack : .terminalGray)
+                    .frame(maxWidth: .infinity)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 6)
+                    .background(engine.resources.credits >= engine.sink.upgradeCost ? Color.neonAmber : Color.terminalGray.opacity(0.3))
+                    .cornerRadius(2)
+                }
+                .disabled(engine.resources.credits < engine.sink.upgradeCost)
+            }
+        }
+        .padding(10)
+        .background(Color.terminalDarkGray)
+        .cornerRadius(4)
+        .overlay(
+            RoundedRectangle(cornerRadius: 4)
+                .stroke(Color.neonAmber.opacity(0.5), lineWidth: 1)
+        )
+    }
+
+    // MARK: - Compact Firewall Card
+
+    @ViewBuilder
+    private var iPadCompactFirewallCard: some View {
+        if let fw = engine.firewall {
+            let healthColor: Color = fw.healthPercentage >= 0.6 ? .neonGreen :
+                (fw.healthPercentage >= 0.3 ? .neonAmber : .neonRed)
+
+            VStack(alignment: .leading, spacing: 6) {
+                // Header row
+                HStack {
+                    Text(fw.name)
+                        .font(.terminalSmall)
+                        .foregroundColor(.neonRed)
+                        .lineLimit(1)
+                    Spacer()
+                    Text("L\(fw.level)")
+                        .font(.terminalMicro)
+                        .foregroundColor(.terminalBlack)
+                        .padding(.horizontal, 5)
+                        .padding(.vertical, 2)
+                        .background(Color.neonRed)
+                        .cornerRadius(2)
+                }
+
+                // Health bar row
+                HStack(spacing: 4) {
+                    Text("HP \(fw.currentHealth.formatted)/\(fw.maxHealth.formatted)")
+                        .font(.terminalMicro)
+                        .foregroundColor(healthColor)
+                    Spacer()
+                    GeometryReader { geo in
+                        ZStack(alignment: .leading) {
+                            Rectangle()
+                                .fill(Color.terminalGray.opacity(0.3))
+                            Rectangle()
+                                .fill(healthColor)
+                                .frame(width: geo.size.width * fw.healthPercentage)
+                        }
+                    }
+                    .frame(width: 60, height: 6)
+                    .cornerRadius(2)
+                }
+
+                // Stats row: DR + Regen
+                HStack(spacing: 12) {
+                    HStack(spacing: 4) {
+                        Text("DR")
+                            .font(.terminalMicro)
+                            .foregroundColor(.terminalGray)
+                        Text(fw.damageReduction.percentFormatted)
+                            .font(.terminalSmall)
+                            .foregroundColor(.neonRed)
+                    }
+                    HStack(spacing: 4) {
+                        Text("REGEN")
+                            .font(.terminalMicro)
+                            .foregroundColor(.terminalGray)
+                        Text("+\(fw.regenPerTick.formatted)")
+                            .font(.terminalSmall)
+                            .foregroundColor(.neonGreen)
+                    }
+                    Spacer()
+                }
+
+                // Buttons row
+                HStack(spacing: 6) {
+                    // Repair button (if damaged)
+                    if fw.currentHealth < fw.maxHealth {
+                        let repairCost = (fw.maxHealth - fw.currentHealth) * 0.5
+                        Button(action: { _ = engine.repairFirewall() }) {
+                            HStack(spacing: 2) {
+                                Image(systemName: "wrench.fill")
+                                    .font(.system(size: 9))
+                                Text("¢\(repairCost.formatted)")
+                                    .font(.terminalMicro)
+                            }
+                            .foregroundColor(engine.resources.credits >= repairCost ? .terminalBlack : .terminalGray)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 6)
+                            .background(engine.resources.credits >= repairCost ? Color.neonAmber : Color.terminalGray.opacity(0.3))
+                            .cornerRadius(2)
+                        }
+                        .disabled(engine.resources.credits < repairCost)
+                    }
+
+                    // Upgrade button or MAX badge
+                    if fw.isAtMaxLevel {
+                        Text("MAX")
+                            .font(.terminalMicro)
+                            .foregroundColor(.terminalBlack)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 6)
+                            .background(Color.neonGreen.opacity(0.8))
+                            .cornerRadius(2)
+                    } else {
+                        Button(action: { _ = engine.upgradeFirewall() }) {
+                            HStack(spacing: 2) {
+                                Image(systemName: "arrow.up.circle.fill")
+                                    .font(.system(size: 9))
+                                Text("¢\(fw.upgradeCost.formatted)")
+                                    .font(.terminalMicro)
+                            }
+                            .foregroundColor(engine.resources.credits >= fw.upgradeCost ? .terminalBlack : .terminalGray)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 6)
+                            .background(engine.resources.credits >= fw.upgradeCost ? Color.neonGreen : Color.terminalGray.opacity(0.3))
+                            .cornerRadius(2)
+                        }
+                        .disabled(engine.resources.credits < fw.upgradeCost)
+                    }
+                }
+            }
+            .padding(10)
+            .background(Color.terminalDarkGray)
+            .cornerRadius(4)
+            .overlay(
+                RoundedRectangle(cornerRadius: 4)
+                    .stroke(Color.neonRed.opacity(0.5), lineWidth: 1)
+            )
+        } else {
+            // No firewall - purchase prompt
+            HStack(spacing: 8) {
+                Image(systemName: "shield.slash")
+                    .font(.system(size: 14))
+                    .foregroundColor(.terminalGray)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("NO FIREWALL")
+                        .font(.terminalSmall)
+                        .foregroundColor(.terminalGray)
+                    Text("Unprotected")
+                        .font(.terminalMicro)
+                        .foregroundColor(.terminalGray)
+                }
+
+                Spacer()
+
+                let cost: Double = 500
+                Button(action: { _ = engine.purchaseFirewall() }) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "shield.fill")
+                            .font(.system(size: 10))
+                        Text("¢\(cost.formatted)")
+                            .font(.terminalMicro)
+                    }
+                    .foregroundColor(engine.resources.credits >= cost ? .terminalBlack : .terminalGray)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 6)
+                    .background(engine.resources.credits >= cost ? Color.neonRed : Color.terminalGray.opacity(0.3))
+                    .cornerRadius(2)
+                }
+                .disabled(engine.resources.credits < cost)
+            }
+            .padding(10)
+            .background(Color.terminalDarkGray)
+            .cornerRadius(4)
+            .overlay(
+                RoundedRectangle(cornerRadius: 4)
+                    .stroke(Color.terminalGray.opacity(0.5), lineWidth: 1)
+            )
         }
     }
 
@@ -631,16 +1074,6 @@ struct DashboardView: View {
                     .padding(.horizontal)
                     .padding(.top, 16)
 
-                    // Malus Intelligence Panel
-                    MalusIntelPanel(
-                        intel: engine.malusIntel,
-                        onSendReport: {
-                            _ = engine.sendMalusReport()
-                        }
-                    )
-                    .padding(.horizontal)
-                    .padding(.top, 16)
-
                     // Bottom stats
                     ThreatStatsView(
                         threatState: engine.threatState,
@@ -649,7 +1082,18 @@ struct DashboardView: View {
                         totalDropped: engine.totalDataDropped,
                         totalProcessed: engine.resources.totalDataProcessed
                     )
-                    .padding()
+                    .padding(.horizontal)
+                    .padding(.top, 16)
+
+                    // Malus Intelligence Panel - moved after stats for stability
+                    MalusIntelPanel(
+                        intel: engine.malusIntel,
+                        onSendReport: {
+                            _ = engine.sendMalusReport()
+                        }
+                    )
+                    .padding(.horizontal)
+                    .padding(.top, 16)
 
                     // Prestige section (only in endless mode)
                     if !engine.isInCampaignMode {

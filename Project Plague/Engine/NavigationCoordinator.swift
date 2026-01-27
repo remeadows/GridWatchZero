@@ -15,6 +15,7 @@ enum AppScreen: Hashable {
     case levelComplete(levelId: Int, isInsane: Bool)
     case levelFailed(levelId: Int, reason: FailureReason, isInsane: Bool)
     case playerProfile
+    case helixAwakening // Cinematic after Level 7 completion
 
     // Custom hash for FailureReason
     func hash(into hasher: inout Hasher) {
@@ -26,12 +27,13 @@ enum AppScreen: Hashable {
         case .levelComplete(let id, let insane): hasher.combine(4); hasher.combine(id); hasher.combine(insane)
         case .levelFailed(let id, let reason, let insane): hasher.combine(5); hasher.combine(id); hasher.combine(reason.rawValue); hasher.combine(insane)
         case .playerProfile: hasher.combine(6)
+        case .helixAwakening: hasher.combine(7)
         }
     }
 
     static func == (lhs: AppScreen, rhs: AppScreen) -> Bool {
         switch (lhs, rhs) {
-        case (.title, .title), (.mainMenu, .mainMenu), (.home, .home), (.playerProfile, .playerProfile): return true
+        case (.title, .title), (.mainMenu, .mainMenu), (.home, .home), (.playerProfile, .playerProfile), (.helixAwakening, .helixAwakening): return true
         case (.gameplay(let a, let ia), .gameplay(let b, let ib)): return a == b && ia == ib
         case (.levelComplete(let a, let ia), .levelComplete(let b, let ib)): return a == b && ia == ib
         case (.levelFailed(let a1, let r1, let i1), .levelFailed(let a2, let r2, let i2)): return a1 == a2 && r1 == r2 && i1 == i2
@@ -158,7 +160,22 @@ class NavigationCoordinator: ObservableObject {
 
     func completeLevel(_ levelId: Int, stats: LevelCompletionStats) {
         lastCompletionStats = stats
-        currentScreen = .levelComplete(levelId: levelId, isInsane: stats.isInsane)
+        // For Level 7, show Helix awakening cinematic first
+        if levelId == 7 {
+            currentScreen = .helixAwakening
+        } else {
+            currentScreen = .levelComplete(levelId: levelId, isInsane: stats.isInsane)
+        }
+    }
+
+    /// Called after Helix awakening cinematic completes
+    func completeHelixAwakening() {
+        // Now show the level 7 complete screen
+        if let stats = lastCompletionStats {
+            currentScreen = .levelComplete(levelId: 7, isInsane: stats.isInsane)
+        } else {
+            currentScreen = .levelComplete(levelId: 7, isInsane: false)
+        }
     }
 
     func failLevel(_ levelId: Int, reason: FailureReason, isInsane: Bool) {
@@ -441,6 +458,14 @@ struct RootNavigationView: View {
                         coordinator.activeStoryMoment = story
                     }
                 }
+
+            case .helixAwakening:
+                HelixAwakeningView {
+                    withAnimation(.easeInOut(duration: 0.5)) {
+                        coordinator.completeHelixAwakening()
+                    }
+                }
+                .transition(.opacity)
             }
 
             // Story overlay - shown on top of everything
