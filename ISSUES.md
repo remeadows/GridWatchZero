@@ -90,39 +90,158 @@ The `CloudSaveManager.swift` code is **fully implemented** using `NSUbiquitousKe
 ## 🟠 Major (Significant Impact)
 
 ### ISSUE-008: Sound Plays When Phone Volume Is Off
-**Status**: 🟠 Open
+**Status**: 🟠 Open → Ready to Fix
 **Severity**: Major
 **Description**: Game sounds are still audible when the phone's volume is turned all the way down. Sounds should respect the device's ringer/media volume settings.
 **Impact**: Disruptive to users in quiet environments; unexpected audio in meetings, etc.
-**Solution**: Ensure AudioManager uses the correct audio session category (e.g., `.ambient` or `.playback`) and respects system volume. Check if sounds are bypassing the silent switch.
-**Files**: `Engine/AudioManager.swift`
+
+**Root Cause**:
+`AudioManager.swift:61` uses `AudioServicesPlaySystemSound()` which:
+- **Ignores the silent/ringer switch** on iPhone
+- **May ignore media volume** depending on iOS version
+- System sounds are designed for alerts and always play
+
+The audio session category (`.ambient`) is correct, but system sounds bypass it.
+
+**Solution**:
+Option A (Recommended): Replace `AudioServicesPlaySystemSound` with `AVAudioPlayer`:
+```swift
+// Create audio players for each sound effect
+let player = try? AVAudioPlayer(contentsOf: soundURL)
+player?.volume = AVAudioSession.sharedInstance().outputVolume
+player?.play()
+```
+
+Option B: Check volume before playing:
+```swift
+guard AVAudioSession.sharedInstance().outputVolume > 0 else { return }
+AudioServicesPlaySystemSound(sound.systemSoundID)
+```
+
+**Files**: `Engine/AudioManager.swift:57-80`
 
 ### ISSUE-009: Starting Credits Should Be Zero Per Level
-**Status**: 🟠 Open
+**Status**: 🟠 Open → Ready to Fix
 **Severity**: Major
 **Description**: Each campaign level should start with zero credits. Currently, players can beat levels too quickly due to starting credit balance.
 **Impact**: Game balance issue - levels are too easy and don't provide intended challenge/progression.
-**Solution**: Reset credits to 0 at the start of each campaign level.
-**Files**: `Engine/GameEngine.swift`, `Models/CampaignProgress.swift`
+
+**Root Cause**:
+`LevelDatabase.swift` defines non-zero `startingCredits` for each level:
+| Level | Starting Credits |
+|-------|-----------------|
+| 1 | 500 |
+| 2 | 1,000 |
+| 3 | 5,000 |
+| 4 | 25,000 |
+| 5 | 80,000 |
+| 6 | 200,000 |
+| 7 | 400,000 |
+
+`GameEngine.swift:1390` applies these: `resources.credits = level.startingCredits`
+
+**Solution**:
+Change all `startingCredits` values to `0` in `LevelDatabase.swift`:
+```swift
+// Level 1
+startingCredits: 0,  // was 500
+
+// Level 2
+startingCredits: 0,  // was 1000
+
+// ... etc for all 7 levels
+```
+
+**Files**: `Models/LevelDatabase.swift:31,64,98,131,164,197,230`
 
 ### ISSUE-010: Offline Progress Lost When Switching Apps
-**Status**: 🟠 Open
+**Status**: 🟠 Open → Ready to Fix
 **Severity**: Major
 **Description**: When user switches to a different app (swipes away) or turns screen off without manually saving, all progress since last save is lost. The game closes without auto-saving.
 **Impact**: Frustrating user experience - players lose progress unexpectedly.
-**Solution**: Implement auto-save on app backgrounding using `scenePhase` changes or `UIApplication.willResignActiveNotification`. Save state when entering background.
-**Files**: `Engine/GameEngine.swift`, `Project_PlagueApp.swift`
+
+**Root Cause**:
+`Project_PlagueApp.swift` has minimal code with NO lifecycle handling:
+```swift
+@main
+struct Project_PlagueApp: App {
+    var body: some Scene {
+        WindowGroup {
+            RootNavigationView()
+        }
+    }
+}
+```
+- No `@Environment(\.scenePhase)` observer
+- No auto-save when app goes to background
+- Game only saves on pause, every 30 ticks, or explicit actions
+
+**Solution**:
+Add `scenePhase` observer to `RootNavigationView` (since it has access to `gameEngine`):
+```swift
+@Environment(\.scenePhase) private var scenePhase
+
+.onChange(of: scenePhase) { oldPhase, newPhase in
+    if newPhase == .background || newPhase == .inactive {
+        gameEngine.pause()  // pause() already calls saveGame()
+        campaignState.save()
+    }
+}
+```
+
+Or add to `Project_PlagueApp.swift` with a shared save manager.
+
+**Files**:
+- `Project_PlagueApp.swift` - Add scenePhase handling
+- OR `Engine/NavigationCoordinator.swift:276` - Add to RootNavigationView
 
 ### ISSUE-011: App Defenses Don't Affect Game Success
-**Status**: 🟠 Open
+**Status**: 🟠 Open → Design Decision Required
 **Severity**: Major
 **Description**: Defense applications are too cheap and upgrade too quickly. They don't meaningfully impact game success. The intended mechanic is: better app defenses = more intel collected to send to team. Currently intel collection should NOT start until proper defenses are deployed.
 **Impact**: Removes strategic depth from defense system; intel reports too easy to obtain.
-**Solution**:
-1. Increase defense app costs and upgrade time
-2. Gate intel collection behind defense deployment
-3. Scale intel collection rate with defense quality
-**Files**: `Models/DefenseApplication.swift`, `Engine/GameEngine.swift`
+
+**Current Cost Analysis**:
+`DefenseApplication.swift:470-471`:
+```swift
+var upgradeCost: Double {
+    25.0 * Double(tier.tierNumber) * pow(1.18, Double(level))
+}
+```
+
+| Tier 1 Level | Current Cost |
+|--------------|--------------|
+| 1 | 30 credits |
+| 5 | 57 credits |
+| 10 (max) | 130 credits |
+
+**Intel Collection Gating**:
+Currently, `MalusIntelligence.addFootprint()` collects intel whenever an attack is survived, with no defense requirement. Intel should require minimum defense deployment.
+
+**Solution Proposal**:
+
+1. **Increase base costs** (5-10x current):
+```swift
+var upgradeCost: Double {
+    250.0 * Double(tier.tierNumber) * pow(1.25, Double(level))
+}
+```
+
+2. **Gate intel collection** in `GameEngine.processTick()`:
+```swift
+// Only collect intel if defense stack has apps deployed
+guard defenseStack.deployedCount >= 1 else { return }
+malusIntel.addFootprint(amount, detectionMultiplier: defenseStack.detectionBonus)
+```
+
+3. **Scale intel rate with defense quality**:
+- Existing: `detectionMultiplier` bonus from SIEM/IDS
+- Add: Minimum defense points threshold to unlock intel reports
+
+**Files**:
+- `Models/DefenseApplication.swift:470` - Upgrade cost formula
+- `Engine/GameEngine.swift` - Intel collection logic
+- `Models/DefenseApplication.swift:805-811` - `addFootprint()` method
 
 ### ISSUE-001: Save Migration Not Implemented
 **Status**: ✅ Closed
