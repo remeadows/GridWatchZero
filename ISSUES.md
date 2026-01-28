@@ -39,12 +39,51 @@ Modified `performInitialCloudSync()` in `NavigationCoordinator.swift` to:
 **Closed**: 2026-01-21
 
 ### ISSUE-007: Cloud Save Does Not Work
-**Status**: 🔴 Open
+**Status**: 🔴 Open → Ready to Fix
 **Severity**: Critical
 **Description**: Cloud save functionality is not working. Player progress is not syncing across devices or to the cloud.
 **Impact**: Players cannot recover progress if they switch devices or reinstall the app. Critical for user retention.
-**Solution**: TBD - Investigate iCloud/CloudKit implementation
-**Files**: TBD
+
+**Root Cause**:
+The `CloudSaveManager.swift` code is **fully implemented** using `NSUbiquitousKeyValueStore` (iCloud Key-Value Store), but the Xcode project is **missing iCloud entitlements**. Without entitlements:
+- `FileManager.default.ubiquityIdentityToken` returns `nil`
+- CloudSaveManager reports "iCloud not signed in" even when user IS signed in
+- No data is synced to iCloud
+
+**Investigation Results**:
+- ✅ `CloudSaveManager.swift` - Complete implementation exists
+- ✅ `NavigationCoordinator.swift` - Cloud sync integration exists
+- ✅ `PlayerProfileView.swift` - Cloud status UI exists
+- ❌ No `.entitlements` file found in project
+- ❌ iCloud capability not enabled in Xcode
+
+**Solution**:
+1. **Create entitlements file** `Project Plague.entitlements`:
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>com.apple.developer.ubiquity-kvstore-identifier</key>
+    <string>$(TeamIdentifierPrefix)$(CFBundleIdentifier)</string>
+</dict>
+</plist>
+```
+
+2. **In Xcode**:
+   - Select project → Target → Signing & Capabilities
+   - Click "+ Capability" → Add "iCloud"
+   - Check "Key-value storage" checkbox
+   - Xcode will create/update entitlements automatically
+
+3. **Verify in App Store Connect**:
+   - Ensure App ID has iCloud capability enabled
+   - May need to regenerate provisioning profiles
+
+**Files**:
+- `Engine/CloudSaveManager.swift` - Implementation (no changes needed)
+- `Project Plague.entitlements` - Create new file
+- `project.pbxproj` - Will be updated by Xcode when adding capability
 
 ---
 
