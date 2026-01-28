@@ -440,14 +440,25 @@ xcodebuild -exportArchive -archivePath build/App.xcarchive -exportPath build/ -e
 
 ---
 
-### DOC-002: Claude Cowork Xcode/Simulator Permissions
+### DOC-002: Claude Code & Claude Desktop - Xcode/Simulator Permissions
 **Status**: ✅ Completed
 **Type**: Documentation
 
 #### Overview
-Claude Code (and similar AI assistants) runs commands in a terminal environment. To build and run iOS projects, the following must be configured on macOS.
+This guide covers setting up Xcode automation for both **Claude Code** (CLI tool) and **Claude Desktop** (macOS app). Each has different permission models and capabilities.
 
-#### 1. Install Xcode Command Line Tools
+| Feature | Claude Code (CLI) | Claude Desktop (App) |
+|---------|-------------------|---------------------|
+| Runs in | Terminal (bash/zsh) | Native macOS app |
+| Command execution | Direct shell access | MCP servers or Computer Use |
+| File access | Inherits terminal permissions | App sandbox + MCP |
+| GUI control | CLI only | Computer Use can click |
+
+---
+
+## Part A: Claude Code (CLI)
+
+#### A1. Install Xcode Command Line Tools
 ```bash
 # Install command line tools
 xcode-select --install
@@ -460,13 +471,13 @@ xcode-select -p
 sudo xcode-select --reset
 ```
 
-#### 2. Accept Xcode License
+#### A2. Accept Xcode License
 ```bash
 # Accept license (required before first use)
 sudo xcodebuild -license accept
 ```
 
-#### 3. Build Project via Command Line
+#### A3. Build Project via Command Line
 ```bash
 # List available schemes
 xcodebuild -list -project "Project Plague.xcodeproj"
@@ -483,7 +494,7 @@ xcodebuild test -project "Project Plague.xcodeproj" \
   -destination "platform=iOS Simulator,name=iPhone 15"
 ```
 
-#### 4. Launch iOS Simulator
+#### A4. Launch iOS Simulator
 ```bash
 # List available simulators
 xcrun simctl list devices
@@ -501,8 +512,8 @@ xcrun simctl install booted /path/to/App.app
 xcrun simctl launch booted com.yourcompany.ProjectPlague
 ```
 
-#### 5. macOS Security Permissions
-For full automation, grant these permissions in System Settings → Privacy & Security:
+#### A5. macOS Security Permissions for Terminal
+Grant these permissions in **System Settings → Privacy & Security**:
 
 | Permission | Required For |
 |------------|--------------|
@@ -514,7 +525,7 @@ To add Terminal to Developer Tools:
 1. System Settings → Privacy & Security → Developer Tools
 2. Click "+" and add Terminal.app (or iTerm)
 
-#### 6. Automation with `xcodebuild`
+#### A6. Full Automation Script
 ```bash
 # Full build + run workflow
 PROJECT_DIR="/Volumes/DEV/Code/dev/Games/ProjectPlague/ProjectPlague/Project Plague"
@@ -537,18 +548,146 @@ xcrun simctl install booted "$APP_PATH"
 xcrun simctl launch booted com.yourcompany.ProjectPlague
 ```
 
-#### 7. Common Issues & Solutions
+#### A7. Claude Code Specifics
+- Operates within user's shell environment
+- Ensure working directory contains `.xcodeproj`
+- Use absolute paths for reliability
+- Xcode must be pre-installed and configured
+- Cannot interact with GUI - all operations must be CLI-based
+
+---
+
+## Part B: Claude Desktop (macOS App)
+
+#### B1. MCP Server Setup for Xcode Commands
+Claude Desktop uses **Model Context Protocol (MCP)** servers to execute local commands. Create an MCP server to expose Xcode operations.
+
+**Step 1: Install MCP CLI tools**
+```bash
+# Install the MCP server framework
+npm install -g @anthropic-ai/mcp
+```
+
+**Step 2: Create Xcode MCP Server**
+Create file `~/.config/claude/mcp-servers/xcode-server.json`:
+```json
+{
+  "name": "xcode-tools",
+  "version": "1.0.0",
+  "description": "Xcode build and simulator tools",
+  "tools": [
+    {
+      "name": "xcode_build",
+      "description": "Build an Xcode project for simulator",
+      "parameters": {
+        "project_path": { "type": "string", "description": "Path to .xcodeproj" },
+        "scheme": { "type": "string", "description": "Build scheme name" }
+      }
+    },
+    {
+      "name": "simulator_launch",
+      "description": "Boot and launch app in iOS Simulator",
+      "parameters": {
+        "device": { "type": "string", "description": "Simulator device name" },
+        "app_bundle_id": { "type": "string", "description": "App bundle identifier" }
+      }
+    }
+  ]
+}
+```
+
+**Step 3: Configure Claude Desktop**
+Add to Claude Desktop settings (`~/Library/Application Support/Claude/config.json`):
+```json
+{
+  "mcpServers": {
+    "xcode-tools": {
+      "command": "node",
+      "args": ["/path/to/your/xcode-mcp-server.js"]
+    }
+  }
+}
+```
+
+#### B2. macOS Permissions for Claude Desktop
+Grant permissions in **System Settings → Privacy & Security**:
+
+| Permission | Path | Purpose |
+|------------|------|---------|
+| **Accessibility** | Privacy → Accessibility → Claude | Required for Computer Use |
+| **Screen Recording** | Privacy → Screen Recording → Claude | See screen for Computer Use |
+| **Automation** | Privacy → Automation → Claude | Control other apps |
+| **Full Disk Access** | Privacy → Full Disk Access → Claude | Access project files |
+| **Files and Folders** | Privacy → Files and Folders → Claude | Developer directories |
+
+**To grant permissions:**
+1. Open System Settings → Privacy & Security
+2. Select each category above
+3. Click "+" or toggle Claude.app ON
+4. May require app restart
+
+#### B3. Computer Use for GUI Automation
+If using Claude's Computer Use feature to control Xcode GUI:
+
+1. **Enable Computer Use** in Claude Desktop settings
+2. **Grant Accessibility permission** (required for mouse/keyboard control)
+3. **Grant Screen Recording** (required to see what's on screen)
+
+Claude can then:
+- Click Xcode menu items (Product → Build, Product → Run)
+- Navigate project navigator
+- Click simulator controls
+- Read build errors from Xcode UI
+
+#### B4. AppleScript Integration (Alternative)
+Create AppleScript shortcuts Claude Desktop can trigger via MCP:
+
+```applescript
+-- build_and_run.scpt
+tell application "Xcode"
+    activate
+    tell application "System Events"
+        keystroke "r" using command down -- Cmd+R to Run
+    end tell
+end tell
+```
+
+Save to `~/Scripts/build_and_run.scpt` and expose via MCP server.
+
+#### B5. Shortcuts App Integration
+Create a macOS Shortcut for Xcode operations:
+
+1. Open **Shortcuts** app
+2. Create new shortcut "Build Project Plague"
+3. Add action: **Run Shell Script**
+4. Enter: `xcodebuild -project "/path/to/Project.xcodeproj" -scheme "Project Plague" build`
+5. Save shortcut
+
+Claude Desktop can invoke shortcuts via:
+```bash
+shortcuts run "Build Project Plague"
+```
+
+---
+
+## Part C: Common Issues & Solutions
 
 | Issue | Solution |
 |-------|----------|
 | `xcodebuild: error: unable to find utility` | Run `xcode-select --install` |
 | `Signing requires a development team` | Add `-allowProvisioningUpdates` or set team in project |
 | `Simulator not found` | Run `xcrun simctl list` to find exact device name |
-| `Permission denied` | Add Terminal to Full Disk Access |
+| `Permission denied` | Add app to Full Disk Access |
 | `Build fails with provisioning error` | Use `-destination generic/platform=iOS Simulator` |
+| Claude Desktop can't see screen | Grant Screen Recording permission |
+| Claude Desktop can't click | Grant Accessibility permission |
+| MCP server not connecting | Check config.json path and restart Claude Desktop |
 
-#### 8. Headless CI/CD Considerations
-For automated pipelines (GitHub Actions, etc.):
+---
+
+## Part D: CI/CD & Headless Builds
+
+For automated pipelines (GitHub Actions, Xcode Cloud, etc.):
 ```bash
 # Create and boot simulator headlessly
 xcrun simctl create "CI_iPhone" "iPhone 15"
@@ -563,13 +702,18 @@ xcodebuild -project "Project.xcodeproj" \
   build
 ```
 
-#### 9. For Claude Code Specifically
-Claude Code operates within a sandboxed terminal environment. To enable Xcode operations:
-1. Ensure the working directory contains the `.xcodeproj`
-2. Use absolute paths when referencing project files
-3. Commands execute in the user's shell environment
-4. Xcode must already be installed and configured on the host Mac
-5. Claude Code cannot click GUI buttons - all operations must be CLI-based
+---
+
+## Quick Reference
+
+| Task | Claude Code Command | Claude Desktop Method |
+|------|--------------------|-----------------------|
+| Build project | `xcodebuild -scheme X build` | MCP tool or Computer Use |
+| Run tests | `xcodebuild test -scheme X` | MCP tool |
+| Boot simulator | `xcrun simctl boot "iPhone 15"` | MCP tool |
+| Install app | `xcrun simctl install booted App.app` | MCP tool |
+| Launch app | `xcrun simctl launch booted bundle.id` | MCP tool or Computer Use |
+| Open Xcode | `open -a Xcode project.xcodeproj` | Computer Use or AppleScript |
 
 ---
 
