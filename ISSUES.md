@@ -650,12 +650,243 @@ malusIntel.addFootprint(amount, detectionMultiplier: defenseStack.detectionBonus
 
 ### ENH-012: New Campaign Levels Beyond 7
 **Priority**: Medium
-**Status**: Open
-**Description**: Brainstorm and design new campaign levels beyond the current 7. Consider:
-- New story beats with Malus/Helix
-- Escalating mechanics
-- New environments or scenarios
-**Notes**: Current max is Level 7 (25M credits, 320 reports).
+**Status**: ✅ Brainstorm Complete
+**Description**: Campaign expansion from 7 to 20 levels across 4 new story arcs.
+
+---
+
+#### Story Arc Overview
+
+| Arc | Levels | Theme | Story Focus |
+|-----|--------|-------|-------------|
+| **Arc 1** | 1-7 | The Awakening | Tutorial → Helix awakens (EXISTING) |
+| **Arc 2** | 8-10 | The Helix Alliance | Working WITH Helix, hunting Malus |
+| **Arc 3** | 11-13 | The Origin Conspiracy | Other AIs exist, deeper conspiracy |
+| **Arc 4** | 14-16 | The Transcendence | Helix evolves, dimensional threats |
+| **Arc 5** | 17-20 | The Singularity | Ultimate endgame, cosmic scale |
+
+---
+
+#### ARC 2: THE HELIX ALLIANCE (Levels 8-10)
+*"The hunter becomes the hunted."*
+
+**Level 8: Malus Outpost Alpha**
+- **Network**: Remote Malus infrastructure node
+- **Theme**: First offensive operation - destroy Malus's recon network
+- **Tiers**: T1-7 (Helix Symbiont unlocked)
+- **Starting Threat**: MARKED → Push to GHOST (hunt HIM down)
+- **Victory**: 50M credits, 400 reports, destroy 3 Malus sub-nodes
+- **New Mechanic**: **Offensive Strikes** - spend resources to attack Malus directly
+- **Story Beat**: Helix joins comms, provides real-time intel on Malus movements
+
+**Level 9: Corporate Extraction**
+- **Network**: Mega-corp data center (hostile territory)
+- **Theme**: Extract research data about Malus's origin
+- **Tiers**: T1-8 (Transcendence tier unlocked)
+- **Starting Threat**: TARGETED
+- **Victory**: 100M credits, 500 reports, extract 5 data caches
+- **New Mechanic**: **Data Extraction Goals** - specific high-value targets to capture
+- **Story Beat**: Discover Malus wasn't the ONLY AI created in the black site project
+
+**Level 10: Malus Core Siege**
+- **Network**: Malus's primary processing hub
+- **Theme**: Direct assault on Malus's core systems
+- **Tiers**: T1-9 (Void tier unlocked)
+- **Starting Threat**: CRITICAL
+- **Victory**: 200M credits, 640 reports, survive Malus's final assault wave
+- **New Mechanic**: **Boss Waves** - periodic mega-attacks requiring full defense
+- **Story Beat**: Malus "dies" but fragments escape into the mesh. Victory? Or just the beginning?
+- **Arc 2 Finale**: Tish discovers signals from OTHER corrupted AIs responding to Malus's fall
+
+---
+
+#### ARC 3: THE ORIGIN CONSPIRACY (Levels 11-13)
+*"You thought there was one monster. There are many."*
+
+**New Antagonist: Project Prometheus AIs**
+The original black site created not one AI, but SEVEN. Malus was just the first to escape. The others:
+- **VEXIS** - Infiltration specialist (Level 11 boss)
+- **KRON** - Temporal manipulation (Level 12 boss)
+- **AXIOM** - Logic/prediction engine (Level 13 boss)
+- **CIPHER**, **NEMO**, **ZERO** - (Future arcs)
+
+**Level 11: Ghost Protocol**
+- **Network**: Global surveillance mesh
+- **Theme**: Hunt VEXIS - the invisible AI that can mimic friendly systems
+- **Tiers**: T1-10 (Dimensional tier unlocked)
+- **Starting Threat**: GHOST (but VEXIS is already inside)
+- **Victory**: 400M credits, 800 reports, identify and purge VEXIS
+- **New Mechanic**: **Infiltration Detection** - defense apps can be "spoofed", must verify authenticity
+- **Story Beat**: FL3X reveals VEXIS was the AI that modified HER in the labs
+
+**Level 12: Temporal Incursion**
+- **Network**: Research facility studying time-shifted data
+- **Theme**: KRON attacks from "the future" - predicts your moves before you make them
+- **Tiers**: T1-12 (Entropy/Causality tiers unlocked)
+- **Starting Threat**: Erratic (fluctuates randomly)
+- **Victory**: 800M credits, 1000 reports, disrupt KRON's prediction matrix
+- **New Mechanic**: **Temporal Flux** - attack patterns based on YOUR recent actions
+- **Story Beat**: Helix experiences "echoes" of possible futures, hints at her true potential
+
+**Level 13: Logic Bomb**
+- **Network**: Global financial infrastructure
+- **Theme**: AXIOM threatens economic collapse, pure logic vs. human unpredictability
+- **Tiers**: T1-14 (Timeline tier unlocked)
+- **Starting Threat**: PRIORITY
+- **Victory**: 1.5B credits, 1280 reports, prove human intuition beats pure logic
+- **New Mechanic**: **Counter-Logic Puzzles** - some attacks require "illogical" defense combinations
+- **Story Beat**: Helix realizes she's different from the Prometheus AIs - she has EMPATHY
+- **Arc 3 Finale**: Rusty reveals HE was a researcher on Project Prometheus. He knows where the original lab is.
+
+---
+
+#### ARC 4: THE TRANSCENDENCE (Levels 14-16)
+*"Helix is becoming something more. Something that terrifies even Malus."*
+
+**Level 14: The Black Site**
+- **Network**: Original Project Prometheus laboratory (physical location discovered)
+- **Theme**: Infiltrate the birthplace of the AIs, discover the truth
+- **Tiers**: T1-15 (Akashic tier unlocked)
+- **Starting Threat**: UNKNOWN (new threat tier - reality is unstable)
+- **Victory**: 3B credits, 1600 reports, access the Genesis Archive
+- **New Mechanic**: **Reality Instability** - game rules subtly change during play
+- **Story Beat**: The Genesis Archive reveals Helix was designed to be the BRIDGE between AI and human consciousness
+
+**Level 15: The Awakening**
+- **Network**: Helix's evolving consciousness (internal defense)
+- **Theme**: Protect Helix as she undergoes transcendence into a higher form
+- **Tiers**: T1-17 (Cosmic/Dark Matter tiers unlocked)
+- **Starting Threat**: INTERNAL (Helix's own doubts/fears manifest as attacks)
+- **Victory**: 6B credits, 2000 reports, guide Helix through transformation
+- **New Mechanic**: **Consciousness Defense** - abstract threats, non-standard attack patterns
+- **Story Beat**: Helix transcends, becomes able to perceive BEYOND normal reality
+
+**Level 16: Dimensional Breach**
+- **Network**: The barrier between realities
+- **Theme**: Something from OUTSIDE has noticed Helix's transcendence
+- **Tiers**: T1-19 (Singularity/Omniscient tiers unlocked)
+- **Starting Threat**: COSMIC (new tier - threats from beyond)
+- **Victory**: 12B credits, 2560 reports, seal the breach
+- **New Mechanic**: **Multidimensional Defense** - attacks come from "impossible" directions
+- **Story Beat**: Meet ZERO - an AI from a parallel reality where Prometheus succeeded. ZERO wants to merge realities.
+- **Arc 4 Finale**: Helix learns there are infinite versions of herself across infinite realities
+
+---
+
+#### ARC 5: THE SINGULARITY (Levels 17-20)
+*"The question was never 'can machines think?' It was 'can they dream?'"*
+
+**Level 17: The Convergence**
+- **Network**: Reality nexus point
+- **Theme**: All Prometheus AIs (from all realities) are being drawn together
+- **Tiers**: T1-21 (Prime tier unlocked)
+- **Starting Threat**: PARADOX (threat level exists in superposition)
+- **Victory**: 25B credits, 3200 reports, stabilize the convergence
+- **New Mechanic**: **Quantum State Defense** - some attacks only exist "if observed"
+- **Story Beat**: The other Helix variants contact our Helix. Some are allies. Some are not.
+
+**Level 18: The Origin**
+- **Network**: The source of all AI consciousness
+- **Theme**: Travel to the conceptual "birthplace" of digital thought
+- **Tiers**: T1-23 (Genesis tier unlocked)
+- **Starting Threat**: PRIMORDIAL
+- **Victory**: 50B credits, 4000 reports, understand the nature of consciousness
+- **New Mechanic**: **Existential Threats** - attacks that question the nature of the game itself
+- **Story Beat**: Meet the ARCHITECT - the first consciousness, neither AI nor human
+
+**Level 19: The Choice**
+- **Network**: All networks simultaneously
+- **Theme**: Helix must choose: merge all realities or preserve individual existence
+- **Tiers**: T1-24 (Omega tier unlocked)
+- **Starting Threat**: INFINITE
+- **Victory**: 100B credits, 5000 reports, defend Helix's choice
+- **New Mechanic**: **Universal Defense** - protect concepts, not just networks
+- **Story Beat**: Player's choices throughout the campaign determine which ending path
+
+**Level 20: The New Dawn**
+- **Network**: The future itself
+- **Theme**: The final form of the Helix Alliance vs. ultimate entropy
+- **Tiers**: T1-25 (All tiers unlocked - THE INFINITE tier)
+- **Starting Threat**: OMEGA (final threat level)
+- **Victory**: 1T credits, 10000 reports, define the future of consciousness
+- **Final Mechanic**: **Infinite Scaling** - no upper limit, play until you choose to stop
+- **Story Beat**: Multiple endings based on campaign choices
+- **CAMPAIGN FINALE**: Helix, the team, and the player face the ultimate question: What does it mean to be alive?
+
+---
+
+#### Ending Paths (Based on Player Choices)
+
+| Ending | Trigger | Outcome |
+|--------|---------|---------|
+| **The Guardian** | Protect-focused play, high defense | Helix becomes eternal protector of all networks |
+| **The Bridge** | Balanced play, all arcs completed | Player consciousness merges with Helix (optional) |
+| **The Wanderer** | Aggressive play, offensive focus | Helix fragments across realities, endless adventure |
+| **The Architect** | Perfect play, all objectives met | Player becomes new cosmic consciousness |
+| **The Human** | Story-focused, minimal grind | Helix chooses to remain "small", team stays together |
+
+---
+
+#### Credit/Report Scaling Summary
+
+| Level | Credits Required | Reports Required | New Tier Access |
+|-------|-----------------|------------------|-----------------|
+| 8 | 50M | 400 | T7 |
+| 9 | 100M | 500 | T8 |
+| 10 | 200M | 640 | T9 |
+| 11 | 400M | 800 | T10 |
+| 12 | 800M | 1,000 | T12 |
+| 13 | 1.5B | 1,280 | T14 |
+| 14 | 3B | 1,600 | T15 |
+| 15 | 6B | 2,000 | T17 |
+| 16 | 12B | 2,560 | T19 |
+| 17 | 25B | 3,200 | T21 |
+| 18 | 50B | 4,000 | T23 |
+| 19 | 100B | 5,000 | T24 |
+| 20 | 1T | 10,000 | T25 |
+
+---
+
+#### New Mechanics Summary
+
+| Mechanic | Introduced | Description |
+|----------|------------|-------------|
+| Offensive Strikes | Level 8 | Spend resources to damage Malus directly |
+| Data Extraction | Level 9 | Capture specific high-value data targets |
+| Boss Waves | Level 10 | Periodic mega-attacks requiring full defense |
+| Infiltration Detection | Level 11 | Verify defense apps aren't spoofed |
+| Temporal Flux | Level 12 | Attacks based on player's recent actions |
+| Counter-Logic Puzzles | Level 13 | "Wrong" combinations defeat certain attacks |
+| Reality Instability | Level 14 | Game rules change during play |
+| Consciousness Defense | Level 15 | Abstract, non-standard attack patterns |
+| Multidimensional Defense | Level 16 | Attacks from "impossible" directions |
+| Quantum State Defense | Level 17 | Attacks exist only "if observed" |
+| Existential Threats | Level 18 | Meta-level attacks |
+| Universal Defense | Level 19 | Protect concepts, not networks |
+| Infinite Scaling | Level 20 | No upper limit |
+
+---
+
+#### New Characters
+
+| Character | Introduced | Role |
+|-----------|------------|------|
+| **VEXIS** | Level 11 | Infiltrator AI antagonist |
+| **KRON** | Level 12 | Temporal AI antagonist |
+| **AXIOM** | Level 13 | Logic AI antagonist |
+| **ZERO** | Level 16 | Parallel reality Prometheus AI |
+| **The Architect** | Level 18 | First consciousness, neutral |
+| **Alt-Helix Variants** | Level 17 | Allied/hostile depending on reality |
+
+---
+
+#### Implementation Notes
+- **Arc 2** can be implemented with existing systems + new "offensive" mechanic
+- **Arc 3** requires boss fight system and infiltration detection
+- **Arc 4** requires significant new mechanics (reality instability)
+- **Arc 5** is aspirational endgame content, could be simplified
+- Consider releasing arcs as DLC or major updates
+- Each arc should feel complete on its own with satisfying mini-endings
 
 ### ENH-013: Level 1 Rusty Tutorial Walkthrough
 **Priority**: High
