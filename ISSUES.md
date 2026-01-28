@@ -346,27 +346,230 @@ Modified `performInitialCloudSync()` in `NavigationCoordinator.swift` to:
 ## 📘 Documentation & Questions
 
 ### DOC-001: App Store Deployment Process
-**Status**: Open
+**Status**: ✅ Completed
 **Type**: Documentation
-**Description**: Document the full process for deploying apps to the App Store, including:
-- Apple Developer Program enrollment
-- App Store Connect setup
-- Provisioning profiles and certificates
-- TestFlight beta testing
-- App Review guidelines
-- Submission checklist
-- Common rejection reasons
-**Notes**: Reference ENH-006 for asset requirements.
+
+#### 1. Apple Developer Program Enrollment
+- **Cost**: $99/year (individual or organization)
+- **URL**: https://developer.apple.com/programs/enroll/
+- **Requirements**:
+  - Apple ID with two-factor authentication enabled
+  - Valid payment method
+  - For organizations: D-U-N-S number (free from Dun & Bradstreet)
+- **Timeline**: Individual accounts typically approved within 48 hours; organizations may take 1-2 weeks
+
+#### 2. Certificates & Provisioning Profiles
+- **In Xcode** (recommended automatic management):
+  1. Open project → Signing & Capabilities tab
+  2. Check "Automatically manage signing"
+  3. Select your Team from the dropdown
+  4. Xcode creates Development and Distribution certificates automatically
+- **Manual Setup** (if needed):
+  1. Go to https://developer.apple.com/account/resources/certificates
+  2. Create "Apple Distribution" certificate using Keychain Access CSR
+  3. Create App ID matching your bundle identifier
+  4. Create "App Store" provisioning profile linking certificate + App ID
+
+#### 3. App Store Connect Setup
+- **URL**: https://appstoreconnect.apple.com
+- **Create New App**:
+  1. My Apps → "+" → New App
+  2. Select platform (iOS)
+  3. Enter app name, primary language, bundle ID, SKU
+- **Required Metadata**:
+  | Field | Requirement |
+  |-------|-------------|
+  | App Name | 30 characters max |
+  | Subtitle | 30 characters max |
+  | Description | 4000 characters max |
+  | Keywords | 100 characters total, comma-separated |
+  | Support URL | Required, must be active |
+  | Privacy Policy URL | Required for all apps |
+  | Category | Primary + optional secondary |
+  | Age Rating | Complete questionnaire |
+
+#### 4. Required Assets
+| Asset | Specification |
+|-------|---------------|
+| App Icon | 1024×1024 PNG, no alpha |
+| iPhone Screenshots | 6.7" (1290×2796) and 5.5" (1242×2208) |
+| iPad Screenshots | 12.9" (2048×2732) - required if iPad supported |
+| App Preview Video | Optional, 15-30 seconds, up to 3 per locale |
+
+#### 5. Build & Upload
+```bash
+# Archive in Xcode
+Product → Archive
+
+# Or via command line
+xcodebuild -scheme "Project Plague" -archivePath build/App.xcarchive archive
+xcodebuild -exportArchive -archivePath build/App.xcarchive -exportPath build/ -exportOptionsPlist ExportOptions.plist
+```
+- After archive: Window → Organizer → Distribute App → App Store Connect
+- Alternatively use `xcrun altool` or Transporter app
+
+#### 6. TestFlight Beta Testing
+1. Upload build to App Store Connect
+2. Build processes (5-30 minutes for automated review)
+3. **Internal Testing**: Up to 100 testers, no review needed
+4. **External Testing**: Up to 10,000 testers, requires Beta App Review
+5. Testers install via TestFlight app using invite link or email
+
+#### 7. App Review Submission
+- Click "Add for Review" after completing all metadata
+- **Review Timeline**: Typically 24-48 hours (90% within 24 hours)
+- **Expedited Review**: Request at https://developer.apple.com/contact/app-store (emergency only)
+
+#### 8. Common Rejection Reasons
+| Reason | Solution |
+|--------|----------|
+| **Guideline 2.1 - Crashes/Bugs** | Test thoroughly on all supported devices |
+| **Guideline 2.3 - Incomplete Info** | Provide demo account if login required |
+| **Guideline 3.1.1 - In-App Purchase** | Use Apple IAP for digital goods, not Stripe/PayPal |
+| **Guideline 4.2 - Minimum Functionality** | App must provide value beyond a website |
+| **Guideline 5.1.1 - Data Collection** | Disclose all data collection in privacy policy |
+| **Guideline 5.1.2 - Data Use** | Only collect data necessary for core functionality |
+| **Metadata Rejected** | Screenshots must show actual app, no iPhone frames |
+
+#### 9. Post-Launch Checklist
+- [ ] Monitor App Store Connect for crash reports
+- [ ] Respond to user reviews (increases engagement)
+- [ ] Set up App Analytics for download/usage metrics
+- [ ] Plan update cadence (fix bugs, add features)
+- [ ] Consider App Store Optimization (ASO) for keywords
+
+---
 
 ### DOC-002: Claude Cowork Xcode/Simulator Permissions
-**Status**: Open
+**Status**: ✅ Completed
 **Type**: Documentation
-**Description**: How to give Claude Cowork (or similar AI coding assistants) permission to:
-- Run Xcode projects
-- Launch the iOS Simulator
-- Execute build commands
-- Access project files
-**Notes**: May involve macOS security permissions, Xcode command-line tools, and terminal access.
+
+#### Overview
+Claude Code (and similar AI assistants) runs commands in a terminal environment. To build and run iOS projects, the following must be configured on macOS.
+
+#### 1. Install Xcode Command Line Tools
+```bash
+# Install command line tools
+xcode-select --install
+
+# Verify installation
+xcode-select -p
+# Should output: /Applications/Xcode.app/Contents/Developer
+
+# If pointing to wrong location, reset:
+sudo xcode-select --reset
+```
+
+#### 2. Accept Xcode License
+```bash
+# Accept license (required before first use)
+sudo xcodebuild -license accept
+```
+
+#### 3. Build Project via Command Line
+```bash
+# List available schemes
+xcodebuild -list -project "Project Plague.xcodeproj"
+
+# Build for simulator
+xcodebuild -project "Project Plague.xcodeproj" \
+  -scheme "Project Plague" \
+  -destination "platform=iOS Simulator,name=iPhone 15" \
+  build
+
+# Build and run tests
+xcodebuild test -project "Project Plague.xcodeproj" \
+  -scheme "Project Plague" \
+  -destination "platform=iOS Simulator,name=iPhone 15"
+```
+
+#### 4. Launch iOS Simulator
+```bash
+# List available simulators
+xcrun simctl list devices
+
+# Boot a specific simulator
+xcrun simctl boot "iPhone 15"
+
+# Open Simulator app (shows booted device)
+open -a Simulator
+
+# Install app on simulator
+xcrun simctl install booted /path/to/App.app
+
+# Launch app on simulator
+xcrun simctl launch booted com.yourcompany.ProjectPlague
+```
+
+#### 5. macOS Security Permissions
+For full automation, grant these permissions in System Settings → Privacy & Security:
+
+| Permission | Required For |
+|------------|--------------|
+| **Full Disk Access** | Accessing project files in protected directories |
+| **Developer Tools** | Terminal/iTerm needs this for debugging |
+| **Automation** | Controlling Xcode and Simulator programmatically |
+
+To add Terminal to Developer Tools:
+1. System Settings → Privacy & Security → Developer Tools
+2. Click "+" and add Terminal.app (or iTerm)
+
+#### 6. Automation with `xcodebuild`
+```bash
+# Full build + run workflow
+PROJECT_DIR="/Volumes/DEV/Code/dev/Games/ProjectPlague/ProjectPlague/Project Plague"
+SCHEME="Project Plague"
+SIMULATOR="iPhone 15"
+
+# Build
+xcodebuild -project "$PROJECT_DIR/Project Plague.xcodeproj" \
+  -scheme "$SCHEME" \
+  -destination "platform=iOS Simulator,name=$SIMULATOR" \
+  -derivedDataPath build/ \
+  build
+
+# Find the built app
+APP_PATH=$(find build/ -name "*.app" -type d | head -1)
+
+# Boot simulator and install
+xcrun simctl boot "$SIMULATOR" 2>/dev/null || true
+xcrun simctl install booted "$APP_PATH"
+xcrun simctl launch booted com.yourcompany.ProjectPlague
+```
+
+#### 7. Common Issues & Solutions
+
+| Issue | Solution |
+|-------|----------|
+| `xcodebuild: error: unable to find utility` | Run `xcode-select --install` |
+| `Signing requires a development team` | Add `-allowProvisioningUpdates` or set team in project |
+| `Simulator not found` | Run `xcrun simctl list` to find exact device name |
+| `Permission denied` | Add Terminal to Full Disk Access |
+| `Build fails with provisioning error` | Use `-destination generic/platform=iOS Simulator` |
+
+#### 8. Headless CI/CD Considerations
+For automated pipelines (GitHub Actions, etc.):
+```bash
+# Create and boot simulator headlessly
+xcrun simctl create "CI_iPhone" "iPhone 15"
+xcrun simctl boot "CI_iPhone"
+
+# Build with no code signing (simulator only)
+xcodebuild -project "Project.xcodeproj" \
+  -scheme "Scheme" \
+  -destination "platform=iOS Simulator,name=CI_iPhone" \
+  CODE_SIGN_IDENTITY="" \
+  CODE_SIGNING_REQUIRED=NO \
+  build
+```
+
+#### 9. For Claude Code Specifically
+Claude Code operates within a sandboxed terminal environment. To enable Xcode operations:
+1. Ensure the working directory contains the `.xcodeproj`
+2. Use absolute paths when referencing project files
+3. Commands execute in the user's shell environment
+4. Xcode must already be installed and configured on the host Mac
+5. Claude Code cannot click GUI buttons - all operations must be CLI-based
 
 ---
 
