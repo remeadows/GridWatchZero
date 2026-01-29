@@ -169,7 +169,7 @@ class StoryDatabase {
             lines: [
                 .init("Your first job—a home network. Simple stuff, low profile.", mood: .neutral),
                 .init("Deploy a firewall and install at least one defense application. Malus hasn't noticed this one yet.", mood: .neutral),
-                .init("Earn ₵2,000 and reach 50 Defense Points. We'll talk soon.", mood: .encouraging)
+                .init("Earn ₵50,000 and reach 50 Defense Points. We'll talk soon.", mood: .encouraging)
             ],
             prerequisiteStoryId: "campaign_start_rusty",
             visualEffect: nil
@@ -200,7 +200,7 @@ class StoryDatabase {
             lines: [
                 .init("Small business network. They've caught someone's attention—probes incoming.", mood: .warning),
                 .init("You'll need Tier 2 equipment now. Deploy defense apps and use the SIEM to track threats.", mood: .neutral),
-                .init("Reach Tier 2 defense, 150 DP, survive 8 attacks, and earn ₵10,000. These people are counting on you.", mood: .encouraging)
+                .init("Reach Tier 2 defense, 150 DP, and earn ₵100,000. These people are counting on you.", mood: .encouraging)
             ],
             prerequisiteStoryId: "level1_victory",
             visualEffect: nil
@@ -246,7 +246,7 @@ class StoryDatabase {
             lines: [
                 .init("Mid-size company. Good data, bad attention. Malus has marked this network.", mood: .warning),
                 .init("You'll need Tier 3 defenses—pattern detection and intel gathering. The attacks are getting sophisticated.", mood: .neutral),
-                .init("Hit 350 DP, survive 15 attacks, earn ₵50K, and get your risk down to BLIP. This is where the real fight begins.", mood: .encouraging)
+                .init("Hit 350 DP, survive 15 attacks, earn ₵500K, and get your risk down to BLIP. This is where the real fight begins.", mood: .encouraging)
             ],
             prerequisiteStoryId: "level2_victory",
             visualEffect: nil
@@ -292,7 +292,7 @@ class StoryDatabase {
             lines: [
                 .init("You've been marked. Malus knows you're not just another operator.", mood: .urgent),
                 .init("DDoS attacks. Intrusion attempts. MALUS STRIKES. Everything he has is coming your way.", mood: .warning),
-                .init("Tier 4 defenses, 500 DP, survive 20 attacks, earn ₵100K. Don't let him break through.", mood: .encouraging)
+                .init("Tier 4 defenses, 500 DP, survive 20 attacks, earn ₵1M. Don't let him break through.", mood: .encouraging)
             ],
             prerequisiteStoryId: "level3_victory",
             visualEffect: .glitch
@@ -338,7 +338,7 @@ class StoryDatabase {
             lines: [
                 .init("University research network. Critical data. Nation-state actors are circling.", mood: .urgent),
                 .init("This data is connected to Helix. Tier 5 defenses. Full SIEM stack.", mood: .mysterious),
-                .init("800 DP, 30 attacks survived, ₵300K. Protect this like your life depends on it—because it might.", mood: .warning)
+                .init("800 DP, 30 attacks survived, ₵5M. Protect this like your life depends on it—because it might.", mood: .warning)
             ],
             prerequisiteStoryId: "level4_victory",
             visualEffect: nil
@@ -384,7 +384,7 @@ class StoryDatabase {
             lines: [
                 .init("The big leagues. Fortune 500 infrastructure. Global scale. Every threat actor is watching.", mood: .urgent),
                 .init("Malus is throwing everything he has. Tier 6 defenses. Counter-intelligence. The works.", mood: .warning),
-                .init("1,200 DP, 40 attacks, ₵600K, risk down to SIGNAL. If we hold this, we can hold anything.", mood: .encouraging)
+                .init("1,200 DP, 40 attacks, ₵10M, risk down to SIGNAL. If we hold this, we can hold anything.", mood: .encouraging)
             ],
             prerequisiteStoryId: "level5_victory",
             visualEffect: nil
@@ -429,7 +429,7 @@ class StoryDatabase {
             title: "The Final Battle",
             lines: [
                 .init("The city's entire grid. Power. Water. Communications. Malus has escalated—this is about Helix.", mood: .urgent),
-                .init("The team is with you. Tish. FL3X. Everyone. Tier 6 max, 2,000 DP, 50 attacks, ₵1.5M.", mood: .warning),
+                .init("The team is with you. Tish. FL3X. Everyone. Tier 6 max, 2,000 DP, 50 attacks, ₵25M.", mood: .warning),
                 .init("Defend the city. This is what we've been training for.", mood: .celebration)
             ],
             prerequisiteStoryId: "level6_victory",

@@ -467,8 +467,9 @@ struct DefenseApplication: Identifiable, Codable {
     // MARK: - Upgrade
 
     /// Upgrade cost uses exponential scaling like other units
+    /// Costs are higher than units since apps provide permanent defense bonuses
     var upgradeCost: Double {
-        25.0 * Double(tier.tierNumber) * pow(1.18, Double(level))
+        250.0 * Double(tier.tierNumber) * pow(1.25, Double(level))
     }
 
     /// Maximum level for this tier (same as unit tiers)

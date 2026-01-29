@@ -213,6 +213,7 @@ struct LevelCompletionStats: Codable, Equatable {
     let attacksSurvived: Int
     let damageBlocked: Double
     let finalDefensePoints: Int
+    let intelReportsSent: Int
     let completionDate: Date
 
     var grade: LevelGrade {

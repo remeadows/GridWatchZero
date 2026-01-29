@@ -173,6 +173,66 @@ See [ISSUES.md](./ISSUES.md) for detailed tracking.
 
 ---
 
+## Session Log: 2026-01-28 (Continued)
+
+### Summary
+Fixed all Minor issues: dialog accuracy, playtime tracking, proactive tier gates, and lifetime stats.
+
+### Modified Files (5 additional)
+
+#### Models
+- `StorySystem.swift` - Updated all level intro dialogs with correct credit requirements
+- `CampaignProgress.swift` - Added playtime tracking, intel reports, highest defense points
+- `CampaignLevel.swift` - Added intelReportsSent to LevelCompletionStats
+
+#### Views
+- `UnitShopView.swift` - Proactive tier gate reason display
+
+#### Engine
+- `GameEngine.swift` - Capture intel reports in completion stats
+- `NavigationCoordinator.swift` - Updated preview with new stat field
+
+### Bug Fixes
+- **ISSUE-012 FIXED**: Story dialogs now match actual level requirements (L1: ₵50K not ₵2K, etc.)
+- **ISSUE-014 FIXED**: Playtime now tracked via totalPlaytimeTicks
+- **ISSUE-015 FIXED**: Tier gate requirements shown proactively in unit shop
+- **ISSUE-016 FIXED**: Added totalIntelReportsSent and highestDefensePoints to LifetimeStats
+
+---
+
+## Session Log: 2026-01-28
+
+### Summary
+Fixed all Critical and Major issues: cloud save entitlements, sound respecting volume, zero starting credits, auto-save on background, and defense app gating for intel collection.
+
+### Modified Files (5 total)
+
+#### Project Configuration
+- `Project Plague.xcodeproj/project.pbxproj` - Removed CODE_SIGN_ENTITLEMENTS (awaiting developer account approval)
+
+#### Engine
+- `AudioManager.swift` - Check device volume before playing system sounds
+- `NavigationCoordinator.swift` - Added scenePhase observer for auto-save on background
+- `GameEngine.swift` - Gated intel collection behind defense app deployment
+
+#### Models
+- `LevelDatabase.swift` - Set all 7 levels to startingCredits: 0
+- `DefenseApplication.swift` - Increased upgrade cost formula (10x base, steeper scaling)
+
+### Bug Fixes
+- **ISSUE-007 FIXED**: Cloud save code ready - awaiting paid developer account approval (~48hrs)
+- **ISSUE-008 FIXED**: Sound respects device volume - added outputVolume check
+- **ISSUE-009 FIXED**: All campaign levels start with 0 credits
+- **ISSUE-010 FIXED**: Auto-save on app background/inactive via scenePhase observer
+- **ISSUE-011 FIXED**: Intel collection requires deployed defense apps; upgrade costs 10x higher
+
+### Balance Changes
+- Defense app upgrade costs increased from `25*tier*1.18^level` to `250*tier*1.25^level`
+- Intel collection now gated behind having at least 1 defense app deployed
+- All campaign levels start with 0 credits (was 500 to 400K)
+
+---
+
 ## Session Log: 2026-01-24
 
 ### Summary

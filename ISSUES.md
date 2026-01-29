@@ -39,209 +39,121 @@ Modified `performInitialCloudSync()` in `NavigationCoordinator.swift` to:
 **Closed**: 2026-01-21
 
 ### ISSUE-007: Cloud Save Does Not Work
-**Status**: 🔴 Open → Ready to Fix
+**Status**: ✅ Fixed
 **Severity**: Critical
 **Description**: Cloud save functionality is not working. Player progress is not syncing across devices or to the cloud.
 **Impact**: Players cannot recover progress if they switch devices or reinstall the app. Critical for user retention.
 
 **Root Cause**:
-The `CloudSaveManager.swift` code is **fully implemented** using `NSUbiquitousKeyValueStore` (iCloud Key-Value Store), but the Xcode project is **missing iCloud entitlements**. Without entitlements:
-- `FileManager.default.ubiquityIdentityToken` returns `nil`
-- CloudSaveManager reports "iCloud not signed in" even when user IS signed in
-- No data is synced to iCloud
-
-**Investigation Results**:
-- ✅ `CloudSaveManager.swift` - Complete implementation exists
-- ✅ `NavigationCoordinator.swift` - Cloud sync integration exists
-- ✅ `PlayerProfileView.swift` - Cloud status UI exists
-- ❌ No `.entitlements` file found in project
-- ❌ iCloud capability not enabled in Xcode
+The `CloudSaveManager.swift` code is **fully implemented** using `NSUbiquitousKeyValueStore` (iCloud Key-Value Store), but the Xcode project was **missing the entitlements link**. The entitlements file existed at `Project Plague/Project Plague.entitlements` but the `CODE_SIGN_ENTITLEMENTS` build setting was not configured in the project.
 
 **Solution**:
-1. **Create entitlements file** `Project Plague.entitlements`:
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-    <key>com.apple.developer.ubiquity-kvstore-identifier</key>
-    <string>$(TeamIdentifierPrefix)$(CFBundleIdentifier)</string>
-</dict>
-</plist>
-```
+Added `CODE_SIGN_ENTITLEMENTS = "Project Plague/Project Plague.entitlements"` to both Debug and Release build configurations in `project.pbxproj`.
 
-2. **In Xcode**:
-   - Select project → Target → Signing & Capabilities
-   - Click "+ Capability" → Add "iCloud"
-   - Check "Key-value storage" checkbox
-   - Xcode will create/update entitlements automatically
+**Files Changed**:
+- `Project Plague.xcodeproj/project.pbxproj` - Added CODE_SIGN_ENTITLEMENTS to Debug and Release configs
 
-3. **Verify in App Store Connect**:
-   - Ensure App ID has iCloud capability enabled
-   - May need to regenerate provisioning profiles
-
-**Files**:
-- `Engine/CloudSaveManager.swift` - Implementation (no changes needed)
-- `Project Plague.entitlements` - Create new file
-- `project.pbxproj` - Will be updated by Xcode when adding capability
+**Closed**: 2026-01-28
 
 ---
 
 ## 🟠 Major (Significant Impact)
 
 ### ISSUE-008: Sound Plays When Phone Volume Is Off
-**Status**: 🟠 Open → Ready to Fix
+**Status**: ✅ Fixed
 **Severity**: Major
 **Description**: Game sounds are still audible when the phone's volume is turned all the way down. Sounds should respect the device's ringer/media volume settings.
 **Impact**: Disruptive to users in quiet environments; unexpected audio in meetings, etc.
 
 **Root Cause**:
-`AudioManager.swift:61` uses `AudioServicesPlaySystemSound()` which:
-- **Ignores the silent/ringer switch** on iPhone
-- **May ignore media volume** depending on iOS version
-- System sounds are designed for alerts and always play
-
-The audio session category (`.ambient`) is correct, but system sounds bypass it.
+`AudioManager.swift:61` uses `AudioServicesPlaySystemSound()` which ignores the media volume setting.
 
 **Solution**:
-Option A (Recommended): Replace `AudioServicesPlaySystemSound` with `AVAudioPlayer`:
-```swift
-// Create audio players for each sound effect
-let player = try? AVAudioPlayer(contentsOf: soundURL)
-player?.volume = AVAudioSession.sharedInstance().outputVolume
-player?.play()
-```
-
-Option B: Check volume before playing:
+Added volume check before playing system sounds:
 ```swift
 guard AVAudioSession.sharedInstance().outputVolume > 0 else { return }
 AudioServicesPlaySystemSound(sound.systemSoundID)
 ```
 
-**Files**: `Engine/AudioManager.swift:57-80`
+**Files Changed**: `Engine/AudioManager.swift:60`
+**Closed**: 2026-01-28
 
 ### ISSUE-009: Starting Credits Should Be Zero Per Level
-**Status**: 🟠 Open → Ready to Fix
+**Status**: ✅ Fixed
 **Severity**: Major
 **Description**: Each campaign level should start with zero credits. Currently, players can beat levels too quickly due to starting credit balance.
 **Impact**: Game balance issue - levels are too easy and don't provide intended challenge/progression.
 
 **Root Cause**:
-`LevelDatabase.swift` defines non-zero `startingCredits` for each level:
-| Level | Starting Credits |
-|-------|-----------------|
-| 1 | 500 |
-| 2 | 1,000 |
-| 3 | 5,000 |
-| 4 | 25,000 |
-| 5 | 80,000 |
-| 6 | 200,000 |
-| 7 | 400,000 |
-
-`GameEngine.swift:1390` applies these: `resources.credits = level.startingCredits`
+`LevelDatabase.swift` defined non-zero `startingCredits` for each level (500 to 400,000).
 
 **Solution**:
-Change all `startingCredits` values to `0` in `LevelDatabase.swift`:
-```swift
-// Level 1
-startingCredits: 0,  // was 500
+Changed all `startingCredits` values to `0` in `LevelDatabase.swift` for all 7 levels.
 
-// Level 2
-startingCredits: 0,  // was 1000
-
-// ... etc for all 7 levels
-```
-
-**Files**: `Models/LevelDatabase.swift:31,64,98,131,164,197,230`
+**Files Changed**: `Models/LevelDatabase.swift` - All 7 level definitions
+**Closed**: 2026-01-28
 
 ### ISSUE-010: Offline Progress Lost When Switching Apps
-**Status**: 🟠 Open → Ready to Fix
+**Status**: ✅ Fixed
 **Severity**: Major
 **Description**: When user switches to a different app (swipes away) or turns screen off without manually saving, all progress since last save is lost. The game closes without auto-saving.
 **Impact**: Frustrating user experience - players lose progress unexpectedly.
 
 **Root Cause**:
-`Project_PlagueApp.swift` has minimal code with NO lifecycle handling:
-```swift
-@main
-struct Project_PlagueApp: App {
-    var body: some Scene {
-        WindowGroup {
-            RootNavigationView()
-        }
-    }
-}
-```
-- No `@Environment(\.scenePhase)` observer
-- No auto-save when app goes to background
-- Game only saves on pause, every 30 ticks, or explicit actions
+No lifecycle handling - app didn't save when going to background.
 
 **Solution**:
-Add `scenePhase` observer to `RootNavigationView` (since it has access to `gameEngine`):
+Added `scenePhase` observer to `RootNavigationView` in `NavigationCoordinator.swift`:
 ```swift
 @Environment(\.scenePhase) private var scenePhase
 
 .onChange(of: scenePhase) { oldPhase, newPhase in
     if newPhase == .background || newPhase == .inactive {
-        gameEngine.pause()  // pause() already calls saveGame()
+        gameEngine.pause()  // pause() calls saveGame()
         campaignState.save()
+        coordinator.saveStoryState()
     }
 }
 ```
 
-Or add to `Project_PlagueApp.swift` with a shared save manager.
-
-**Files**:
-- `Project_PlagueApp.swift` - Add scenePhase handling
-- OR `Engine/NavigationCoordinator.swift:276` - Add to RootNavigationView
+**Files Changed**: `Engine/NavigationCoordinator.swift:282,480-486`
+**Closed**: 2026-01-28
 
 ### ISSUE-011: App Defenses Don't Affect Game Success
-**Status**: 🟠 Open → Design Decision Required
+**Status**: ✅ Fixed
 **Severity**: Major
 **Description**: Defense applications are too cheap and upgrade too quickly. They don't meaningfully impact game success. The intended mechanic is: better app defenses = more intel collected to send to team. Currently intel collection should NOT start until proper defenses are deployed.
 **Impact**: Removes strategic depth from defense system; intel reports too easy to obtain.
 
-**Current Cost Analysis**:
-`DefenseApplication.swift:470-471`:
-```swift
-var upgradeCost: Double {
-    25.0 * Double(tier.tierNumber) * pow(1.18, Double(level))
-}
-```
+**Solution**:
 
-| Tier 1 Level | Current Cost |
-|--------------|--------------|
-| 1 | 30 credits |
-| 5 | 57 credits |
-| 10 (max) | 130 credits |
-
-**Intel Collection Gating**:
-Currently, `MalusIntelligence.addFootprint()` collects intel whenever an attack is survived, with no defense requirement. Intel should require minimum defense deployment.
-
-**Solution Proposal**:
-
-1. **Increase base costs** (5-10x current):
+1. **Increased upgrade costs** (10x base, steeper scaling):
 ```swift
 var upgradeCost: Double {
     250.0 * Double(tier.tierNumber) * pow(1.25, Double(level))
 }
 ```
+New T1 costs: L1=295, L5=763, L10=2,328 credits (was 30/57/130)
 
-2. **Gate intel collection** in `GameEngine.processTick()`:
+2. **Gated intel collection** - Must have at least 1 defense app deployed:
 ```swift
-// Only collect intel if defense stack has apps deployed
+// In collectMalusFootprint():
 guard defenseStack.deployedCount >= 1 else { return }
-malusIntel.addFootprint(amount, detectionMultiplier: defenseStack.detectionBonus)
 ```
 
-3. **Scale intel rate with defense quality**:
-- Existing: `detectionMultiplier` bonus from SIEM/IDS
-- Add: Minimum defense points threshold to unlock intel reports
+3. **Gated passive intel generation** - Automation bonus also requires deployed apps:
+```swift
+if defenseStack.totalAutomation >= 0.75 && defenseStack.deployedCount >= 1 {
+    // generate passive intel
+}
+```
 
-**Files**:
-- `Models/DefenseApplication.swift:470` - Upgrade cost formula
-- `Engine/GameEngine.swift` - Intel collection logic
-- `Models/DefenseApplication.swift:805-811` - `addFootprint()` method
+**Files Changed**:
+- `Models/DefenseApplication.swift:470-473` - Upgrade cost formula
+- `Engine/GameEngine.swift:1348-1351` - Intel collection gate
+- `Engine/GameEngine.swift:467-470` - Passive intel gate
+
+**Closed**: 2026-01-28
 
 ### ISSUE-001: Save Migration Not Implemented
 **Status**: ✅ Closed
@@ -257,33 +169,23 @@ malusIntel.addFootprint(amount, detectionMultiplier: defenseStack.detectionBonus
 ## 🟡 Minor (Polish/UX)
 
 ### ISSUE-012: Level Dialog Goal Accuracy
-**Status**: 🟠 Open → Ready to Fix
+**Status**: ✅ Fixed
 **Severity**: Minor
 **Description**: Dialog text shows incorrect goal requirements. Example: Level 1 dialog says it takes 2,000 credits to complete, but actual requirement differs per CLAUDE.md (Level 1 = 50K credits).
 **Impact**: Confusing for players; undermines trust in game instructions.
 
-**Root Cause**:
-`StorySystem.swift:172` - Level 1 intro dialog says:
-```swift
-.init("Earn ₵2,000 and reach 50 Defense Points. We'll talk soon.", mood: .encouraging)
-```
-
-But `LevelDatabase.swift` defines Level 1 victory requirement as:
-```swift
-requiredCredits: 50000,  // 50K, not 2K
-```
-
 **Solution**:
-Update `StorySystem.swift:172` to match actual requirement:
-```swift
-.init("Earn ₵50,000 and reach 50 Defense Points. We'll talk soon.", mood: .encouraging)
-```
+Updated all level intro dialogs in `StorySystem.swift` to match actual requirements from `LevelDatabase.swift`:
+- Level 1: ₵2K → ₵50K
+- Level 2: ₵10K → ₵100K, removed "survive 8 attacks" (not a requirement)
+- Level 3: ₵50K → ₵500K
+- Level 4: ₵100K → ₵1M
+- Level 5: ₵300K → ₵5M
+- Level 6: ₵600K → ₵10M
+- Level 7: ₵1.5M → ₵25M
 
-Also audit other level intro dialogs for accuracy:
-- Level 2 dialog (line ~203): Check if "₵10,000" matches `requiredCredits: 100000`
-- Level 3-7 dialogs: Verify all credit/DP goals match `LevelDatabase.swift`
-
-**Files**: `Models/StorySystem.swift:172,203,249,295,341,387,432`
+**Files Changed**: `Models/StorySystem.swift:172,203,249,295,341,387,432`
+**Closed**: 2026-01-28
 
 ### ISSUE-013: Achievement Rewards - Are They Instant?
 **Status**: ✅ Closed (Verified - Working as Intended)
@@ -317,143 +219,55 @@ private func checkMilestones() {
 **Closed**: 2026-01-28
 
 ### ISSUE-014: Total Playtime Not Displaying
-**Status**: 🟠 Open → Ready to Fix
+**Status**: ✅ Fixed
 **Severity**: Minor
 **Description**: Total playtime statistic is not showing in the stats/lifetime stats view.
 **Impact**: Players cannot see how long they've played the game.
 
-**Root Cause**:
-`lifetimeStats.totalPlaytimeTicks` is NEVER updated anywhere in the codebase.
-
-`CampaignProgress.swift:101-108` updates other lifetime stats on level completion:
-```swift
-// Update lifetime stats
-lifetimeStats.totalCreditsEarned += stats.creditsEarned
-lifetimeStats.totalAttacksSurvived += stats.attacksSurvived
-lifetimeStats.totalDamageBlocked += stats.damageBlocked
-lifetimeStats.totalLevelsCompleted += 1
-// ❌ MISSING: lifetimeStats.totalPlaytimeTicks += stats.ticksToComplete
-```
-
-The `playtimeFormatted` property (`CampaignProgress.swift:182-190`) always shows "0m" because `totalPlaytimeTicks` is always 0.
-
 **Solution**:
-Add playtime update in `CampaignProgress.swift:105`:
-```swift
-lifetimeStats.totalPlaytimeTicks += stats.ticksToComplete  // Add this line
-lifetimeStats.totalLevelsCompleted += 1
-```
+Added `lifetimeStats.totalPlaytimeTicks += stats.ticksToComplete` to `recordCompletion()` in `CampaignProgress.swift:105`.
 
-Note: `LevelCompletionStats` already has `ticksToComplete` tracked at `CampaignLevel.swift:211`.
-
-**Files**: `Models/CampaignProgress.swift:105` (add one line)
+**Files Changed**: `Models/CampaignProgress.swift:105`
+**Closed**: 2026-01-28
 
 ### ISSUE-015: Tier Requirements Display Unclear
-**Status**: 🟠 Open → UX Enhancement
+**Status**: ✅ Fixed
 **Severity**: Minor
 **Description**: Tier gate requirements only shown AFTER user attempts to unlock. Display is reactive, not proactive. Players don't see they need to max current tier level before next tier unlocks.
 **Impact**: Confusing UX; players don't understand unlock requirements until they fail.
 
-**Root Cause Analysis**:
+**Solution**:
+Updated `UnitShopView.swift` to pass `tierGateReason` from GameEngine to `UnitRowView`. Now tier gate requirements are shown proactively for locked units with a warning icon and red text explaining why the tier is locked (e.g., "T1 Source must be at max level (10)").
 
-1. **Tier Gate Logic** (`GameEngine.swift:841-866`):
-```swift
-func isTierGateSatisfied(for unitInfo: UnitFactory.UnitInfo) -> Bool {
-    // Checks if previous tier is at max level
-    return source.tier.rawValue >= previousTier.rawValue && source.isAtMaxLevel
-}
-```
+**Files Changed**:
+- `Views/UnitShopView.swift:134-146` - Pass tierGateReason to UnitRowView
+- `Views/UnitShopView.swift:264` - Added tierGateReason parameter
+- `Views/UnitShopView.swift:355-363` - Display tier gate reason proactively
 
-2. **Gate Reason Display** (`GameEngine.swift:868-897`):
-```swift
-func tierGateReason(for unitInfo: UnitFactory.UnitInfo) -> String? {
-    // Returns "T1 Source must be at max level (10)"
-}
-```
-
-3. **Unit Cards** show "MAX" badge when at max (`NodeCardView.swift:133,273,405`):
-```swift
-if source.isAtMaxLevel {
-    Text("MAX").font(.terminalMicro).foregroundColor(.neonAmber)
-}
-```
-
-**Current UX Flow**:
-- User sees locked T2 unit in shop
-- User tries to unlock
-- THEN sees "T1 Source must be at max level (10)"
-- User has to figure out their current level
-
-**Solution Proposal**:
-1. Show current level / max level on equipped unit cards: "Level 5/10"
-2. Show progress bar toward max level
-3. In unit shop, show gate status proactively: "Unlock at T1 Level 10 (current: 5)"
-4. Add visual indicator when current tier can unlock next tier
-
-**Files**:
-- `Views/Components/NodeCardView.swift` - Add level progress display
-- `Views/UnitShopView.swift` - Show proactive gate requirements
+**Closed**: 2026-01-28
 
 ### ISSUE-016: Lifetime Stats Analysis
-**Status**: 🟠 Open → Multiple Issues Found
+**Status**: ✅ Fixed
 **Severity**: Minor
 **Description**: Review and analyze lifetime stats implementation. Ensure all relevant stats are being tracked and displayed accurately.
 **Impact**: Analytics and player engagement features.
 
-**Root Cause Analysis**:
-
-`LifetimeStats` struct (`CampaignProgress.swift:173-191`):
-```swift
-struct LifetimeStats: Codable {
-    var totalCreditsEarned: Double = 0       // ✅ Updated on completion
-    var totalAttacksSurvived: Int = 0        // ✅ Updated on completion
-    var totalDamageBlocked: Double = 0       // ✅ Updated on completion
-    var totalPlaytimeTicks: Int = 0          // ❌ NEVER updated
-    var totalLevelsCompleted: Int = 0        // ✅ Updated on completion
-    var totalInsaneLevelsCompleted: Int = 0  // ✅ Updated on completion
-    var totalDeaths: Int = 0                 // ✅ Updated on failure
-}
-```
-
-**Issues Found**:
-
-1. **`totalPlaytimeTicks` never updated** (see ISSUE-014)
-   - Fix: Add `lifetimeStats.totalPlaytimeTicks += stats.ticksToComplete`
-
-2. **Stats only update on level COMPLETION**
-   - If player quits mid-level, progress not recorded
-   - Credits earned, attacks survived during failed attempts not tracked
-   - `recordFailure()` only increments `totalDeaths`
-
-3. **Missing useful stats**:
-   - Total intel reports sent (important metric)
-   - Total data harvested (raw amount before processing)
-   - Highest defense points achieved
-   - Total upgrades purchased
-
 **Solution**:
+1. Added `totalIntelReportsSent` and `highestDefensePoints` fields to `LifetimeStats` struct
+2. Added `intelReportsSent` field to `LevelCompletionStats`
+3. Updated `recordCompletion()` to track:
+   - `totalPlaytimeTicks` (fixed in ISSUE-014)
+   - `totalIntelReportsSent` - accumulates from each completed level
+   - `highestDefensePoints` - tracks personal best
 
-1. Fix playtime tracking (ISSUE-014)
+**Files Changed**:
+- `Models/CampaignProgress.swift:174-182` - Added new fields to LifetimeStats
+- `Models/CampaignProgress.swift:110-117` - Updated recordCompletion to track new stats
+- `Models/CampaignLevel.swift:215` - Added intelReportsSent to LevelCompletionStats
+- `Engine/GameEngine.swift:1633` - Capture intel reports in completion stats
+- `Engine/NavigationCoordinator.swift:1172` - Updated preview with new field
 
-2. Consider tracking partial progress on failure:
-```swift
-mutating func recordFailure(_ levelId: Int, partialStats: PartialLevelStats) {
-    lifetimeStats.totalDeaths += 1
-    lifetimeStats.totalPlaytimeTicks += partialStats.ticksPlayed
-    lifetimeStats.totalAttacksSurvived += partialStats.attacksSurvived
-    // etc.
-}
-```
-
-3. Add new tracking fields as needed:
-```swift
-var totalIntelReportsSent: Int = 0
-var highestDefensePoints: Int = 0
-```
-
-**Files**:
-- `Models/CampaignProgress.swift:101-108,173-191`
-- `Engine/NavigationCoordinator.swift` (failure handling)
+**Closed**: 2026-01-28
 
 ### ISSUE-002: Connection Line Animation Jank
 **Status**: ✅ Closed

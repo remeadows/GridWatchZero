@@ -102,10 +102,17 @@ struct CampaignProgress: Codable {
         lifetimeStats.totalCreditsEarned += stats.creditsEarned
         lifetimeStats.totalAttacksSurvived += stats.attacksSurvived
         lifetimeStats.totalDamageBlocked += stats.damageBlocked
+        lifetimeStats.totalPlaytimeTicks += stats.ticksToComplete
         lifetimeStats.totalLevelsCompleted += 1
         if isInsane {
             lifetimeStats.totalInsaneLevelsCompleted += 1
         }
+        // Track highest defense points achieved
+        if stats.finalDefensePoints > lifetimeStats.highestDefensePoints {
+            lifetimeStats.highestDefensePoints = stats.finalDefensePoints
+        }
+        // Track intel reports sent
+        lifetimeStats.totalIntelReportsSent += stats.intelReportsSent
 
         lastPlayDate = Date()
     }
@@ -178,6 +185,8 @@ struct LifetimeStats: Codable {
     var totalLevelsCompleted: Int = 0
     var totalInsaneLevelsCompleted: Int = 0
     var totalDeaths: Int = 0
+    var totalIntelReportsSent: Int = 0
+    var highestDefensePoints: Int = 0
 
     var playtimeFormatted: String {
         let totalSeconds = totalPlaytimeTicks  // 1 tick = 1 second
