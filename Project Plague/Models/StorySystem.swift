@@ -168,8 +168,7 @@ class StoryDatabase {
             title: "First Assignment",
             lines: [
                 .init("Your first job—a home network. Simple stuff, low profile.", mood: .neutral),
-                .init("Deploy a firewall and install at least one defense application. Malus hasn't noticed this one yet.", mood: .neutral),
-                .init("Earn ₵50,000 and reach 50 Defense Points. We'll talk soon.", mood: .encouraging)
+                .init("I'll walk you through everything. Pay attention, and you'll do fine.", mood: .encouraging)
             ],
             prerequisiteStoryId: "campaign_start_rusty",
             visualEffect: nil

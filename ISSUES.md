@@ -863,25 +863,146 @@ The original black site created not one AI, but SEVEN. Malus was just the first 
 
 ### ENH-013: Level 1 Rusty Tutorial Walkthrough
 **Priority**: High
-**Status**: Open
+**Status**: ✅ Implemented
 **Description**: In Level 1, Rusty should perform a guided walkthrough explaining:
 - How to play the game
 - Core mechanics (Source → Link → Sink)
 - Goals and victory conditions
 - Threat system basics
-**Notes**: Consider step-by-step tutorial with highlighting and forced actions.
+
+**Implementation**:
+Created comprehensive tutorial system with 12 guided steps:
+1. Welcome - Introduction from Rusty
+2. Explain Data Flow - Source → Link → Sink pipeline
+3. Upgrade Source - Interactive with UI highlighting
+4. Upgrade Link - Bandwidth explanation + action
+5. Upgrade Sink - Processing/credits + action
+6. Explain Credits - Income/spending
+7. Purchase Firewall - Defense deployment + action
+8. Explain Defense - Defense Points goal
+9. Deploy Defense App - Security applications + action
+10. Explain Intel - Intel reports system
+11. Send First Report - Intel reporting + action
+12. Victory Goals - Summary of Level 1 requirements
+
+**Features**:
+- Character dialogue with Rusty portrait
+- UI highlighting with animated pulse effects
+- Hint banner showing current action required
+- Skip button for returning players
+- Tutorial state persistence (won't repeat after completion)
+- Automatic step progression triggered by player actions
+
+**Files Added**:
+- `Models/TutorialSystem.swift` - Tutorial steps, state, and manager
+- `Views/Components/TutorialOverlayView.swift` - Dialogue and highlight UI
+
+**Files Modified**:
+- `Engine/GameEngine.swift` - Tutorial action triggers
+- `Views/DashboardView.swift` - Tutorial overlay integration + highlights
+- `Models/StorySystem.swift` - Shortened Level 1 intro
+
+**Closed**: 2026-01-29
 
 ### ENH-014: Game Engagement Improvements
 **Priority**: High
-**Status**: Open
-**Description**: Brainstorm features to make the game more engaging and keep users interested longer:
-- Daily rewards/login bonuses
-- Streak systems
-- Limited-time events
-- Social features
-- Achievement hunting
-- Collection mechanics
-**Notes**: Focus on retention without becoming predatory.
+**Status**: ✅ Implemented
+**Description**: Features to make the game more engaging and keep users interested longer.
+
+**Implementation**:
+
+#### 1. Daily Login Rewards (EngagementSystem.swift)
+- 7-day weekly reward cycle that repeats
+- Progressive rewards: Day 1 = ₵500, Day 7 = ₵5,000
+- Bonus multipliers: Day 2 = 1.2x (5min), Day 7 = 2.0x (30min)
+- Special rewards on certain days: Data Chips, Lore Fragments, Defense Boosts, Helix Shards
+- Streak bonuses multiply rewards: 1 week = 1.25x, 4+ weeks = 2.0x
+
+| Day | Credits | Bonus Multiplier | Duration | Special Reward |
+|-----|---------|-----------------|----------|----------------|
+| 1 | 500 | - | - | - |
+| 2 | 750 | 1.2x | 5 min | - |
+| 3 | 1,000 | - | - | Data Chip |
+| 4 | 1,500 | 1.3x | 10 min | - |
+| 5 | 2,000 | - | - | Lore Fragment |
+| 6 | 3,000 | 1.5x | 15 min | Defense Boost |
+| 7 | 5,000 | 2.0x | 30 min | Helix Shard |
+
+#### 2. Weekly Challenges
+- 3 challenges generated per week based on player level
+- Challenge types: Earn Credits, Process Data, Survive Attacks, Send Reports, Upgrade Units, Deploy Defense, Play Minutes
+- Rewards: Credits + Data Chips
+- Progress tracked across all gameplay
+
+#### 3. Achievement System (AchievementSystem.swift)
+- 40+ achievements across 7 categories
+- Categories: Combat, Economy, Progression, Collection, Mastery, Social, Secret
+- Rarity tiers: Common, Uncommon, Rare, Epic, Legendary
+- Each achievement awards Credits + Data Chips
+- Achievement points system for total score
+- Secret achievements with hidden descriptions
+
+**Achievement Examples**:
+| Achievement | Category | Rarity | Requirement |
+|-------------|----------|--------|-------------|
+| Survivor | Combat | Common | Survive 10 attacks |
+| Iron Wall | Combat | Epic | 25 attacks without credit loss |
+| Digital Empire | Economy | Legendary | Earn 1B credits |
+| True Operator | Mastery | Legendary | 100-day login streak |
+| Night Owl | Secret | Uncommon | Play at 3:00 AM |
+
+#### 4. Collection System (CollectionSystem.swift)
+- 25+ collectible Data Chips across 6 categories
+- Categories: Network, Malware, Encryption, AI Research, Helix, Personnel
+- Rarity: Common (60%), Uncommon (25%), Rare (12%), Legendary (3%)
+- Each chip has name, description, and flavor text
+- Chips unlock based on progression (level, attacks, reports, prestige)
+- Chips can be sold for credits (value based on rarity)
+- Awarded from daily rewards, level completions, and achievements
+
+**Data Chip Categories**:
+| Category | Example Chips |
+|----------|---------------|
+| Network | Router Config, Backbone Topology, Quantum Mesh Protocol |
+| Malware | Basic Trojan, Polymorphic Virus, Malus Code Fragment |
+| Encryption | AES Implementation, Post-Quantum Algorithm, Helix Cipher |
+| AI Research | ML Training Data, Consciousness Research, Project Prometheus Data |
+| Helix | Helix Signal Fragment, Helix Memory Core, Helix Origin Data |
+| Personnel | Rusty's Dossier, Tish's Notes, FL3X Mission Logs |
+
+#### 5. UI Components (EngagementView.swift)
+- Daily Reward Popup: Full-screen modal with weekly progress and claim button
+- Streak Badge: Shows current streak with color-coded flames
+- Bonus Multiplier Indicator: Shows active boost and time remaining
+- Weekly Challenge Cards: Progress bars with claim buttons
+- Achievement Unlock Popup: Shows rarity, rewards, and celebration
+- Data Chip Unlock Popup: Shows chip details and flavor text
+- Engagement Stats Summary: Compact view showing streak/achievements/chips
+
+#### 6. Integration
+- EngagementManager, AchievementManager, CollectionManager as @MainActor singletons
+- GameEngine tracks all engagement triggers:
+  - Attacks survived → Combat achievements + weekly challenges
+  - Credits earned → Economy achievements + weekly challenges
+  - Intel reports sent → Collection achievements + weekly challenges
+  - Units upgraded → Progression achievements + weekly challenges
+  - Defense deployed → Progression achievements + weekly challenges
+  - Level completed → Awards random Data Chip + achievement check
+- Engagement bonus multiplier applied to credit production
+- Daily reward popup shown on app launch if unclaimed
+- All state persisted to UserDefaults
+
+**Files Added**:
+- `Models/EngagementSystem.swift` - Daily rewards, streaks, weekly challenges
+- `Models/AchievementSystem.swift` - Achievements database and tracking
+- `Models/CollectionSystem.swift` - Data chips collection
+- `Views/Components/EngagementView.swift` - All engagement UI components
+
+**Files Modified**:
+- `Engine/GameEngine.swift` - Engagement tracking integration
+- `Views/DashboardView.swift` - Engagement popup overlays
+
+**Closed**: 2026-01-29
 
 ### ENH-015: Ad/Purchase Multipliers
 **Priority**: Medium

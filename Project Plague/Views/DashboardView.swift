@@ -6,6 +6,10 @@ import SwiftUI
 
 struct DashboardView: View {
     @EnvironmentObject var engine: GameEngine
+    @StateObject private var tutorialManager = TutorialManager.shared
+    @StateObject private var engagementManager = EngagementManager.shared
+    @StateObject private var achievementManager = AchievementManager.shared
+    @StateObject private var collectionManager = CollectionManager.shared
     @State private var showingEvent: GameEvent? = nil
     @State private var screenShake: CGFloat = 0
     @State private var showingShop = false
@@ -95,6 +99,49 @@ struct DashboardView: View {
                 .transition(.opacity)
                 .zIndex(200)
             }
+
+            // Tutorial Overlay (Level 1 only)
+            if tutorialManager.shouldShowTutorial {
+                TutorialOverlayView(tutorialManager: tutorialManager)
+                    .zIndex(300)
+            }
+
+            // Daily Reward Popup
+            if engagementManager.showDailyRewardPopup {
+                DailyRewardPopupView(
+                    engagementManager: engagementManager,
+                    onClaim: { credits in
+                        engine.addCredits(credits)
+                        AudioManager.shared.playSound(.milestone)
+                    }
+                )
+                .zIndex(400)
+            }
+
+            // Achievement Unlock Popup
+            if achievementManager.showAchievementPopup,
+               let achievement = achievementManager.pendingUnlocks.first {
+                AchievementUnlockPopupView(
+                    achievement: achievement,
+                    onDismiss: {
+                        engine.addCredits(achievement.rewardCredits)
+                        achievementManager.dismissAchievementPopup()
+                    }
+                )
+                .zIndex(401)
+            }
+
+            // Data Chip Unlock Popup
+            if collectionManager.showChipUnlock,
+               let chip = collectionManager.pendingChips.first {
+                DataChipUnlockPopupView(
+                    chip: chip,
+                    onDismiss: {
+                        collectionManager.dismissChipPopup()
+                    }
+                )
+                .zIndex(402)
+            }
         }
         .onAppear {
             engine.start()
@@ -105,6 +152,13 @@ struct DashboardView: View {
             // Check for critical alarm
             if engine.shouldShowCriticalAlarm {
                 showingCriticalAlarm = true
+            }
+            // Start tutorial for Level 1 (if not completed)
+            if engine.levelConfiguration?.level.id == 1 && !tutorialManager.state.hasCompletedTutorial {
+                // Delay to let intro story finish
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    tutorialManager.startTutorialForLevel1()
+                }
             }
         }
         .onChange(of: engine.lastEvent) { _, newEvent in
@@ -926,6 +980,11 @@ struct DashboardView: View {
 
     private var iPhoneLayout: some View {
         VStack(spacing: 0) {
+            // Tutorial hint banner (Level 1 only)
+            if tutorialManager.shouldShowTutorial && !tutorialManager.isShowingDialogue {
+                TutorialHintBanner(tutorialManager: tutorialManager)
+            }
+
             // Alert banner (appears above header)
             AlertBannerView(event: showingEvent)
                 .zIndex(100)
@@ -970,6 +1029,7 @@ struct DashboardView: View {
                         credits: engine.resources.credits,
                         onUpgrade: { _ = engine.upgradeSource() }
                     )
+                    .tutorialHighlight(.sourceCard, manager: tutorialManager)
                     .padding(.horizontal)
                     .accessibilityElement(children: .combine)
                     .accessibilityLabel("Source node: \(engine.source.name), level \(engine.source.level), output \(engine.source.productionPerTick.formatted) per tick")
@@ -998,6 +1058,7 @@ struct DashboardView: View {
                             DDoSOverlay()
                         }
                     }
+                    .tutorialHighlight(.linkCard, manager: tutorialManager)
                     .padding(.horizontal)
                     .accessibilityElement(children: .combine)
                     .accessibilityLabel("Link node: \(engine.link.name), level \(engine.link.level), bandwidth \(engine.link.bandwidth.formatted) per tick")
@@ -1018,6 +1079,7 @@ struct DashboardView: View {
                         credits: engine.resources.credits,
                         onUpgrade: { _ = engine.upgradeSink() }
                     )
+                    .tutorialHighlight(.sinkCard, manager: tutorialManager)
                     .padding(.horizontal)
                     .accessibilityElement(children: .combine)
                     .accessibilityLabel("Sink node: \(engine.sink.name), level \(engine.sink.level), processing \(engine.sink.processingPerTick.formatted) per tick")
@@ -1054,6 +1116,7 @@ struct DashboardView: View {
                         onRepair: { _ = engine.repairFirewall() },
                         onPurchase: { _ = engine.purchaseFirewall() }
                     )
+                    .tutorialHighlight(.firewallSection, manager: tutorialManager)
                     .padding(.horizontal)
 
                     // Security Applications Stack
@@ -1071,6 +1134,7 @@ struct DashboardView: View {
                             _ = engine.unlockDefenseTier(tier)
                         }
                     )
+                    .tutorialHighlight(.defenseApps, manager: tutorialManager)
                     .padding(.horizontal)
                     .padding(.top, 16)
 
@@ -1092,6 +1156,7 @@ struct DashboardView: View {
                             _ = engine.sendMalusReport()
                         }
                     )
+                    .tutorialHighlight(.intelPanel, manager: tutorialManager)
                     .padding(.horizontal)
                     .padding(.top, 16)
 

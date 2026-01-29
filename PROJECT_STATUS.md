@@ -2,7 +2,7 @@
 
 ## Current Version: 0.8.1-alpha
 
-## Last Updated: 2026-01-24
+## Last Updated: 2026-01-29
 
 ---
 
@@ -170,6 +170,93 @@ See [ISSUES.md](./ISSUES.md) for detailed tracking.
 **Critical**: None (all closed)
 **Major**: None (all closed)
 **Minor**: None (all closed)
+
+---
+
+## Session Log: 2026-01-29 (ENH-014)
+
+### Summary
+Implemented ENH-014: Game Engagement Improvements - comprehensive daily rewards, achievement, and collection systems.
+
+### Engagement System Implementation
+
+#### Daily Rewards & Streaks (`Models/EngagementSystem.swift`)
+- 7-day reward cycle: Day 1=₵500, Day 7=₵5,000 + 2x multiplier
+- Streak tracking with bonus multipliers:
+  - 1 week streak: 1.25x production bonus
+  - 2 weeks: 1.5x bonus
+  - 4+ weeks: 2x bonus
+- Weekly challenges generated based on player level
+- Streak persistence with proper day boundary handling
+
+#### Achievement System (`Models/AchievementSystem.swift`)
+- 40+ achievements across 7 categories:
+  - Combat, Economy, Progression, Collection, Mastery, Social, Secret
+- 5 rarity tiers: Common, Uncommon, Rare, Epic, Legendary
+- Progress tracking via `AchievementStats` struct
+- Credit rewards based on rarity (100-10,000 credits)
+
+#### Collection System (`Models/CollectionSystem.swift`)
+- 25+ collectible Data Chips across 6 categories:
+  - Network, Malware, Encryption, AI Research, Helix, Personnel
+- 4 rarity tiers: Common (60% drop), Uncommon (25%), Rare (12%), Legendary (3%)
+- Unlock requirements tied to gameplay progression
+- Sellable duplicates for credits
+
+#### Engagement UI (`Views/Components/EngagementView.swift`)
+- `DailyRewardPopupView` - Full-screen modal with weekly progress
+- `AchievementUnlockPopupView` - Shows rarity, rewards, descriptions
+- `DataChipUnlockPopupView` - Shows chip details and flavor text
+- `StreakBadgeView`, `BonusMultiplierView`, `WeeklyChallengeCardView`
+
+### New Files
+- `Models/EngagementSystem.swift` (~350 lines)
+- `Models/AchievementSystem.swift` (~500 lines)
+- `Models/CollectionSystem.swift` (~400 lines)
+- `Views/Components/EngagementView.swift` (~350 lines)
+
+### Modified Files
+- `Engine/GameEngine.swift` - Added engagement tracking methods and bonus multiplier
+- `Views/DashboardView.swift` - Added popup overlays at zIndex 400-402
+- `ISSUES.md` - Marked ENH-014 as complete
+- `Project Plague.entitlements` - Restored iCloud Key-Value Storage
+
+### iCloud Configuration
+- Confirmed paid Apple Developer account (Team ID: B2U8T6A2Y3)
+- Restored iCloud Key-Value Storage entitlement for cloud saves
+
+---
+
+## Session Log: 2026-01-29 (ENH-013)
+
+### Summary
+Implemented ENH-013: Level 1 Rusty Tutorial Walkthrough - comprehensive guided tutorial system.
+
+### Tutorial System Implementation
+Created 12-step guided tutorial for Level 1 with:
+- Welcome and data flow explanation
+- Interactive steps for upgrading Source, Link, Sink
+- Firewall purchase and defense app deployment
+- Intel reports explanation and first report
+- Victory goals summary
+
+### Features
+- Character dialogue overlay with Rusty portrait
+- UI highlighting with animated pulse effects on target elements
+- Hint banner showing current required action
+- Skip button for returning players
+- Tutorial state persistence (won't repeat after completion)
+- Automatic step progression triggered by player actions
+
+### New Files
+- `Models/TutorialSystem.swift` - Tutorial steps, state, TutorialManager
+- `Views/Components/TutorialOverlayView.swift` - Dialogue UI, highlight modifier, hint banner
+
+### Modified Files
+- `Engine/GameEngine.swift` - Added TutorialManager action triggers
+- `Views/DashboardView.swift` - Tutorial overlay + card highlights
+- `Models/StorySystem.swift` - Shortened Level 1 intro story
+- `ISSUES.md` - Marked ENH-013 as complete
 
 ---
 
