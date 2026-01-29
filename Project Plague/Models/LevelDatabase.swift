@@ -28,7 +28,7 @@ class LevelDatabase {
 
             The threats are minimal here. Perfect for learning the ropes.
             """,
-            startingCredits: 500,
+            startingCredits: 0,
             startingThreatLevel: .ghost,
             availableTiers: [1],
             victoryConditions: VictoryConditions(
@@ -61,7 +61,7 @@ class LevelDatabase {
 
             Time to upgrade to Tier 2 equipment.
             """,
-            startingCredits: 1000,
+            startingCredits: 0,
             startingThreatLevel: .blip,
             availableTiers: [1, 2],
             victoryConditions: VictoryConditions(
@@ -95,7 +95,7 @@ class LevelDatabase {
 
             Deploy SIEM systems. Start collecting intel.
             """,
-            startingCredits: 5000,
+            startingCredits: 0,
             startingThreatLevel: .signal,
             availableTiers: [1, 2, 3],
             victoryConditions: VictoryConditions(
@@ -128,7 +128,7 @@ class LevelDatabase {
 
             This is where the real fight begins.
             """,
-            startingCredits: 25000,
+            startingCredits: 0,
             startingThreatLevel: .target,
             availableTiers: [1, 2, 3, 4],
             victoryConditions: VictoryConditions(
@@ -161,7 +161,7 @@ class LevelDatabase {
 
             Deploy Quantum Firewall and Predictive SIEM to survive.
             """,
-            startingCredits: 120000,
+            startingCredits: 0,
             startingThreatLevel: .targeted,
             availableTiers: [1, 2, 3, 4, 5],
             victoryConditions: VictoryConditions(
@@ -194,7 +194,7 @@ class LevelDatabase {
 
             Neural Mesh Defense and Helix integration are your only hope.
             """,
-            startingCredits: 300000,
+            startingCredits: 0,
             startingThreatLevel: .hammered,
             availableTiers: [1, 2, 3, 4, 5, 6],
             victoryConditions: VictoryConditions(
@@ -227,7 +227,7 @@ class LevelDatabase {
 
             Channel Helix. Become the Guardian. End this.
             """,
-            startingCredits: 400000,
+            startingCredits: 0,
             startingThreatLevel: .critical,
             availableTiers: [1, 2, 3, 4, 5, 6],
             victoryConditions: VictoryConditions(

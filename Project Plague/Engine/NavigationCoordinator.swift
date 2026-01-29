@@ -296,6 +296,7 @@ struct RootNavigationView: View {
     @StateObject private var campaignState = CampaignState()
     @StateObject private var cloudManager = CloudSaveManager.shared
     @State private var hasPerformedInitialSync = false
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         ZStack {
@@ -490,6 +491,18 @@ struct RootNavigationView: View {
                 Task {
                     await coordinator.performInitialCloudSync(campaignState: campaignState)
                 }
+            }
+        }
+        .onChange(of: scenePhase) { oldPhase, newPhase in
+            // Auto-save when app goes to background or becomes inactive
+            if newPhase == .background || newPhase == .inactive {
+                gameEngine.pause()  // pause() calls saveGame()
+                campaignState.save()
+                coordinator.saveStoryState()
+                AmbientAudioManager.shared.pause()
+            } else if newPhase == .active && oldPhase != .active {
+                // Resume music when returning to foreground
+                AmbientAudioManager.shared.resume()
             }
         }
     }
@@ -1186,6 +1199,7 @@ struct LevelFailedView: View {
             attacksSurvived: 5,
             damageBlocked: 150,
             finalDefensePoints: 75,
+            intelReportsSent: 5,
             completionDate: Date()
         ),
         onNextLevel: {},

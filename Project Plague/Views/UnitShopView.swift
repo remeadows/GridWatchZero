@@ -137,7 +137,8 @@ struct UnitShopView: View {
                         isUnlocked: engine.unlockState.isUnlocked(unit.id),
                         isEquipped: isEquipped(unit),
                         isSelected: selectedUnit?.id == unit.id,
-                        credits: engine.resources.credits
+                        credits: engine.resources.credits,
+                        tierGateReason: engine.tierGateReason(for: unit)
                     ) {
                         withAnimation(.easeInOut(duration: 0.15)) {
                             selectedUnit = (selectedUnit?.id == unit.id) ? nil : unit
@@ -260,6 +261,7 @@ struct UnitRowView: View {
     let isEquipped: Bool
     let isSelected: Bool
     let credits: Double
+    let tierGateReason: String?
     let onTap: () -> Void
 
     private var tierColor: Color {
@@ -345,6 +347,17 @@ struct UnitRowView: View {
                         Text("Requirement: \(unit.unlockRequirement)")
                             .font(.terminalMicro)
                             .foregroundColor(.dimAmber)
+
+                        // Show tier gate reason proactively
+                        if let gateReason = tierGateReason {
+                            HStack(spacing: 4) {
+                                Image(systemName: "exclamationmark.triangle.fill")
+                                    .font(.system(size: 10))
+                                Text(gateReason)
+                            }
+                            .font(.terminalMicro)
+                            .foregroundColor(.neonRed)
+                        }
                     }
                 }
 

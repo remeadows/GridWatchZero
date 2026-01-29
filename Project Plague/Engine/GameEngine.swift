@@ -464,7 +464,8 @@ final class GameEngine: ObservableObject {
         }
 
         // === AUTOMATION: Passive intel generation ===
-        if defenseStack.totalAutomation >= 0.75 {
+        // Only generates intel if defense apps are deployed (automation comes from apps anyway)
+        if defenseStack.totalAutomation >= 0.75 && defenseStack.deployedCount >= 1 {
             let passiveIntel = 1.0 * defenseStack.totalAutomation
             malusIntel.addFootprintData(passiveIntel, detectionMultiplier: defenseStack.totalDetectionBonus)
         }
@@ -1346,6 +1347,10 @@ final class GameEngine: ObservableObject {
 
     /// Collect footprint data from survived attack
     private func collectMalusFootprint(_ attack: Attack) {
+        // GATE: Must have at least one defense app deployed to collect intel
+        // This makes defense apps essential for campaign progress (intel reports are required)
+        guard defenseStack.deployedCount >= 1 else { return }
+
         // Base intel from attack: damage blocked + duration + severity bonus
         let damageBlocked = attack.blocked
         let durationBonus = Double(attack.type.baseDuration) * 15.0
@@ -1626,6 +1631,7 @@ final class GameEngine: ObservableObject {
             attacksSurvived: levelAttacksSurvived,
             damageBlocked: levelDamageBlocked,
             finalDefensePoints: Int(defenseStack.totalDefensePoints),
+            intelReportsSent: malusIntel.reportsSent,
             completionDate: Date()
         )
 
