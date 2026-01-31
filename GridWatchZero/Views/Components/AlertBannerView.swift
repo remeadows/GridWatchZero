@@ -9,17 +9,21 @@ struct AlertBannerView: View {
     @State private var isVisible = false
     @State private var glitchOffset: CGFloat = 0
 
+    private var shouldShow: Bool {
+        guard let event = event else { return false }
+        return shouldShowBanner(for: event)
+    }
+
     var body: some View {
-        Group {
+        ZStack {
             if let event = event, shouldShowBanner(for: event) {
                 bannerContent(for: event)
-                    .transition(.asymmetric(
-                        insertion: .move(edge: .top).combined(with: .opacity),
-                        removal: .opacity
-                    ))
             }
         }
-        .animation(.spring(response: 0.3, dampingFraction: 0.7), value: event)
+        .frame(maxWidth: .infinity)
+        .frame(height: shouldShow ? nil : 0, alignment: .top)
+        .clipped()
+        .animation(.easeInOut(duration: 0.2), value: event)
     }
 
     private func shouldShowBanner(for event: GameEvent) -> Bool {

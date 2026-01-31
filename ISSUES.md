@@ -1,4 +1,4 @@
-# ISSUES.md - Grid Watch Zero: Neural Grid
+# ISSUES.md - Grid Watch Zero
 
 ## Issue Tracker
 

@@ -9,10 +9,12 @@ import SwiftUI
 struct HomeView: View {
     @EnvironmentObject var campaignState: CampaignState
     @EnvironmentObject var cloudManager: CloudSaveManager
+    @StateObject private var dossierManager = DossierManager.shared
     @State private var selectedLevelId: Int?
     @State private var showTeamSheet = false
     @State private var showProfileSheet = false
     @State private var showSettingsSheet = false
+    @State private var showDossierSheet = false
 
     var onStartLevel: (CampaignLevel, Bool) -> Void  // (level, isInsane)
     var onPlayEndless: () -> Void
@@ -82,6 +84,9 @@ struct HomeView: View {
         .sheet(isPresented: $showSettingsSheet) {
             SettingsView()
         }
+        .sheet(isPresented: $showDossierSheet) {
+            DossierCollectionView()
+        }
     }
 
     // MARK: - Header
@@ -102,7 +107,7 @@ struct HomeView: View {
             // Progress indicator with cloud sync status
             VStack(alignment: .trailing, spacing: 2) {
                 HStack(spacing: 4) {
-                    Text("\(campaignState.progress.completedLevels.count)/7")
+                    Text("\(campaignState.progress.completedLevels.count)/20")
                         .font(.terminalTitle)
                         .foregroundColor(.neonCyan)
 
@@ -233,8 +238,9 @@ struct HomeView: View {
 
     private var teamSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            SectionHeader(title: "THE TEAM", icon: "person.3.fill")
+            SectionHeader(title: "INTELLIGENCE", icon: "folder.fill")
 
+            // Team Roster
             Button {
                 showTeamSheet = true
             } label: {
@@ -247,7 +253,7 @@ struct HomeView: View {
                     }
 
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("View Team Roster")
+                        Text("Team Roster")
                             .font(.terminalBody)
                             .foregroundColor(.white)
                         Text("5 Operators")
@@ -266,6 +272,53 @@ struct HomeView: View {
                 .overlay(
                     RoundedRectangle(cornerRadius: 4)
                         .stroke(Color.dimGreen, lineWidth: 1)
+                )
+            }
+            .buttonStyle(.plain)
+
+            // Character Dossiers
+            Button {
+                showDossierSheet = true
+            } label: {
+                HStack(spacing: 12) {
+                    Image(systemName: "person.text.rectangle")
+                        .font(.title2)
+                        .foregroundColor(.neonCyan)
+                        .frame(width: 40)
+
+                    VStack(alignment: .leading, spacing: 2) {
+                        HStack(spacing: 6) {
+                            Text("Character Dossiers")
+                                .font(.terminalBody)
+                                .foregroundColor(.white)
+
+                            // New badge if unread
+                            if dossierManager.unreadCount > 0 {
+                                Text("\(dossierManager.unreadCount) NEW")
+                                    .font(.terminalMicro)
+                                    .foregroundColor(.terminalBlack)
+                                    .padding(.horizontal, 6)
+                                    .padding(.vertical, 2)
+                                    .background(Color.neonAmber)
+                                    .cornerRadius(4)
+                            }
+                        }
+                        Text("\(dossierManager.unlockedCount)/\(dossierManager.totalCount) Profiles Unlocked")
+                            .font(.terminalMicro)
+                            .foregroundColor(.terminalGray)
+                    }
+
+                    Spacer()
+
+                    Image(systemName: "chevron.right")
+                        .foregroundColor(.terminalGray)
+                }
+                .padding(16)
+                .background(Color.terminalDarkGray)
+                .cornerRadius(4)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 4)
+                        .stroke(Color.neonCyan.opacity(0.3), lineWidth: 1)
                 )
             }
             .buttonStyle(.plain)
@@ -1050,9 +1103,9 @@ struct PlayerStatsSheet: View {
 
                 // Campaign progress
                 VStack(spacing: 12) {
-                    StatRow(label: "Levels Completed", value: "\(progress.completedLevels.count)/7")
-                    StatRow(label: "Insane Completed", value: "\(progress.insaneCompletedLevels.count)/7")
-                    StatRow(label: "Total Stars", value: "\(progress.totalStars)/21")
+                    StatRow(label: "Levels Completed", value: "\(progress.completedLevels.count)/20")
+                    StatRow(label: "Insane Completed", value: "\(progress.insaneCompletedLevels.count)/20")
+                    StatRow(label: "Total Stars", value: "\(progress.totalStars)/60")
                 }
                 .padding(16)
                 .background(Color.terminalDarkGray)

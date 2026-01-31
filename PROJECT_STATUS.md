@@ -1,8 +1,8 @@
-# PROJECT_STATUS.md - Project Plague: Neural Grid
+# PROJECT_STATUS.md - Grid Watch Zero
 
-## Current Version: 0.8.1-alpha
+## Current Version: 0.9.0-alpha
 
-## Last Updated: 2026-01-29
+## Last Updated: 2026-01-31
 
 ---
 
@@ -87,13 +87,20 @@
 - [x] Network Topology visualization
 - [x] Critical Alarm full-screen overlay
 - [x] Malus Intelligence tracking system
-- [x] Title update to "PROJECT PLAGUE"
+- [x] Title update to "GRID WATCH ZERO"
 - [x] Scrollable defense section in dashboard
 
-### 🔄 Phase 8: Platform & Release (IN PROGRESS)
+### ✅ Phase 8: Platform & Release (COMPLETE)
 - [x] iPad layout optimization (side-by-side panels with HStack)
 - [x] Accessibility improvements (VoiceOver labels, Dynamic Type, reduce motion)
 - [x] Game balance tuning (T2 costs +50%, attack scaling, prestige 150K, bottleneck variety)
+
+### 🔄 Phase 9: Character System & Polish (IN PROGRESS)
+- [x] Character Dossier System - Unlockable profiles with detailed BIOs
+- [x] Dossier Collection View - Gallery view in Campaign Hub
+- [x] UI Fixes - Alert banner overlay, level count corrections
+- [x] Large number precision fixes (scientific notation for T18+)
+- [x] Added Ronin and T33 to StoryCharacter enum
 - [ ] App Store preparation (screenshots, metadata, TestFlight)
 
 ---
@@ -173,6 +180,63 @@ See [ISSUES.md](./ISSUES.md) for detailed tracking.
 
 ---
 
+## Session Log: 2026-01-31
+
+### Summary
+Implemented Character Dossier System with unlockable profiles and detailed BIOs for all characters.
+
+### Character Dossier System
+
+#### New Files Created
+- `Models/CharacterDossier.swift` - Dossier data model containing:
+  - 11 character profiles (Rusty, Tish, FL3X, Malus, Helix, Ronin, T33, VEXIS, KRON, AXIOM, ZERO, The Architect)
+  - Visual descriptions, multi-paragraph BIOs, combat style, weakness, secret intel
+  - CharacterFaction enum (GridWatch Team, Prometheus AI, Unknown)
+  - DossierDatabase with all dossier entries
+
+- `Models/DossierManager.swift` - Unlock tracking and persistence:
+  - DossierState with unlocked/viewed tracking
+  - Level-based unlock triggers
+  - Unread count for "NEW" badges
+  - UserDefaults persistence
+
+- `Views/DossierView.swift` - UI for viewing dossiers:
+  - DossierCollectionView with faction filter tabs
+  - DossierCardView with locked/unlocked states
+  - DossierDetailView with BIO/COMBAT/SECRET tabs
+  - Responsive iPad/iPhone layouts
+
+### UI Fixes
+- **Campaign Level Count**: Updated from 7 to 20 in HomeView, CampaignProgress, CloudSaveManager, MilestoneSystem, AchievementSystem
+- **Alert Banner**: Fixed screen movement by using fixed height overlay approach in AlertBannerView
+- **Large Number Precision**: Converted T18-T25 unlock costs to scientific notation in UnitFactory
+- **Theme.swift**: Updated number formatting to use scientific notation
+
+### Modified Files
+- `Models/StorySystem.swift` - Added `ronin` and `tee` to StoryCharacter enum with display names, roles, image names, and theme colors
+- `Views/HomeView.swift` - Added Character Dossiers button in Intelligence section
+- `Engine/NavigationCoordinator.swift` - Added dossier unlock triggers on level completion
+- `Engine/GameEngine.swift` - Added Malus dossier unlock on first survived attack
+- `Views/Components/AlertBannerView.swift` - Fixed overlay approach to prevent screen movement
+
+### Dossier Unlock Schedule
+| Level | Character |
+|-------|-----------|
+| 1 | Rusty |
+| 2 | Tish |
+| 3 | FL3X |
+| First Attack | Malus |
+| 5 | Helix |
+| 8 | Ronin |
+| 10 | T33 |
+| 12 | VEXIS |
+| 14 | KRON |
+| 16 | AXIOM |
+| 18 | ZERO |
+| 20 | The Architect |
+
+---
+
 ## Session Log: 2026-01-29 (ENH-014)
 
 ### Summary
@@ -219,7 +283,7 @@ Implemented ENH-014: Game Engagement Improvements - comprehensive daily rewards,
 - `Engine/GameEngine.swift` - Added engagement tracking methods and bonus multiplier
 - `Views/DashboardView.swift` - Added popup overlays at zIndex 400-402
 - `ISSUES.md` - Marked ENH-014 as complete
-- `Project Plague.entitlements` - Restored iCloud Key-Value Storage
+- `Grid Watch Zero.entitlements` - Restored iCloud Key-Value Storage
 
 ### iCloud Configuration
 - Confirmed paid Apple Developer account (Team ID: B2U8T6A2Y3)
@@ -275,7 +339,7 @@ Complete audio system overhaul - replaced procedural synth and system sounds wit
 ### Files Changed
 - `Engine/AudioManager.swift` - Complete rewrite using AVAudioPlayer
 - `Engine/NavigationCoordinator.swift` - Added AmbientAudioManager pause/resume on scenePhase
-- `Project Plague/Resources/` - New folder with 9 audio files
+- `Grid Watch Zero/Resources/` - New folder with 9 audio files
 
 ---
 
@@ -314,7 +378,7 @@ Fixed all Critical and Major issues: cloud save entitlements, sound respecting v
 ### Modified Files (5 total)
 
 #### Project Configuration
-- `Project Plague.xcodeproj/project.pbxproj` - Removed CODE_SIGN_ENTITLEMENTS (awaiting developer account approval)
+- `Grid Watch Zero.xcodeproj/project.pbxproj` - Removed CODE_SIGN_ENTITLEMENTS (awaiting developer account approval)
 
 #### Engine
 - `AudioManager.swift` - Check device volume before playing system sounds
@@ -531,17 +595,17 @@ See APP_STORE_METADATA.md for full submission checklist.
 ### Version Target: 1.0.0
 
 ### Overview
-Transform Project Plague from endless idle into a structured **campaign with 7 levels**, featuring Rusty as the main character, a progression system through increasingly difficult network protection scenarios, and culminating in joining the fight against Malus.
+Transform Grid Watch Zero from endless idle into a structured **campaign with 7 levels**, featuring Rusty as the main character, a progression system through increasingly difficult network protection scenarios, and culminating in joining the fight against Malus.
 
 ### Core Requirements
 
-1. **Title Screen** - "Project Plague v1.0.0"
+1. **Title Screen** - "Grid Watch Zero v1.0.0"
 2. **Developer Credit** - "REMeadows"
 3. **Main Menu** - "New Game", "Continue Game"
 4. **Home Page** - Level select, stats, topology, Team info
 5. **Cloud Save** - Apple ID / iCloud sync
 6. **Player Account** - Stats tracking across campaigns
-7. **Story Integration** - Character images from `/dev/ProjectPlague/AppPhoto`
+7. **Story Integration** - Character images from `AppPhoto/`
 8. **Level-based Progression** - 7 campaign levels + "Insane" variants
 
 ### Campaign Architecture

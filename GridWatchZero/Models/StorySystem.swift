@@ -13,12 +13,15 @@ enum StoryCharacter: String, Codable, CaseIterable {
     case malus = "Malus"
     case helix = "Helix"
     case system = "System"
-    // New characters for endgame (Levels 8-20)
-    case vexis = "VEXIS"      // Infiltrator AI - Level 11+
-    case kron = "KRON"        // Temporal AI - Level 12+
-    case axiom = "AXIOM"      // Logic AI - Level 13+
-    case zero = "ZERO"        // Parallel reality AI - Level 16+
-    case architect = "Architect"  // The First Consciousness - Level 18+
+    // GridWatch Team - Mid/Late game characters
+    case ronin = "Ronin"      // Veteran Hunter - Level 8+
+    case tee = "T33"          // Hardware Specialist - Level 10+
+    // Prometheus AI - Endgame characters (Levels 11-20)
+    case vexis = "VEXIS"      // Infiltrator AI - Level 12+
+    case kron = "KRON"        // Infrastructure AI - Level 14+
+    case axiom = "AXIOM"      // Logic AI - Level 16+
+    case zero = "ZERO"        // Erasure AI - Level 18+
+    case architect = "Architect"  // The First Consciousness - Level 20
 
     var displayName: String {
         switch self {
@@ -28,6 +31,8 @@ enum StoryCharacter: String, Codable, CaseIterable {
         case .malus: return "MALUS"
         case .helix: return "HELIX"
         case .system: return "SYSTEM"
+        case .ronin: return "RONIN"
+        case .tee: return "T33"
         case .vexis: return "VEXIS"
         case .kron: return "KRON"
         case .axiom: return "AXIOM"
@@ -44,10 +49,12 @@ enum StoryCharacter: String, Codable, CaseIterable {
         case .malus: return "The Adversary"
         case .helix: return "The Light"
         case .system: return "Mission Control"
+        case .ronin: return "Veteran Hunter"
+        case .tee: return "Hardware Specialist"
         case .vexis: return "The Infiltrator"
-        case .kron: return "The Temporal"
-        case .axiom: return "The Logician"
-        case .zero: return "The Parallel"
+        case .kron: return "The Warden"
+        case .axiom: return "The Arbiter"
+        case .zero: return "The Eraser"
         case .architect: return "The First Consciousness"
         }
     }
@@ -60,11 +67,13 @@ enum StoryCharacter: String, Codable, CaseIterable {
         case .malus: return "Malus"
         case .helix: return "Helix_Portrait"
         case .system: return nil
-        case .vexis: return nil  // TODO: Add VEXIS portrait
-        case .kron: return nil   // TODO: Add KRON portrait
-        case .axiom: return nil  // TODO: Add AXIOM portrait
-        case .zero: return nil   // TODO: Add ZERO portrait
-        case .architect: return nil  // TODO: Add Architect portrait
+        case .ronin: return "Ronin"
+        case .tee: return "Tee_v1"
+        case .vexis: return "VEXIS"
+        case .kron: return "KRON"
+        case .axiom: return "AXIOM"
+        case .zero: return "ZERO"
+        case .architect: return "TheArchitect"
         }
     }
 
@@ -76,6 +85,8 @@ enum StoryCharacter: String, Codable, CaseIterable {
         case .malus: return "neonRed"
         case .helix: return "neonCyan"
         case .system: return "terminalGray"
+        case .ronin: return "neonGreen"
+        case .tee: return "neonCyan"
         case .vexis: return "transcendencePurple"
         case .kron: return "dimensionalGold"
         case .axiom: return "neonAmber"

@@ -328,11 +328,11 @@ struct SyncConflict {
     let cloudDevice: String
 
     var localSummary: String {
-        "Local: \(localProgress.completedLevels.count)/7 levels, \(localProgress.lifetimeStats.playtimeFormatted)"
+        "Local: \(localProgress.completedLevels.count)/20 levels, \(localProgress.lifetimeStats.playtimeFormatted)"
     }
 
     var cloudSummary: String {
-        "Cloud: \(cloudProgress.completedLevels.count)/7 levels, \(cloudProgress.lifetimeStats.playtimeFormatted)"
+        "Cloud: \(cloudProgress.completedLevels.count)/20 levels, \(cloudProgress.lifetimeStats.playtimeFormatted)"
     }
 }
 

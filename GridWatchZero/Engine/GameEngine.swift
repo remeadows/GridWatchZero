@@ -561,6 +561,11 @@ final class GameEngine: ObservableObject {
                 threatState.attacksSurvived += 1
                 emitEvent(.attackEnded(attack.type, survived: true))
 
+                // Unlock Malus dossier on first survived attack
+                if threatState.attacksSurvived == 1 {
+                    DossierManager.shared.unlockMalusDossier()
+                }
+
                 // Track for campaign mode
                 if isInCampaignMode {
                     levelAttacksSurvived += 1

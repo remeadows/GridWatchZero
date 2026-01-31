@@ -471,7 +471,7 @@ enum AchievementDatabase {
         Achievement(
             id: "progression_level_7",
             title: "Campaign Complete",
-            description: "Complete all 7 levels",
+            description: "Complete all 20 levels",
             hiddenDescription: nil,
             category: .progression,
             rarity: .epic,

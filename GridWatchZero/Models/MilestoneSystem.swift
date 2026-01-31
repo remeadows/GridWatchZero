@@ -508,8 +508,8 @@ enum MilestoneDatabase {
             id: "insane_7",
             type: .insane,
             title: "HELIX GUARDIAN",
-            description: "Complete all 7 levels on Insane difficulty",
-            requirement: 7,
+            description: "Complete all 20 levels on Insane difficulty",
+            requirement: 20,
             reward: .credits(500000),
             isHidden: true
         )

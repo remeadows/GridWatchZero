@@ -154,13 +154,13 @@ struct CampaignProgress: Codable {
     }
 
     var campaignProgress: Double {
-        // Percentage of levels completed (normal mode)
-        Double(completedLevels.count) / 7.0
+        // Percentage of levels completed (normal mode) - 20 total levels
+        Double(completedLevels.count) / 20.0
     }
 
     var fullCompletionProgress: Double {
-        // Percentage including insane mode (14 total completions)
-        Double(completedLevels.count + insaneCompletedLevels.count) / 14.0
+        // Percentage including insane mode (40 total completions)
+        Double(completedLevels.count + insaneCompletedLevels.count) / 40.0
     }
 
     // MARK: - Next Level

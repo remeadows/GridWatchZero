@@ -163,22 +163,22 @@ extension Double {
         let sign = self < 0 ? "-" : ""
 
         switch absValue {
-        case 1_000_000_000_000_000_000_000_000...:  // Septillion+
-            return sign + String(format: "%.1fSp", absValue / 1_000_000_000_000_000_000_000_000)
-        case 1_000_000_000_000_000_000_000..<1_000_000_000_000_000_000_000_000:  // Sextillion
-            return sign + String(format: "%.1fSx", absValue / 1_000_000_000_000_000_000_000)
-        case 1_000_000_000_000_000_000..<1_000_000_000_000_000_000_000:  // Quintillion
-            return sign + String(format: "%.1fQi", absValue / 1_000_000_000_000_000_000)
-        case 1_000_000_000_000_000..<1_000_000_000_000_000_000:  // Quadrillion
-            return sign + String(format: "%.1fQ", absValue / 1_000_000_000_000_000)
-        case 1_000_000_000_000..<1_000_000_000_000_000:  // Trillion
-            return sign + String(format: "%.1fT", absValue / 1_000_000_000_000)
-        case 1_000_000_000..<1_000_000_000_000:  // Billion
-            return sign + String(format: "%.1fB", absValue / 1_000_000_000)
-        case 1_000_000..<1_000_000_000:  // Million
-            return sign + String(format: "%.1fM", absValue / 1_000_000)
-        case 1_000..<1_000_000:  // Thousand
-            return sign + String(format: "%.1fK", absValue / 1_000)
+        case 1e24...:  // Septillion+
+            return sign + String(format: "%.1fSp", absValue / 1e24)
+        case 1e21..<1e24:  // Sextillion
+            return sign + String(format: "%.1fSx", absValue / 1e21)
+        case 1e18..<1e21:  // Quintillion
+            return sign + String(format: "%.1fQi", absValue / 1e18)
+        case 1e15..<1e18:  // Quadrillion
+            return sign + String(format: "%.1fQ", absValue / 1e15)
+        case 1e12..<1e15:  // Trillion
+            return sign + String(format: "%.1fT", absValue / 1e12)
+        case 1e9..<1e12:  // Billion
+            return sign + String(format: "%.1fB", absValue / 1e9)
+        case 1e6..<1e9:  // Million
+            return sign + String(format: "%.1fM", absValue / 1e6)
+        case 1e3..<1e6:  // Thousand
+            return sign + String(format: "%.1fK", absValue / 1e3)
         case _ where absValue == floor(absValue):
             return sign + String(format: "%.0f", absValue)
         default:

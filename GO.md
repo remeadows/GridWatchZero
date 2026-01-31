@@ -1,10 +1,10 @@
-# GO.md - Project Plague: Neural Grid
+# GO.md - Grid Watch Zero
 
 ## Quick Start
 
 ```bash
 # Open the Xcode project
-open "/Volumes/DEV/Code/dev/Games/ProjectPlague/ProjectPlague/Project Plague/Project Plague.xcodeproj"
+open "/Users/russmeadows/Dev/Games/GridWatchZero/GridWatchZero.xcodeproj"
 ```
 
 Then press **Cmd+R** to build and run.
@@ -23,20 +23,22 @@ Then press **Cmd+R** to build and run.
 
 ---
 
-## Current Sprint: Phase 8 - Platform & Polish
+## Current Sprint: Phase 9 - Character System & Polish
 
-### ✅ Completed: iPhone Layout Fix (2026-01-27)
-Added responsive layouts to NodeCardView for iPhone vs iPad:
-- SourceCardView, LinkCardView, SinkCardView now detect `horizontalSizeClass`
-- iPhone (compact): Vertical stat layout with full-width upgrade buttons
-- iPad (regular): Horizontal inline stat layout (preserved)
+### ✅ Completed: Character Dossier System (2026-01-31)
+Unlockable character profiles with detailed BIOs:
+- 11 character dossiers (GridWatch Team + Prometheus AI)
+- Profiles unlock as players progress through campaign
+- Dossier Collection view accessible from Campaign Hub
+- Each profile has: Visual description, multi-paragraph BIO, combat style, weakness, secret intel
+- Faction filtering (GridWatch Team, Prometheus AI, Unknown)
+- "NEW" badges for unread dossiers
 
-### ✅ Completed: Helix Awakening Cinematic (2026-01-27)
-15-second cinematic sequence after Level 7 completion:
-- Dormant Helix (Helixv2) with pulsing aura and eye glow effect
-- Crossfade to awakened Helix (Helix_The_Light) looking upward
-- Procedural cyberpunk ambient audio (bass drone + harmonics)
-- Skip button, reduce motion support, particle effects
+### ✅ Completed: UI Fixes (2026-01-31)
+- Campaign hub now shows correct 20 missions (was 7)
+- Alert banner no longer pushes screen down (uses fixed height overlay)
+- Fixed large number precision warnings in UnitFactory (scientific notation)
+- Fixed Theme.swift number formatting for large values
 
 ### Completed in Phase 8 (2026-01-27)
 - ✅ iPad Layout - Side-by-side panels, horizontal card layout
@@ -51,12 +53,17 @@ Added responsive layouts to NodeCardView for iPhone vs iPad:
 - Network Topology visualization
 - Critical Alarm full-screen overlay
 - Malus Intelligence tracking
-- Title changed to "PROJECT PLAGUE"
+- Title changed to "GRID WATCH ZERO"
 
 ### Remaining Tasks
 1. **App Store Prep** - Screenshots, metadata, TestFlight
 
-### New Files Added
+### New Files Added (Phase 9)
+- `Models/CharacterDossier.swift` - Dossier data model with all character BIOs
+- `Models/DossierManager.swift` - Unlock tracking and persistence
+- `Views/DossierView.swift` - Collection and detail views for dossiers
+
+### New Files Added (Phase 8)
 - `Models/DefenseApplication.swift` - Security app model
 - `Views/Components/DefenseApplicationView.swift` - Security app cards, topology
 - `Views/Components/CriticalAlarmView.swift` - Full-screen alarm
@@ -74,7 +81,7 @@ Added responsive layouts to NodeCardView for iPhone vs iPad:
 
 ### Adding New Files
 1. Create file in correct folder via code
-2. In Xcode: Right-click folder → "Add Files to 'Project Plague'..."
+2. In Xcode: Right-click folder → "Add Files to 'GridWatchZero'..."
 3. Select file, ensure "Copy items if needed" is **unchecked**
 4. Build to verify (Cmd+B)
 
@@ -93,7 +100,7 @@ engine.performPrestige()
 ```
 
 ### Save Data Location
-UserDefaults key: `ProjectPlague.GameState.v5`
+UserDefaults key: `GridWatchZero.GameState.v6`
 
 To reset: Delete app from simulator or call `engine.resetGame()`
 
@@ -154,7 +161,7 @@ To reset: Delete app from simulator or call `engine.resetGame()`
 ## Key Contacts
 
 **Project**: Personal/Solo
-**Repository**: Local at `/Volumes/DEV/Code/dev/Games/ProjectPlague`
+**Repository**: Local at `/Users/russmeadows/Dev/Games/GridWatchZero`
 
 ---
 

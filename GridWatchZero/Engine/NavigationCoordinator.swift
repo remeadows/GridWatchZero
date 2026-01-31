@@ -166,6 +166,9 @@ class NavigationCoordinator: ObservableObject {
             CertificateManager.shared.earnCertificateForLevel(levelId)
         }
 
+        // Unlock character dossiers based on level completion
+        DossierManager.shared.unlockDossiersForLevel(levelId)
+
         // For Level 7, show Helix awakening cinematic first
         if levelId == 7 {
             currentScreen = .helixAwakening

@@ -7,13 +7,13 @@
 	objects = {
 
 /* Begin PBXFileReference section */
-		860691102F1F21FB0091E203 /* GridWatchZero.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "GridWatchZero.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		860691102F1F21FB0091E203 /* GridWatchZero.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GridWatchZero.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		860691122F1F21FB0091E203 /* GridWatchZero */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = "GridWatchZero";
+			path = GridWatchZero;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -63,10 +63,10 @@
 			fileSystemSynchronizedGroups = (
 				860691122F1F21FB0091E203 /* GridWatchZero */,
 			);
-			name = "GridWatchZero";
+			name = GridWatchZero;
 			packageProductDependencies = (
 			);
-			productName = "GridWatchZero";
+			productName = GridWatchZero;
 			productReference = 860691102F1F21FB0091E203 /* GridWatchZero.app */;
 			productType = "com.apple.product-type.application";
 		};

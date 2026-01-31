@@ -218,37 +218,48 @@ struct DashboardView: View {
     // MARK: - iPad Layout (Side-by-side panels)
 
     private var iPadLayout: some View {
-        GeometryReader { geo in
-            let layoutMode = determineIPadLayout(for: geo.size.width)
+        ZStack(alignment: .top) {
+            GeometryReader { geo in
+                let layoutMode = determineIPadLayout(for: geo.size.width)
 
-            HStack(spacing: 0) {
-                // Left sidebar - Stats, Defense
-                iPadLeftSidebar(layoutMode: layoutMode)
-                    .frame(width: layoutMode.sidebarWidth)
-                    .background(Color.terminalDarkGray.opacity(0.5))
+                HStack(spacing: 0) {
+                    // Left sidebar - Stats, Defense
+                    iPadLeftSidebar(layoutMode: layoutMode)
+                        .frame(width: layoutMode.sidebarWidth)
+                        .background(Color.terminalDarkGray.opacity(0.5))
 
-                // Divider
-                Rectangle()
-                    .fill(Color.neonGreen.opacity(0.3))
-                    .frame(width: 1)
-
-                // Center main area - Network Map
-                iPadCenterPanel(layoutMode: layoutMode)
-                    .frame(maxWidth: .infinity)
-                    .background(Color.terminalDarkGray.opacity(0.3))
-
-                // Third column for expanded layout (Intel/Milestones)
-                if layoutMode.showsThirdColumn {
                     // Divider
                     Rectangle()
-                        .fill(Color.neonCyan.opacity(0.3))
+                        .fill(Color.neonGreen.opacity(0.3))
                         .frame(width: 1)
 
-                    iPadRightSidebar
-                        .frame(width: layoutMode.thirdColumnWidth)
-                        .background(Color.terminalDarkGray.opacity(0.5))
+                    // Center main area - Network Map
+                    iPadCenterPanel(layoutMode: layoutMode)
+                        .frame(maxWidth: .infinity)
+                        .background(Color.terminalDarkGray.opacity(0.3))
+
+                    // Third column for expanded layout (Intel/Milestones)
+                    if layoutMode.showsThirdColumn {
+                        // Divider
+                        Rectangle()
+                            .fill(Color.neonCyan.opacity(0.3))
+                            .frame(width: 1)
+
+                        iPadRightSidebar
+                            .frame(width: layoutMode.thirdColumnWidth)
+                            .background(Color.terminalDarkGray.opacity(0.5))
+                    }
                 }
             }
+
+            // Alert banner overlay (floats on top without pushing content)
+            VStack {
+                AlertBannerView(event: showingEvent)
+                    .padding(.top, 60)  // Below the header
+                Spacer()
+            }
+            .allowsHitTesting(false)
+            .zIndex(100)
         }
         .offset(x: reduceMotion ? 0 : screenShake)
     }
@@ -363,11 +374,7 @@ struct DashboardView: View {
                         )
                         .padding(.horizontal, layoutMode == .expanded ? 40 : 24)
                         .padding(.top, 16)
-
-                        // Alert banner - moved here for stability
-                        AlertBannerView(event: showingEvent)
-                            .padding(.horizontal, layoutMode == .expanded ? 40 : 24)
-                            .padding(.bottom, 24)
+                        .padding(.bottom, 24)
                     }
                 }
             }
@@ -983,18 +990,16 @@ struct DashboardView: View {
     // MARK: - iPhone Layout (Original stacked layout)
 
     private var iPhoneLayout: some View {
-        VStack(spacing: 0) {
-            // Tutorial hint banner (Level 1 only)
-            if tutorialManager.shouldShowTutorial && !tutorialManager.isShowingDialogue {
-                TutorialHintBanner(tutorialManager: tutorialManager)
-            }
+        ZStack(alignment: .top) {
+            // Main content in VStack
+            VStack(spacing: 0) {
+                // Tutorial hint banner (Level 1 only)
+                if tutorialManager.shouldShowTutorial && !tutorialManager.isShowingDialogue {
+                    TutorialHintBanner(tutorialManager: tutorialManager)
+                }
 
-            // Alert banner (appears above header)
-            AlertBannerView(event: showingEvent)
-                .zIndex(100)
-
-            // Header with stats + threat indicator
-            StatsHeaderView(
+                // Header with stats + threat indicator
+                StatsHeaderView(
                 credits: engine.resources.credits,
                 tickStats: engine.lastTickStats,
                 currentTick: engine.currentTick,
@@ -1180,7 +1185,17 @@ struct DashboardView: View {
                     }
                 }
             }
-        }
+            }  // End of main VStack
+
+            // Alert banner overlay (floats on top without pushing content)
+            VStack {
+                AlertBannerView(event: showingEvent)
+                    .padding(.top, tutorialManager.shouldShowTutorial && !tutorialManager.isShowingDialogue ? 44 : 0)
+                Spacer()
+            }
+            .allowsHitTesting(false)
+            .zIndex(100)
+        }  // End of ZStack
         .offset(x: reduceMotion ? 0 : screenShake)
     }
 

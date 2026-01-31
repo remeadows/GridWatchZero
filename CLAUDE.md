@@ -15,10 +15,10 @@ This is an iOS idle/strategy game built with SwiftUI and Swift 6. The player ope
 
 ## Project Structure
 ```
-ProjectPlague/
-├── ProjectPlague.xcodeproj/
-└── ProjectPlague/Project Plague/Project Plague/
-    ├── Project_PlagueApp.swift      # App entry point
+GridWatchZero/
+├── GridWatchZero.xcodeproj/
+└── GridWatchZero/
+    ├── GridWatchZeroApp.swift       # App entry point
     ├── Models/
     │   ├── Resource.swift           # ResourceType, DataPacket, PlayerResources
     │   ├── Node.swift               # NodeProtocol, SourceNode, SinkNode, FirewallNode
@@ -27,7 +27,9 @@ ProjectPlague/
     │   ├── EventSystem.swift        # RandomEvent, EventGenerator, EventEffect
     │   ├── LoreSystem.swift         # LoreFragment, LoreDatabase, LoreState
     │   ├── MilestoneSystem.swift    # Milestone, MilestoneDatabase, MilestoneState
-    │   └── DefenseApplication.swift # DefenseStack, MalusIntelligence, 6 security categories
+    │   ├── DefenseApplication.swift # DefenseStack, MalusIntelligence, 6 security categories
+    │   ├── CharacterDossier.swift   # Character profiles, BIOs, DossierDatabase
+    │   └── DossierManager.swift     # Unlock tracking, persistence
     ├── Engine/
     │   ├── GameEngine.swift         # Core tick loop, game state, all systems
     │   ├── UnitFactory.swift        # Unit creation factory, unit catalog
@@ -46,12 +48,13 @@ ProjectPlague/
             ├── StatsHeaderView.swift
             ├── ThreatIndicatorView.swift
             └── AlertBannerView.swift
+        ├── DossierView.swift            # Character dossier collection & detail views
 ```
 
 ## Key Commands
 ```bash
 # Open project
-open "/Volumes/DEV/Code/dev/Games/ProjectPlague/ProjectPlague/Project Plague/Project Plague.xcodeproj"
+open "/Users/russmeadows/Dev/Games/GridWatchZero/GridWatchZero.xcodeproj"
 
 # Build: Cmd+B in Xcode
 # Run: Cmd+R in Xcode
@@ -225,10 +228,10 @@ The game features main characters with art assets in `AppPhoto/`:
 ### Project Prometheus AIs (Arc 3+)
 | Character | Introduced | Role | Image File |
 |-----------|------------|------|------------|
-| **VEXIS** | Level 11 | Infiltrator AI - mimics friendly systems | `VEXIS.png` *(needed)* |
-| **KRON** | Level 12 | Temporal AI - attacks from "the future" | `KRON.png` *(needed)* |
-| **AXIOM** | Level 13 | Logic AI - pure efficiency engine | `AXIOM.png` *(needed)* |
-| **ZERO** | Level 16 | Parallel AI - Helix's dark mirror | `ZERO.png` *(needed)* |
-| **The Architect** | Level 18 | First consciousness - neutral cosmic entity | `Architect.png` *(needed)* |
+| **VEXIS** | Level 11 | Infiltrator AI - mimics friendly systems | `VEXIS.jpg` ✅ |
+| **KRON** | Level 12 | Temporal AI - attacks from "the future" | `KRON.jpg` ✅ |
+| **AXIOM** | Level 13 | Logic AI - pure efficiency engine | `AXIOM.jpg` ✅ |
+| **ZERO** | Level 16 | Parallel AI - Helix's dark mirror | `ZERO.jpg` ✅ |
+| **The Architect** | Level 18 | First consciousness - neutral cosmic entity | `The Architect.png` ✅ |
 
 See `DESIGN.md` for detailed character profiles, visual descriptions, and full bios.

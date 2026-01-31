@@ -1,8 +1,8 @@
-# CONTEXT.md - Project Plague: Neural Grid
+# CONTEXT.md - Grid Watch Zero
 
 ## Game Concept
 
-**Project Plague: Neural Grid** is a cyberpunk idle/strategy game where you operate a grey-hat data brokerage network. Unlike standard idle games that focus purely on number growth, this game emphasizes **logistics optimization** and **network defense**.
+**Grid Watch Zero** is a cyberpunk idle/strategy game where you operate a grey-hat data brokerage network. Unlike standard idle games that focus purely on number growth, this game emphasizes **logistics optimization** and **network defense**.
 
 ## The Setting
 
