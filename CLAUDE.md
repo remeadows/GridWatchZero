@@ -205,24 +205,30 @@ Each deployed app adds:
 
 The game features main characters with art assets in `AppPhoto/`:
 
-### Core Team
+### The Team
 | Character | Role | Image File |
 |-----------|------|------------|
-| **Malus** | Antagonist AI - adaptive threat hunting the player | `Malus.png` |
-| **Helix** | Benevolent AI - mythical consciousness, player's goal | `Helix_Portrait.png` |
+| **Ronin** | Team Lead - strategic commander, ex-corporate defector | `Ronin.jpg` |
+| **Rusty** | Senior Engineer - technical architect, player mentor | `Rusty.jpg` |
+| **Tish** | Intelligence Analyst - cryptographer, decodes Helix | `Tish3.jpg` / `TishRaw.webp` |
+| **Fl3x** | Field Operative - tactical specialist, Prometheus survivor | `FL3X_3000x3000.jpg` / `FL3X_v1.png` |
+| **Tee** | Communications Specialist - social engineer, team morale | `Tee_v1.png` |
+
+### AI Characters
+| Character | Role | Image File |
+|-----------|------|------------|
+| **Helix** | Benevolent AI - mythical consciousness, player's goal | `Helix Portrait.png` |
 | **Helix** (Dormant) | Helix before awakening - cinematic use | `Helixv2.png` |
-| **Helix** (Awakened) | Helix after awakening - looking upward | `Helix_The_Light.png` |
-| **Rusty** | Team Lead - player's handler, human coordinator | `Rusty.jpg` |
-| **Tish** | Hacker/Intel - technical analyst, decodes Helix | `TishRaw.webp` / `Tish3.jpg` |
-| **Fl3x** | Field Operative - tactical support, ground intel | `FL3X_3000x3000.jpg` |
+| **Helix** (Awakened) | Helix after awakening - transcendent form | `Helix_The_Light.png` |
+| **Malus** | Primary Antagonist - adaptive threat hunting the player | `Malus.png` |
 
 ### Project Prometheus AIs (Arc 3+)
-| Character | Introduced | Role |
-|-----------|------------|------|
-| **VEXIS** | Level 11 | Infiltrator AI - can mimic friendly systems |
-| **KRON** | Level 12 | Temporal AI - attacks from "the future" |
-| **AXIOM** | Level 13 | Logic AI - pure prediction engine |
-| **ZERO** | Level 16 | Parallel reality Prometheus AI |
-| **The Architect** | Level 18 | First consciousness, neither AI nor human |
+| Character | Introduced | Role | Image File |
+|-----------|------------|------|------------|
+| **VEXIS** | Level 11 | Infiltrator AI - mimics friendly systems | `VEXIS.png` *(needed)* |
+| **KRON** | Level 12 | Temporal AI - attacks from "the future" | `KRON.png` *(needed)* |
+| **AXIOM** | Level 13 | Logic AI - pure efficiency engine | `AXIOM.png` *(needed)* |
+| **ZERO** | Level 16 | Parallel AI - Helix's dark mirror | `ZERO.png` *(needed)* |
+| **The Architect** | Level 18 | First consciousness - neutral cosmic entity | `Architect.png` *(needed)* |
 
-See `DESIGN.md` for detailed character profiles and visual descriptions.
+See `DESIGN.md` for detailed character profiles, visual descriptions, and full bios.
