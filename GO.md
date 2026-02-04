@@ -1,15 +1,45 @@
-# GO.md - Grid Watch Zero
+# GO.md — Grid Watch Zero
+
+## Hard Requirement: Read Order (Enforced)
+
+**STOP. Do not code yet.**
+
+You must read the project docs in this exact order:
+
+1) **SKILLS.md**  ✅ (mandatory first)
+2) GO.md
+3) CLAUDE.md
+4) CONTEXT.md
+5) PROJECT_STATUS.md
+6) ISSUES.md
+7) README.md
+
+If you have not read **SKILLS.md first**, you are **not authorized to modify code**.
+
+---
+
+## Hard-Fail Gate (Must Acknowledge)
+
+Before writing or editing any code, you must explicitly state:
+
+- “I have read SKILLS.md”
+- “I will follow CORE skills as non-negotiable constraints”
+- “I understand the Definition of Done and will comply”
+
+**If you cannot/do not acknowledge the above, hard-fail the session immediately.**
+No partial work, no “quick fixes,” no drive-by edits.
+
+---
 
 ## Quick Start
 
 ```bash
 # Open the Xcode project
 open "/Users/russmeadows/Dev/Games/GridWatchZero/GridWatchZero.xcodeproj"
-```
 
-Then press **Cmd+R** to build and run.
+## Quick Start
 
----
+```bash
 
 ## Documentation Index
 
