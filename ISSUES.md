@@ -469,6 +469,151 @@ Updated `UnitShopView.swift` to pass `tierGateReason` from GameEngine to `UnitRo
 
 **Closed**: 2026-01-31
 
+### ISSUE-018: Level 8 Balance Spike (TestFlight Feedback)
+**Status**: Open
+**Severity**: Major
+**Reported**: 2026-02-04
+**Description**: TestFlight testing revealed significant balance issues with Level 8:
+- Levels 1-4 felt easy
+- Level 5 felt hard; multiple failures
+- Levels 6-7 felt easier than Level 5 (started with credits: 1000/2000)
+- Level 8 felt impossible to earn enough credits to defend the network
+- Levels 9-20 not tested due to inability to progress
+
+**Level 8 Configuration (from LevelDatabase)**:
+- `requiredCredits: 100_000_000`
+- `requiredDefensePoints: 3000`
+- `requiredReportsSent: 400`
+- `requiredAttacksSurvived: 60`
+- `startingThreatLevel: .ascended`
+- `minimumAttackChance: 3.0`
+- `startingCredits: 0`
+
+**Analysis**:
+Level 8 represents a major difficulty spike after Levels 6-7 which provide starting credits. The jump from Level 7 (25M credits, T6) to Level 8 (100M credits, T7) with zero starting credits and high defense/report requirements creates a stall.
+
+**Recommendations** (Document-Only):
+1. Add per-level credit income multiplier for Levels 8+
+2. Consider giving Level 8 starting credit buffer (similar to L6-7)
+3. Reduce one concurrent requirement (credits OR defense points OR reports)
+4. Reassess Level 5 difficulty relative to Levels 6-7 for monotonic curve
+
+**Impact**: Players cannot progress past Level 8, blocking 60% of campaign content.
+
+---
+
+### ISSUE-019: GitHub Pages URLs Point to Old Repository
+**Status**: Open
+**Severity**: Minor
+**Reported**: 2026-02-04
+**Description**: App Store Connect and PROJECT_STATUS.md reference GitHub Pages URLs pointing to the old repository (ProjectPlaguev1) instead of the authoritative GridWatchZero repo.
+
+**Current URLs (Incorrect)**:
+- Privacy: `https://remeadows.github.io/ProjectPlaguev1/privacy-policy.html`
+- Support: `https://remeadows.github.io/ProjectPlaguev1/support.html`
+
+**Should Be**:
+- Privacy: `https://remeadows.github.io/GridWatchZero/privacy-policy.html`
+- Support: `https://remeadows.github.io/GridWatchZero/support.html`
+
+**Actions Required**:
+1. Enable GitHub Pages on the GridWatchZero repository (Settings → Pages → Source: main branch, /docs folder)
+2. Update App Store Connect URLs to point to GridWatchZero
+3. Consider adding redirect from old ProjectPlaguev1 pages to new URLs
+4. Archive or delete the ProjectPlaguev1 repository to avoid confusion
+
+**Impact**: Users and App Store reviewers may be directed to incorrect/outdated support pages.
+
+---
+
+### ENH-017: Audio System Upgrade Using Apple Dev Tools
+**Priority**: High
+**Status**: Open
+**Description**: Upgrade audio system using better Apple development tools available in Xcode.
+
+**Current Implementation**:
+- `AVAudioPlayer` for sound effects and background music
+- 9 custom .m4a audio files in `GridWatchZero/Resources/`
+- `AudioManager` with preloading and volume control
+- `AmbientAudioManager` for looping background music
+- `AudioSettings` model with persistence
+
+**Current Audio Files**:
+| File | Purpose |
+|------|---------|
+| background_music.m4a | Looping ambient track |
+| button_tap.m4a | UI interaction feedback |
+| upgrade.m4a | Node/unit upgrades |
+| attack_incoming.m4a | Attack start warning |
+| attack_end.m4a | Attack resolved |
+| milestone.m4a | Achievement/milestone |
+| warning.m4a | Threat level warnings |
+| error.m4a | Error feedback |
+| malus_message.m4a | Malus dialogue cue |
+
+**Apple Dev Tools Available for Upgrade**:
+
+1. **AVAudioEngine** (Recommended)
+   - Real-time audio processing and mixing
+   - Audio effects: reverb, delay, distortion, EQ
+   - Spatial audio support (3D positioning)
+   - Lower latency than AVAudioPlayer
+   - Multiple simultaneous audio streams with independent control
+
+2. **Core Haptics** (iOS 13+)
+   - Custom haptic patterns (not just preset feedback)
+   - Synchronized audio-haptic experiences (AHAP files)
+   - Transient and continuous haptic events
+   - Pattern authoring via Haptic Composer in Xcode
+
+3. **Audio Unit Extensions**
+   - Custom audio processing units
+   - Built-in Apple effects (compression, limiter, pitch shift)
+   - Third-party AU support
+
+4. **PHASE (Physical Audio Spatialization Engine)** (iOS 15+)
+   - Advanced spatial audio
+   - Environmental modeling
+   - Object-based audio
+   - Head tracking support
+
+5. **Sound Analysis Framework**
+   - AI-powered sound classification
+   - Could detect game state from audio cues
+   - Accessibility applications
+
+**Recommended Upgrade Path**:
+
+**Phase 1: AVAudioEngine Migration**
+- Replace AVAudioPlayer with AVAudioEngine for SFX
+- Enable real-time mixing of multiple sound layers
+- Add audio ducking (lower music during attacks/dialogue)
+- Implement crossfade between music tracks
+
+**Phase 2: Core Haptics Integration**
+- Create custom AHAP patterns for game events
+- Synchronized audio-haptic feedback for attacks
+- Distinct haptic signatures for threat levels
+- Use Haptic Composer in Xcode to author patterns
+
+**Phase 3: Spatial Audio (Optional)**
+- Position attack sounds based on threat direction
+- Environmental reverb based on network size
+- Binaural audio for immersion
+
+**Implementation Notes**:
+- AVAudioEngine requires more setup but provides professional-grade control
+- Core Haptics patterns (.ahap files) can be bundled in app resources
+- Xcode's Haptic Composer provides visual pattern design
+- Consider adaptive audio that responds to game state
+
+**Files to Modify**:
+- `Engine/AudioManager.swift` - Migrate to AVAudioEngine
+- `Models/AudioSettings.swift` - Add haptic pattern preferences
+- Add `Resources/Haptics/` folder for .ahap files
+
+---
+
 ### ENH-009: Endless Mode Slower Gameplay
 **Priority**: Medium
 **Status**: Open

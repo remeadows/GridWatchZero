@@ -235,3 +235,28 @@ The game features main characters with art assets in `AppPhoto/`:
 | **The Architect** | Level 18 | First consciousness - neutral cosmic entity | `The Architect.png` ✅ |
 
 See `DESIGN.md` for detailed character profiles, visual descriptions, and full bios.
+
+## Repository & Deployment
+
+**Authoritative Repository**: https://github.com/remeadows/GridWatchZero
+**Legacy Repository** (deprecated): https://github.com/remeadows/ProjectPlaguev1
+**GitHub Pages**: https://remeadows.github.io/GridWatchZero/
+**Bundle ID**: WarSignal.GridWatchZero
+**App Store Connect**: Build 1.0(1) uploaded, TestFlight internal testing
+
+### App Store URLs
+- Privacy Policy: `docs/privacy-policy.html`
+- Support Page: `docs/support.html`
+- Landing Page: `docs/index.html`
+
+### Audio System
+Current implementation uses `AVAudioPlayer` with custom .m4a files in `GridWatchZero/Resources/`:
+- `background_music.m4a` - Looping ambient track
+- `button_tap.m4a`, `upgrade.m4a`, `attack_incoming.m4a`, `attack_end.m4a`
+- `milestone.m4a`, `warning.m4a`, `error.m4a`, `malus_message.m4a`
+
+**Audio Upgrade Opportunity** (ENH-017 in ISSUES.md):
+- AVAudioEngine for real-time mixing and effects
+- Core Haptics with custom AHAP patterns
+- PHASE for spatial audio (iOS 15+)
+- Xcode Haptic Composer for pattern authoring
