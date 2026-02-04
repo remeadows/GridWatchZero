@@ -186,6 +186,44 @@ See [ISSUES.md](./ISSUES.md) for detailed tracking.
 
 ---
 
+## Session Log: 2026-02-04 (Continued)
+
+### Summary
+Created comprehensive GAMEPLAY.md balance reference document, documented monetization ideas, and updated issues tracking.
+
+### New Documentation Created
+
+#### GAMEPLAY.md - Comprehensive Balance Reference
+Created new reference document with:
+- **Campaign Level Tables**: All 20 levels with credits (100K-1T), defense points (50-100K), reports (5-10K), attacks survived, starting credits, and attack percentages
+- **Source Units Table**: T1-T25 with base production (8.0 to 262M/tick), upgrade costs, max levels
+- **Link Units Table**: T1-T25 with base bandwidth (5.0 to 314M/tick), latency, costs
+- **Sink Units Table**: T1-T25 with processing rates (5.0 to 209M/tick), conversion multipliers (1.5x-14.0x)
+- **Defense App Intel Tables**: SIEM and IDS specialist bonuses for intel gathering
+- **Monetization Section**: Credit Boost Button concept (ENH-020)
+- **Audio Notes**: Documented concerns about repetitive single-track music
+- **Quick Reference Formulas**: Production pipeline and defense calculations
+
+#### Issues Updates
+- **ISSUE-018**: Updated with user feedback - 5K starting credits proposed for Level 8
+- **ISSUE-019**: Verified GitHub Pages working - docs folder exists with correct URLs
+- **ENH-020**: Added Credit Boost Button monetization enhancement
+  - 2x/3x credit multiplier options
+  - Pricing tiers ($0.99-$9.99)
+  - Ad alternative for F2P players
+
+### Balance Recommendations
+- Level 8 should start with 5,000 credits (not 0 or 5M)
+- This provides survival buffer without trivializing progression
+- Reference GAMEPLAY.md for all balance tuning decisions
+
+### Files Changed
+- `GAMEPLAY.md` - NEW: Comprehensive balance reference document
+- `ISSUES.md` - Updated ISSUE-018, ISSUE-019, added ENH-020
+- `PROJECT_STATUS.md` - Added session log
+
+---
+
 ## Session Log: 2026-02-04
 
 ### Summary

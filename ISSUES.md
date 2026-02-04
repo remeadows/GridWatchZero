@@ -473,6 +473,7 @@ Updated `UnitShopView.swift` to pass `tierGateReason` from GameEngine to `UnitRo
 **Status**: Open
 **Severity**: Major
 **Reported**: 2026-02-04
+**Updated**: 2026-02-04
 **Description**: TestFlight testing revealed significant balance issues with Level 8:
 - Levels 1-4 felt easy
 - Level 5 felt hard; multiple failures
@@ -481,7 +482,7 @@ Updated `UnitShopView.swift` to pass `tierGateReason` from GameEngine to `UnitRo
 - Levels 9-20 not tested due to inability to progress
 
 **Level 8 Configuration (from LevelDatabase)**:
-- `requiredCredits: 100_000_000`
+- `requiredCredits: 100_000_000` (4x jump from L7's 25M)
 - `requiredDefensePoints: 3000`
 - `requiredReportsSent: 400`
 - `requiredAttacksSurvived: 60`
@@ -492,37 +493,48 @@ Updated `UnitShopView.swift` to pass `tierGateReason` from GameEngine to `UnitRo
 **Analysis**:
 Level 8 represents a major difficulty spike after Levels 6-7 which provide starting credits. The jump from Level 7 (25M credits, T6) to Level 8 (100M credits, T7) with zero starting credits and high defense/report requirements creates a stall.
 
-**Recommendations** (Document-Only):
-1. Add per-level credit income multiplier for Levels 8+
-2. Consider giving Level 8 starting credit buffer (similar to L6-7)
-3. Reduce one concurrent requirement (credits OR defense points OR reports)
-4. Reassess Level 5 difficulty relative to Levels 6-7 for monotonic curve
+**User Feedback** (2026-02-04):
+- 5M starting credits is too much (trivializes early game)
+- Level should be challenging but not unfair
+- Suggested: 5,000 starting credits as buffer
+
+**Proposed Fix**:
+- Change Level 8 `startingCredits: 0` → `startingCredits: 5000`
+- This provides survival buffer without trivializing progression
+- Levels 6-7 have 1000/2000 starting credits for reference
 
 **Impact**: Players cannot progress past Level 8, blocking 60% of campaign content.
+
+**See Also**: GAMEPLAY.md for comprehensive balance tables
 
 ---
 
 ### ISSUE-019: GitHub Pages URLs Point to Old Repository
-**Status**: Open
+**Status**: ✅ Verified Working
 **Severity**: Minor
 **Reported**: 2026-02-04
+**Updated**: 2026-02-04
 **Description**: App Store Connect and PROJECT_STATUS.md reference GitHub Pages URLs pointing to the old repository (ProjectPlaguev1) instead of the authoritative GridWatchZero repo.
 
-**Current URLs (Incorrect)**:
-- Privacy: `https://remeadows.github.io/ProjectPlaguev1/privacy-policy.html`
-- Support: `https://remeadows.github.io/ProjectPlaguev1/support.html`
-
-**Should Be**:
+**Current URLs (Already Correct in README.md)**:
 - Privacy: `https://remeadows.github.io/GridWatchZero/privacy-policy.html`
 - Support: `https://remeadows.github.io/GridWatchZero/support.html`
 
-**Actions Required**:
-1. Enable GitHub Pages on the GridWatchZero repository (Settings → Pages → Source: main branch, /docs folder)
-2. Update App Store Connect URLs to point to GridWatchZero
-3. Consider adding redirect from old ProjectPlaguev1 pages to new URLs
-4. Archive or delete the ProjectPlaguev1 repository to avoid confusion
+**Status Check**:
+The README.md already references the correct GridWatchZero URLs. GitHub Pages is configured and serving from the `docs/` folder. The pages are live and accessible.
 
-**Impact**: Users and App Store reviewers may be directed to incorrect/outdated support pages.
+**Verification**:
+1. ✅ README.md lines 176-177 show correct GridWatchZero URLs
+2. ✅ `docs/` folder exists with privacy-policy.html and support.html
+3. ✅ GitHub Pages enabled on GridWatchZero repository
+
+**User Action Required**:
+- Verify App Store Connect URLs match the GridWatchZero pages
+- If still pointing to ProjectPlaguev1 in App Store Connect, update manually:
+  - Privacy Policy URL: `https://remeadows.github.io/GridWatchZero/privacy-policy.html`
+  - Support URL: `https://remeadows.github.io/GridWatchZero/support.html`
+
+**Closed**: 2026-02-04
 
 ---
 
@@ -1333,6 +1345,40 @@ Created comprehensive tutorial system with 12 guided steps:
 - `Views/DashboardView.swift` - Engagement popup overlays
 
 **Closed**: 2026-01-29
+
+### ENH-020: Credit Boost Button (Monetization)
+**Priority**: High
+**Status**: Open
+**Added**: 2026-02-04
+**Description**: In-game button allowing players to temporarily boost credit earnings. Provides monetization opportunity while respecting F2P players.
+
+**Proposed Implementation**:
+- UI: Button in Dashboard header or floating action button
+- Options: 2x Credits (5 min) or 3x Credits (5 min)
+- Pricing: $0.99 for 2x, $4.99 for 3x (or watch ad for 2x)
+- Visual: Animated glow effect when active, countdown timer visible
+- Stacking: Does NOT stack with daily login bonuses (uses higher value)
+
+**Revenue Tiers**:
+| Option | Multiplier | Duration | Price | Ad Alternative |
+|--------|------------|----------|-------|----------------|
+| Basic Boost | 2x | 5 min | $0.99 | 30-sec ad |
+| Power Boost | 3x | 5 min | $4.99 | Not available |
+| Premium Pack | 3x | 30 min | $9.99 | Not available |
+
+**Integration Points**:
+- Apply multiplier in `GameEngine.processTick()` credit calculation
+- Store active boost state in `EngagementManager` or new `BoostManager`
+- Persist boost timer across app background/foreground
+- Show boost status in `StatsHeaderView`
+
+**Balance Considerations**:
+- 5-minute duration prevents "pay to skip" feeling
+- 2x is meaningful but not game-breaking
+- Ad option keeps F2P players engaged
+- Does not affect defense/intel mechanics (credits only)
+
+**See Also**: GAMEPLAY.md for full monetization documentation
 
 ### ENH-015: Ad/Purchase Multipliers
 **Priority**: Medium
