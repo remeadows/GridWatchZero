@@ -1,8 +1,8 @@
 # PROJECT_STATUS.md - Grid Watch Zero
 
-## Current Version: 1.0.0
+## Current Version: 1.0.0 (Build 2)
 
-## Last Updated: 2026-02-04
+## Last Updated: 2026-02-05
 
 ---
 
@@ -183,6 +183,91 @@ See [ISSUES.md](./ISSUES.md) for detailed tracking.
 **Critical**: None (all closed)
 **Major**: None (all closed)
 **Minor**: None (all closed)
+
+---
+
+## Session Log: 2026-02-05 — TestFlight Build Prep (Build 2)
+
+### Summary
+Merged `CLAUDE_UPDATE` branch into `main` via fast-forward merge (75 files, +6250/-1273 lines). Bumped build number from 1 to 2 for TestFlight upload. All v2.0 balance migration work, Glass HUD upgrade, and intel report fixes now on main.
+
+### Changes
+- Fast-forward merge: `CLAUDE_UPDATE` → `main` (all 6 sprints + Glass HUD + intel fixes)
+- Bumped `CURRENT_PROJECT_VERSION` from 1 to 2 in project.pbxproj (Debug + Release)
+- Build verified: BUILD SUCCEEDED on iPhone 17 Pro simulator
+- Pushed main and synced CLAUDE_UPDATE branch
+
+### Files Changed
+- `GridWatchZero.xcodeproj/project.pbxproj` — Build number 1 → 2
+
+### Next Steps
+- Archive in Xcode (Product → Archive) and upload to App Store Connect
+- TestFlight internal testing of v2.0 balance changes
+
+---
+
+## Session Log: 2026-02-05 — Fix Intel Report Bugs + 9 New Milestones
+
+### Summary
+Fixed two player-reported bugs: (1) "Send ALL" batch upload banner displayed lifetime total intel credits instead of batch-earned credits, and (2) intel milestones capped at 25 reports leaving no goals for the remaining 9,975 reports needed for campaign completion. Added 9 new endgame milestones scaling from 50 to 10,000 reports with credit rewards and permanent bonuses.
+
+### Issue A Fix: Batch Credit Display
+- **Root cause**: `emitEvent(.batchUploadComplete(..., malusIntel.totalIntelCredits))` passed lifetime total
+- **Fix**: Added `batchCreditsEarned` accumulator in batch processing loop, pass batch-only total to event
+- Banner now correctly shows credits earned in that specific batch upload
+
+### Issue B Fix: 9 New Intel Milestones
+| Reports | Name | Credit Reward | Permanent Bonus |
+|---------|------|---------------|-----------------|
+| 50 | Signal Analyst | 750K | +5% credit protection |
+| 100 | Network Sentinel | 1.5M | +10% intel collection |
+| 200 | Cipher Breaker | 3M | +5% damage reduction |
+| 400 | Grid Watcher | 7.5M | +10% pattern ID speed |
+| 800 | Shadow Operator | 20M | 10% fewer attacks |
+| 1,500 | Phantom Protocol | 50M | +15% intel collection |
+| 3,000 | Architect's Eye | 150M | +10% damage reduction |
+| 5,000 | Omega Analyst | 500M | +10% credit protection |
+| 10,000 | Grid Watch Zero | 2B | +20% intel collection |
+
+- New `IntelBonus.creditProtection` case added
+- Credit protection bonus wired into attack damage calculation: `min(0.90, defenseStack + malusIntel)`
+- No save migration needed — `claimedMilestones` is `Set<Int>`, new raw values absent from old saves
+- Total milestones: 16 (7 original + 9 new)
+
+### Files Changed
+- `Engine/GameEngine.swift` — Batch credit accumulator, event fix, credit protection wiring
+- `Models/DefenseApplication.swift` — 9 new milestone cases, IntelBonus.creditProtection, creditProtectionBonus computed property
+
+---
+
+## Session Log: 2026-02-05 — Glass HUD Visual Upgrade
+
+### Summary
+Implemented Glass HUD visual system across all game views on `CLAUDE_UPDATE` branch. Replaced flat opaque card backgrounds with frosted translucent panels featuring inner shadows, neon rim glow, and procedural noise texture. Terminal aesthetic retained with enhanced depth and polish.
+
+### Glass HUD Components
+- **GlassPanel modifier** — `.ultraThinMaterial` background with inner shadow and 1px neon rim glow
+- **NoiseOverlay** — Canvas-based procedural noise using xorshift64 RNG, 4% opacity
+- **GlassCard ViewModifier** — Combines glass panel + noise for consistent card styling
+- Applied to: node cards, stat headers, threat indicators, defense panels, alert banners, firewall cards, critical alarm overlay, dossier views, settings panels
+
+### Files Changed (16 files)
+- `Views/Theme.swift` — GlassPanel, NoiseOverlay, GlassCard modifiers
+- `Views/DashboardView.swift` — Glass card backgrounds
+- `Views/Components/NodeCardView.swift` — Glass HUD cards
+- `Views/Components/StatsHeaderView.swift` — Glass header
+- `Views/Components/ThreatIndicatorView.swift` — Glass indicator
+- `Views/Components/AlertBannerView.swift` — Glass banners
+- `Views/Components/FirewallCardView.swift` — Glass firewall card
+- `Views/Components/CriticalAlarmView.swift` — Glass alarm overlay
+- `Views/Components/DefenseApplicationView.swift` — Glass defense panels
+- `Views/Components/ConnectionLineView.swift` — Glass connection overlay
+- `Views/DossierView.swift` — Glass dossier cards
+- `Views/UnitShopView.swift` — Glass shop panels
+- `Views/LoreView.swift` — Glass lore cards
+- `Views/HomeView.swift` — Glass campaign hub cards
+- `Views/SettingsView.swift` — Glass settings panels
+- `Engine/NavigationCoordinator.swift` — Glass navigation elements
 
 ---
 
@@ -1210,6 +1295,7 @@ Each level has an "Insane" variant:
 - [ ] Create app icon (1024x1024 PNG)
 - [ ] Capture screenshots for iPhone 15 Pro Max (6.7")
 - [ ] Capture screenshots for iPad Pro 12.9"
+- [ ] Archive build 1.0(2) and upload to App Store Connect
 - [ ] TestFlight internal testing
 - [ ] TestFlight external beta
 - [ ] Submit to App Store

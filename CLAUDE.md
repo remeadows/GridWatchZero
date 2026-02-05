@@ -193,6 +193,33 @@ T7+ scales exponentially: `T6Value × 1.8^(tier-6)`
 - Intel Reports are a **primary victory objective** - required to complete campaign levels
 - Report requirements double each level: L1=5, L2=10, L3=20, L4=40, L5=80, L6=160, L7=320
 - Tish (Intel Analyst) provides victory dialogue acknowledging reports received
+- **"Send ALL" batch upload**: Sends all pending reports at once (requires 11+, disabled during attacks)
+  - Latency: `min(20, log₂(count) × 1.5)` ticks
+  - Bandwidth impact: 0-10=0%, 11-50=15%, 51-200=30%, 201-500=55%, 501+=80%
+
+### Intel Milestones (16 Total)
+Progressive report goals with credit rewards and permanent bonuses:
+
+| # | Reports | Name | Credit Reward | Permanent Bonus |
+|---|---------|------|---------------|-----------------|
+| 1 | 1 | First Contact | 1,000 | +5% intel collection |
+| 2 | 3 | Pattern Spotter | 5,000 | +5% pattern ID speed |
+| 3 | 5 | Analyst | 15,000 | +5% damage reduction |
+| 4 | 10 | Senior Analyst | 50,000 | +10% intel collection |
+| 5 | 15 | Counter-Intel | 150,000 | 5% fewer attacks |
+| 6 | 20 | Intel Officer | 400,000 | +10% pattern ID speed |
+| 7 | 25 | Master Analyst | 500,000 | +10% damage reduction |
+| 8 | 50 | Signal Analyst | 750,000 | +5% credit protection |
+| 9 | 100 | Network Sentinel | 1,500,000 | +10% intel collection |
+| 10 | 200 | Cipher Breaker | 3,000,000 | +5% damage reduction |
+| 11 | 400 | Grid Watcher | 7,500,000 | +10% pattern ID speed |
+| 12 | 800 | Shadow Operator | 20,000,000 | 10% fewer attacks |
+| 13 | 1,500 | Phantom Protocol | 50,000,000 | +15% intel collection |
+| 14 | 3,000 | Architect's Eye | 150,000,000 | +10% damage reduction |
+| 15 | 5,000 | Omega Analyst | 500,000,000 | +10% credit protection |
+| 16 | 10,000 | Grid Watch Zero | 2,000,000,000 | +20% intel collection |
+
+Credit protection bonuses reduce credit loss during attacks: `min(0.90, defenseStack.totalCreditProtection + malusIntel.creditProtectionBonus)`
 
 ### Critical Alarm
 - Full-screen overlay when risk = HUNTED or MARKED

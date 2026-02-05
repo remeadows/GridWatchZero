@@ -610,6 +610,58 @@ The README.md already references the correct GridWatchZero URLs. GitHub Pages is
 
 ---
 
+### ISSUE-021: "Send ALL" Batch Upload Shows Wrong Credit Amount
+**Status**: ✅ Fixed
+**Severity**: Major
+**Reported**: 2026-02-05
+**Description**: After completing a batch intel upload via "Send ALL", the alert banner displays the player's lifetime total intel credits (~963K) instead of the credits earned in that specific batch. Player sees "+₵963.1K" and believes they were promised that amount, but actual credits deposited are much smaller (batch-specific).
+**Impact**: Confusing UX — players think they received zero credits because the displayed amount doesn't match their credit change.
+
+**Root Cause**: In `GameEngine.swift` line 403, the batch complete event passed `malusIntel.totalIntelCredits` (lifetime accumulated total) instead of the credits earned during the batch upload.
+
+**Fix**:
+- Added `batchCreditsEarned` accumulator variable in the batch processing loop
+- Accumulate `result.creditsEarned` for each report successfully sent in the batch
+- Pass `batchCreditsEarned` to the `.batchUploadComplete` event instead of lifetime total
+- Credits WERE being deposited correctly — only the display was wrong
+
+**Files Changed**:
+- `Engine/GameEngine.swift` — Batch credit accumulator, event payload fix
+
+**Closed**: 2026-02-05
+
+---
+
+### ISSUE-022: Intel Milestones Cap at 25 Reports — No Goals for Endgame
+**Status**: ✅ Fixed
+**Severity**: Major
+**Reported**: 2026-02-05
+**Description**: Intel milestones have only 7 levels (capping at 25 reports). After claiming all 7, the UI permanently shows "ALL MILESTONES COMPLETE" with no further goals. Campaign levels require up to 10,000 reports (Level 20), leaving a massive 9,975-report gap with zero progression feedback.
+**Impact**: Players lose motivation and progression signals for the majority of the campaign. At ~430 credits per report, the only incentive is grinding credits with no milestone rewards.
+
+**Fix**: Added 9 new endgame milestones aligned with campaign progression:
+| Reports | Name | Credit Reward | Permanent Bonus |
+|---------|------|---------------|-----------------|
+| 50 | Signal Analyst | 750K | +5% credit protection |
+| 100 | Network Sentinel | 1.5M | +10% intel collection |
+| 200 | Cipher Breaker | 3M | +5% damage reduction |
+| 400 | Grid Watcher | 7.5M | +10% pattern ID speed |
+| 800 | Shadow Operator | 20M | 10% fewer attacks |
+| 1,500 | Phantom Protocol | 50M | +15% intel collection |
+| 3,000 | Architect's Eye | 150M | +10% damage reduction |
+| 5,000 | Omega Analyst | 500M | +10% credit protection |
+| 10,000 | Grid Watch Zero | 2B | +20% intel collection |
+
+No save migration needed — `claimedMilestones` is `Set<Int>`, new raw values simply absent from existing saves. Total milestones: 16 (7 original + 9 new). New `IntelBonus.creditProtection` bonus wired into attack damage calculation.
+
+**Files Changed**:
+- `Models/DefenseApplication.swift` — 9 new IntelMilestone cases, all switch arms, creditProtection bonus
+- `Engine/GameEngine.swift` — Credit protection wiring in attack damage calc
+
+**Closed**: 2026-02-05
+
+---
+
 ### ENH-017: Audio System Upgrade Using Apple Dev Tools
 **Priority**: High
 **Status**: Open
