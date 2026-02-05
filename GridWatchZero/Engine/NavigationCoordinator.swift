@@ -171,6 +171,11 @@ class NavigationCoordinator: ObservableObject {
         // Unlock character dossiers based on level completion
         DossierManager.shared.unlockDossiersForLevel(levelId)
 
+        // Unlock Insane Mode exclusive dossiers
+        if stats.isInsane {
+            DossierManager.shared.unlockDossiersForInsaneLevel(levelId)
+        }
+
         // For Level 7, show Helix awakening cinematic first
         if levelId == 7 {
             currentScreen = .helixAwakening

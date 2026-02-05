@@ -127,6 +127,26 @@ class DossierManager: ObservableObject {
         unlockDossier(for: .malus)
     }
 
+    /// Unlock Insane Mode exclusive dossiers based on Insane level completion
+    func unlockDossiersForInsaneLevel(_ levelId: Int) {
+        switch levelId {
+        case 5:
+            unlockDossier(withId: "dossier_flex_insane")
+        case 10:
+            unlockDossier(withId: "dossier_malus_insane")
+        case 13:
+            unlockDossier(withId: "dossier_prometheus_classified")
+        case 15:
+            unlockDossier(withId: "dossier_helix_prime")
+        case 18:
+            unlockDossier(withId: "dossier_architect_journal")
+        case 20:
+            unlockDossier(withId: "dossier_zero_protocol")
+        default:
+            break
+        }
+    }
+
     // MARK: - Queries
 
     var unlockedDossiers: [CharacterDossier] {

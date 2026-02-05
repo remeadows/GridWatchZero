@@ -69,12 +69,11 @@ open "/Users/russmeadows/Dev/Games/GridWatchZero/GridWatchZero.xcodeproj"
 | **C** | Certification Maturity | ✅ Complete |
 | **D** | Intel System Enhancements | ✅ Complete |
 | **E** | Link Latency & Protection | ✅ Complete |
-| **F** | Insane Dossiers & Polish | 🔜 Next |
+| **F** | Insane Dossiers & Polish | ✅ Complete |
 
 ### Remaining Tasks
-1. **Sprint F** - 6 new Insane Mode dossiers, story dialog, save migration
-4. **TestFlight Testing** - Verify v2.0 balance on device
-5. **App Store Submission** - Submit for Apple review when testing complete
+1. **TestFlight Testing** - Verify v2.0 balance on device
+2. **App Store Submission** - Submit for Apple review when testing complete
 
 ---
 

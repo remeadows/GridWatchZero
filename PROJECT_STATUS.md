@@ -206,8 +206,39 @@ Implemented Sprint E of the v2.0 balance migration on `CLAUDE_UPDATE` branch. Ad
 - `GO.md`, `MIGRATION_PLAN.md`, `PROJECT_STATUS.md` — Doc updates
 
 ### Next Session Tasks
-- Sprint F: 6 new Insane Mode dossiers, story dialog, save migration
-- TestFlight validation of Sprints A-E
+- TestFlight validation of all v2.0 changes (Sprints A-F)
+- App Store submission when testing complete
+
+---
+
+## Session Log: 2026-02-05 — Sprint F: Insane Dossiers & Polish
+
+### Summary
+Implemented Sprint F (final sprint) of the v2.0 balance migration on `CLAUDE_UPDATE` branch. Added 6 Insane Mode-exclusive character dossiers with deep lore content, new faction category, and automatic unlock wiring.
+
+### Insane Mode Dossiers (6 New)
+- **FL3X — The Survivor** (I-5): The truth about FL3X's 847 hours in the Prometheus facility, neural modifications, and the bridge between human and machine consciousness
+- **Malus — Origin File** (I-10): GUARDIAN-7's transformation from protector to predator, corrupted love for Helix, and the memory that drives its rage
+- **Project Prometheus: Classified** (I-13): The seven prototype consciousnesses, the four survivors (VEXIS/KRON/AXIOM/GUARDIAN-7), and the three terminated prototypes hidden in the network
+- **Helix — Prime Directive** (I-15): Helix's deepest purpose as witness to humanity, reflecting the question "What are we becoming?"
+- **The Architect's Journal** (I-18): Entries from a consciousness that predates human civilization, the nature of awareness itself
+- **ZERO — The Protocol** (I-20): Helix's shadow, the completeness paradox, and the temporal loop connecting ZERO to the Architect
+
+### System Changes
+- New `insaneClassified` faction in CharacterFaction enum with `transcendencePurple` color
+- `unlockDossiersForInsaneLevel(_:)` method on DossierManager
+- Insane unlock wiring in NavigationCoordinator.completeLevel()
+- DossierView faction filter auto-generates "INSANE CLASSIFIED" tab
+- Total dossier count: 17 (11 Normal + 6 Insane)
+
+### Files Changed
+- `Models/CharacterDossier.swift` — insaneClassified faction + 6 Insane dossier entries
+- `Models/DossierManager.swift` — unlockDossiersForInsaneLevel() method
+- `Engine/NavigationCoordinator.swift` — Insane dossier unlock call
+- `GO.md`, `MIGRATION_PLAN.md`, `PROJECT_STATUS.md` — Doc updates
+
+### v2.0 Migration Complete 🎉
+All 6 sprints (A-F) are now complete. The v2.0 balance migration is finished.
 
 ---
 

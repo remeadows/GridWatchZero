@@ -73,7 +73,7 @@ GAMEPLAY, DEFENSE, and UNITS were authored separately. Cross-referencing formula
 | **C** | Certification Maturity | Medium | ✅ Complete | 40h/60h maturity timers, partial bonuses, Settings UI |
 | **D** | Intel System Enhancements | Medium | ✅ Complete | Send ALL, batch latency, early warning system |
 | **E** | Link Latency & Protection | Medium | ✅ Complete | Transfer delays, packet loss protection, credit protection |
-| **F** | Insane Dossiers & Polish | Lower | 🔜 Next | 6 new dossiers, story dialog updates, save migration |
+| **F** | Insane Dossiers & Polish | Lower | ✅ Complete | 6 new dossiers, faction filter, Insane unlock wiring |
 
 ---
 
@@ -219,6 +219,42 @@ Implement link-level transfer delays (latency buffer) based on link tier. Packet
 
 ---
 
+## Sprint F: Insane Dossiers & Polish (Detail)
+
+### Objective
+Add 6 Insane Mode-exclusive character dossiers unlocked at specific Insane level completions, with new "INSANE CLASSIFIED" faction category and automatic UI integration.
+
+### Files Modified
+
+| File | Changes |
+|------|---------|
+| `Models/CharacterDossier.swift` | Added `insaneClassified` faction, 6 new dossiers (FL3X Survivor, Malus Origin, Prometheus Classified, Helix Prime Directive, Architect's Journal, ZERO Protocol) |
+| `Models/DossierManager.swift` | Added `unlockDossiersForInsaneLevel(_:)` method (I-5, I-10, I-13, I-15, I-18, I-20) |
+| `Engine/NavigationCoordinator.swift` | Wired Insane dossier unlock call in `completeLevel()` when `stats.isInsane` |
+
+### Acceptance Criteria (All Met)
+- [x] 6 Insane Mode dossiers with full bio/combat/weakness/secret content
+- [x] New `insaneClassified` faction with `transcendencePurple` color
+- [x] Dossiers appear in existing DossierView grid (faction filter auto-generated)
+- [x] Insane dossier unlock triggered on Insane level completion (I-5/10/13/15/18/20)
+- [x] Normal mode dossier unlocks unaffected
+- [x] Total dossier count: 17 (11 Normal + 6 Insane)
+- [x] No save migration needed (DossierState uses separate persistence key v1)
+- [x] Builds cleanly with zero warnings
+
+### Insane Dossier Unlock Map
+
+| Insane Level | Dossier | Character | ID |
+|--------------|---------|-----------|-----|
+| I-5 | The Survivor | FL3X | `dossier_flex_insane` |
+| I-10 | Malus Origin File | Malus | `dossier_malus_insane` |
+| I-13 | Project Prometheus: Classified | Architect | `dossier_prometheus_classified` |
+| I-15 | Helix Prime Directive | Helix | `dossier_helix_prime` |
+| I-18 | The Architect's Journal | Architect | `dossier_architect_journal` |
+| I-20 | ZERO Protocol | ZERO | `dossier_zero_protocol` |
+
+---
+
 ## Version History
 
 | Date | Change |
@@ -230,3 +266,5 @@ Implement link-level transfer delays (latency buffer) based on link tier. Packet
 | 2026-02-05 | ISSUES.md archived (2003 → 636 lines), COMMIT.md + SESSIONS.md created |
 | 2026-02-05 | Sprint D completed — early warning system (IDS prediction) + batch intel upload |
 | 2026-02-05 | Sprint E completed — link latency buffer (packet loss + credit protection already done in Sprint B) |
+| 2026-02-05 | Sprint F completed — 6 Insane Mode dossiers, INSANE CLASSIFIED faction, unlock wiring |
+| 2026-02-05 | **All 6 sprints complete** — v2.0 balance migration finished |
