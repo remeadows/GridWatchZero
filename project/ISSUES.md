@@ -682,15 +682,22 @@ No save migration needed — `claimedMilestones` is `Set<Int>`, new raw values s
 
 ### TODO-001: Xcode Cloud Cannot See `main` Branch
 **Priority**: High
-**Status**: Open
+**Status**: In Progress
 **Reported**: 2026-02-05
+**Updated**: 2026-02-05
 **Description**: Xcode Cloud's "Start Build" dialog shows no branches available when trying to build from `main`. The workflow is configured for `main` but Xcode Cloud only indexed the legacy `master` branch from a previous successful build. An empty commit was pushed to `main` to trigger detection but the issue persists.
 **Impact**: Cannot trigger Xcode Cloud builds from `main` branch via App Store Connect.
-**Workaround**: Builds may still trigger automatically on push if the workflow's auto-build is enabled.
+**Root Cause**: Stale GitHub authorization token. Xcode Cloud's connection to GitHub had gone stale, preventing branch list fetching. The "Find a Branch" dropdown showed "There are no branches available" even with "Any Branches" selected.
+**Actions Taken**:
+1. Pushed empty commit to `main` to trigger detection — no effect
+2. Changed workflow from "Specific Branches" to "Any Branches" — still no branches visible
+3. Confirmed repo connection is correct: `https://github.com/remeadows/GridWatchZero.git`
+4. Revoked and reconnected Xcode Cloud GitHub application authorization
+5. Also found stale App Store Connect URLs still pointing to old `ProjectPlaguev1` repo — updated to `GridWatchZero`
 **Next Steps**:
-- Try deleting the old `master` workflow and creating a new one targeting `main`
-- Contact Apple Developer Support if branch detection continues to fail
-- Verify repository connection settings in App Store Connect → Xcode Cloud
+- Push a new commit to test if reconnected authorization resolves branch detection
+- If still failing, delete the "GridWatch" workflow entirely and recreate from scratch
+- Contact Apple Developer Support as last resort
 
 ---
 
