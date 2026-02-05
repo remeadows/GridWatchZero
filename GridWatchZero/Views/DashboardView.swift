@@ -281,7 +281,8 @@ struct DashboardView: View {
             ThreatBarView(
                 threatState: engine.threatState,
                 activeAttack: engine.activeAttack,
-                attacksSurvived: engine.threatState.attacksSurvived
+                attacksSurvived: engine.threatState.attacksSurvived,
+                earlyWarning: engine.activeEarlyWarning
             )
 
             // Sidebar content
@@ -376,7 +377,13 @@ struct DashboardView: View {
                             intel: engine.malusIntel,
                             onSendReport: {
                                 _ = engine.sendMalusReport()
-                            }
+                            },
+                            onSendAll: {
+                                _ = engine.sendAllMalusReports()
+                            },
+                            canSendAll: engine.canSendAllReports,
+                            batchUpload: engine.batchUploadState,
+                            earlyWarning: engine.activeEarlyWarning
                         )
                         .padding(.horizontal, layoutMode == .expanded ? 40 : 24)
                         .padding(.top, 16)
@@ -892,7 +899,13 @@ struct DashboardView: View {
                         intel: engine.malusIntel,
                         onSendReport: {
                             _ = engine.sendMalusReport()
-                        }
+                        },
+                        onSendAll: {
+                            _ = engine.sendAllMalusReports()
+                        },
+                        canSendAll: engine.canSendAllReports,
+                        batchUpload: engine.batchUploadState,
+                        earlyWarning: engine.activeEarlyWarning
                     )
 
                     // Recent lore/intel teaser
@@ -1027,7 +1040,8 @@ struct DashboardView: View {
             ThreatBarView(
                 threatState: engine.threatState,
                 activeAttack: engine.activeAttack,
-                attacksSurvived: engine.threatState.attacksSurvived
+                attacksSurvived: engine.threatState.attacksSurvived,
+                earlyWarning: engine.activeEarlyWarning
             )
             .frame(height: 32)
             .clipped()
@@ -1183,7 +1197,13 @@ struct DashboardView: View {
                         intel: engine.malusIntel,
                         onSendReport: {
                             _ = engine.sendMalusReport()
-                        }
+                        },
+                        onSendAll: {
+                            _ = engine.sendAllMalusReports()
+                        },
+                        canSendAll: engine.canSendAllReports,
+                        batchUpload: engine.batchUploadState,
+                        earlyWarning: engine.activeEarlyWarning
                     )
                     .tutorialHighlight(.intelPanel, manager: tutorialManager)
                     .padding(.horizontal)
@@ -1525,13 +1545,15 @@ struct ThreatBarView: View {
     let threatState: ThreatState
     let activeAttack: Attack?
     let attacksSurvived: Int
+    var earlyWarning: EarlyWarning? = nil
 
     var body: some View {
         HStack(spacing: 12) {
             // Threat / Defense / Risk indicator
             ThreatIndicatorView(
                 threatState: threatState,
-                activeAttack: activeAttack
+                activeAttack: activeAttack,
+                earlyWarning: earlyWarning
             )
 
             Spacer()

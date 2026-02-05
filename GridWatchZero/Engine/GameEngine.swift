@@ -42,10 +42,13 @@ enum GameEvent: Equatable {
     case randomEvent(String, String)  // title, message
     case loreUnlocked(String)  // fragment title
     case milestoneCompleted(String)  // milestone title
+    case earlyWarning(AttackType, Int, Double)  // predicted type, ticks until attack, accuracy %
+    case batchUploadStarted(Int)   // total reports in batch
+    case batchUploadComplete(Int, Double)  // reports sent, total credits earned
 
     var isAlert: Bool {
         switch self {
-        case .attackStarted, .nodeDisabled, .malusMessage, .firewallDestroyed:
+        case .attackStarted, .nodeDisabled, .malusMessage, .firewallDestroyed, .earlyWarning:
             return true
         default:
             return false
@@ -238,6 +241,12 @@ final class GameEngine: ObservableObject {
     @Published private(set) var showCriticalAlarm: Bool = false
     @Published private(set) var criticalAlarmAcknowledged: Bool = false
 
+    // Sprint D: Early Warning System
+    @Published private(set) var activeEarlyWarning: EarlyWarning? = nil
+
+    // Sprint D: Batch Upload State
+    @Published private(set) var batchUploadState: BatchUploadState? = nil
+
     // MARK: - Event Multipliers (from random events)
 
     private var sourceMultiplier: Double = 1.0
@@ -360,6 +369,43 @@ final class GameEngine: ObservableObject {
         // === RANDOM EVENT PHASE ===
         processRandomEvents()
 
+        // === BATCH UPLOAD PHASE (Sprint D) ===
+        var batchBandwidthCost: Double = 0
+        if var upload = batchUploadState {
+            // Cancel batch upload if an attack starts
+            if activeAttack != nil {
+                batchUploadState = nil
+            } else {
+                upload.ticksElapsed += 1
+                // Calculate reports to send this tick (spread evenly across latency)
+                let reportsPerTick = max(1, upload.totalReports / max(1, upload.latencyTicks))
+                let reportsThisTick = min(reportsPerTick, upload.totalReports - upload.reportsSent)
+
+                for _ in 0..<reportsThisTick {
+                    if malusIntel.canSendReport {
+                        let intelMultiplier = defenseStack.totalIntelMultiplier
+                        if let result = malusIntel.sendReport(intelMultiplier: intelMultiplier) {
+                            resources.addCredits(result.creditsEarned)
+                            upload.reportsSent += 1
+                        }
+                    } else {
+                        break  // No more footprint data
+                    }
+                }
+
+                batchBandwidthCost = upload.bandwidthCost
+
+                if upload.isComplete || upload.ticksElapsed >= upload.latencyTicks || !malusIntel.canSendReport {
+                    // Upload finished
+                    emitEvent(.batchUploadComplete(upload.reportsSent, malusIntel.totalIntelCredits))
+                    AudioManager.shared.playSound(.milestone)
+                    batchUploadState = nil
+                } else {
+                    batchUploadState = upload
+                }
+            }
+        }
+
         // === PRODUCTION PHASE ===
 
         // Sprint C: Compute certification multiplier once per tick
@@ -374,8 +420,8 @@ final class GameEngine: ObservableObject {
         // Step 2: Check how much the sink can accept
         let sinkCanAccept = sink.bufferRemaining
 
-        // Step 3: Apply bandwidth debuff from attacks AND event multiplier
-        let effectiveBandwidth = link.bandwidth * (1.0 - bandwidthDebuff) * bandwidthMultiplier
+        // Step 3: Apply bandwidth debuff from attacks, events, AND batch upload
+        let effectiveBandwidth = link.bandwidth * (1.0 - bandwidthDebuff) * (1.0 - batchBandwidthCost) * bandwidthMultiplier
 
         // Step 4: Link transfers data (applies bandwidth cap + packet loss)
         var modifiedLink = link
@@ -605,34 +651,80 @@ final class GameEngine: ObservableObject {
                 return  // Skip attack generation during grace period
             }
 
-            // Check for early warning (from intel milestone + IDS early warning)
-            let warningChance = malusIntel.attackWarningChance + defenseStack.totalEarlyWarningChance
-            var attackBlocked = false
-            if warningChance > 0 && Double.random(in: 0...1, using: &rng) < warningChance {
-                // Early warning - chance to prevent attack entirely
-                attackBlocked = true
+            // Sprint D: Process active early warning countdown
+            if var warning = activeEarlyWarning {
+                warning.tick()
+                if warning.isExpired {
+                    // Warning countdown finished — decide if attack actually lands
+                    let attackLands = Double.random(in: 0...1, using: &rng) < warning.accuracy
+                    activeEarlyWarning = nil
+
+                    if attackLands {
+                        // Predicted attack arrives
+                        let frequencyMultiplier = levelConfiguration?.threatMultiplier ?? 1.0
+                        let severity = Double.random(in: 0.5...2.0, using: &rng) * frequencyMultiplier
+                        let newAttack = Attack(type: warning.predictedAttackType, severity: severity, startTick: currentTick)
+                        activeAttack = newAttack
+                        emitEvent(.attackStarted(newAttack.type))
+                        AudioManager.shared.playSound(.attackIncoming)
+                    }
+                    // If !attackLands: false positive — warning was wrong, no attack
+                } else {
+                    activeEarlyWarning = warning
+                }
+                return  // While warning is active, no other attack generation
             }
 
-            if !attackBlocked {
-                // Get frequency multiplier from campaign mode (e.g., 2x for Insane)
+            // Sprint D: IDS Early Warning Prediction System
+            // If IDS level >= 10, try to predict the next attack instead of just blocking
+            let idsLevel = defenseStack.totalIdsLevel
+            if let params = EarlyWarning.parameters(forIdsLevel: idsLevel) {
+                // Roll to see if we would have generated an attack this tick
                 let frequencyMultiplier = levelConfiguration?.threatMultiplier ?? 1.0
-
-                // Get minimum attack chance floor from level config
                 let minimumAttackChance = levelConfiguration?.minimumAttackChance ?? 0.0
-
-                // Use RAW threat level for attack generation (defense reduces DAMAGE, not frequency)
-                // This ensures attacks keep happening even with high defense
-                if let newAttack = AttackGenerator.tryGenerateAttack(
-                    threatLevel: threatState.currentLevel,  // Raw threat, not effectiveRiskLevel
+                if let predictedAttack = AttackGenerator.tryGenerateAttack(
+                    threatLevel: threatState.currentLevel,
                     currentTick: currentTick,
                     random: &rng,
-                    frequencyReduction: defenseStack.attackFrequencyReduction + malusIntel.attackFrequencyReductionBonus,  // Sprint B: risk reduction from defense apps
+                    frequencyReduction: defenseStack.attackFrequencyReduction + malusIntel.attackFrequencyReductionBonus,
                     frequencyMultiplier: frequencyMultiplier,
                     minimumChance: minimumAttackChance
                 ) {
-                    activeAttack = newAttack
-                    emitEvent(.attackStarted(newAttack.type))
-                    AudioManager.shared.playSound(.attackIncoming)
+                    // IDS detected incoming attack — start countdown instead of immediate attack
+                    let warning = EarlyWarning(
+                        predictedAttackType: predictedAttack.type,
+                        warningTicks: params.ticks,
+                        accuracy: params.accuracy,
+                        ticksRemaining: params.ticks
+                    )
+                    activeEarlyWarning = warning
+                    emitEvent(.earlyWarning(predictedAttack.type, params.ticks, params.accuracy))
+                    AudioManager.shared.playSound(.warning)
+                    return
+                }
+            } else {
+                // Legacy behavior for IDS level < 10: simple block chance from milestones + IDS
+                let warningChance = malusIntel.attackWarningChance + defenseStack.totalEarlyWarningChance
+                var attackBlocked = false
+                if warningChance > 0 && Double.random(in: 0...1, using: &rng) < warningChance {
+                    attackBlocked = true
+                }
+
+                if !attackBlocked {
+                    let frequencyMultiplier = levelConfiguration?.threatMultiplier ?? 1.0
+                    let minimumAttackChance = levelConfiguration?.minimumAttackChance ?? 0.0
+                    if let newAttack = AttackGenerator.tryGenerateAttack(
+                        threatLevel: threatState.currentLevel,
+                        currentTick: currentTick,
+                        random: &rng,
+                        frequencyReduction: defenseStack.attackFrequencyReduction + malusIntel.attackFrequencyReductionBonus,
+                        frequencyMultiplier: frequencyMultiplier,
+                        minimumChance: minimumAttackChance
+                    ) {
+                        activeAttack = newAttack
+                        emitEvent(.attackStarted(newAttack.type))
+                        AudioManager.shared.playSound(.attackIncoming)
+                    }
                 }
             }
         }
@@ -1407,6 +1499,43 @@ final class GameEngine: ObservableObject {
         TutorialManager.shared.recordAction(.sentReport)
         saveGame()
         return true
+    }
+
+    // MARK: - Sprint D: Batch Intel Upload
+
+    /// Start "Send ALL" batch intel upload
+    /// - Returns: true if batch upload started, false if cannot (no reports, active attack, already uploading)
+    func sendAllMalusReports() -> Bool {
+        // Can't send during active attack
+        guard activeAttack == nil else { return false }
+        // Can't start if already uploading
+        guard batchUploadState == nil else { return false }
+        // Need at least 11 pending reports for batch mode
+        let pending = malusIntel.pendingReportCount
+        guard pending >= 11 else { return false }
+
+        let latency = BatchUploadState.latency(forReportCount: pending)
+        let bandwidthCost = BatchUploadState.bandwidthImpact(forReportCount: pending)
+
+        batchUploadState = BatchUploadState(
+            totalReports: pending,
+            latencyTicks: latency,
+            bandwidthCost: bandwidthCost
+        )
+
+        emitEvent(.batchUploadStarted(pending))
+        AudioManager.shared.playSound(.upgrade)
+        return true
+    }
+
+    /// Cancel an in-progress batch upload
+    func cancelBatchUpload() {
+        batchUploadState = nil
+    }
+
+    /// Whether the "Send ALL" button should be shown
+    var canSendAllReports: Bool {
+        malusIntel.pendingReportCount >= 11 && activeAttack == nil && batchUploadState == nil
     }
 
     /// Get info about next intel milestone

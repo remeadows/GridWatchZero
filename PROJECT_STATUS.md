@@ -186,6 +186,43 @@ See [ISSUES.md](./ISSUES.md) for detailed tracking.
 
 ---
 
+## Session Log: 2026-02-05 — Sprint D: Intel System Enhancements
+
+### Summary
+Implemented Sprint D of the v2.0 balance migration on `CLAUDE_UPDATE` branch. Added IDS-based early warning system with attack prediction countdown, and "Send ALL" batch intel upload with latency and bandwidth tradeoffs.
+
+### Early Warning System (IDS Prediction)
+- `EarlyWarning` struct with IDS-level-based parameters (2-5 ticks advance warning, 60-90% accuracy)
+- Replaced simple block-chance with prediction countdown for IDS ≥ 10
+- False positives possible (accuracy < 100%); legacy behavior preserved for IDS < 10
+- Early warning banner (AlertBannerView) + threat bar countdown indicator (ThreatIndicatorView)
+- In-panel display in MalusIntelPanel showing predicted attack type, confidence, countdown
+
+### Batch Intel Upload ("Send ALL")
+- `BatchUploadState` struct with latency formula: `min(20, log₂(count) × 1.5)` ticks
+- Bandwidth impact tiers: 0-10=0%, 11-50=15%, 51-200=30%, 201-500=55%, 501+=80%
+- Requires 11+ pending reports, no active attack, no existing upload
+- Auto-cancels if attack starts during upload
+- Progress bar in MalusIntelPanel with bandwidth cost warning
+- "Send ALL (N)" button showing latency estimate and bandwidth impact
+
+### Files Changed
+- `Models/ThreatSystem.swift` — EarlyWarning + BatchUploadState structs
+- `Models/DefenseApplication.swift` — pendingReportCount, totalIdsLevel
+- `Engine/GameEngine.swift` — processThreats() rewrite, batch upload processing, sendAllMalusReports()
+- `Views/Components/CriticalAlarmView.swift` — MalusIntelPanel with Send ALL + batch progress + early warning
+- `Views/Components/ThreatIndicatorView.swift` — EarlyWarningIndicator component
+- `Views/Components/AlertBannerView.swift` — EarlyWarningBanner + batch upload banners
+- `Views/DashboardView.swift` — Wired new parameters to all MalusIntelPanel + ThreatBarView call sites
+- `GO.md`, `MIGRATION_PLAN.md`, `PROJECT_STATUS.md` — Doc updates
+
+### Next Session Tasks
+- Sprint E: Link latency, packet loss protection, credit protection
+- Sprint F: 6 new Insane Mode dossiers, story dialog, save migration
+- TestFlight validation of Sprints A-D
+
+---
+
 ## Session Log: 2026-02-05 — v2.0 Balance Migration (Sprints A-C)
 
 ### Summary

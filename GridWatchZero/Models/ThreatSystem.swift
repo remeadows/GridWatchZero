@@ -688,6 +688,68 @@ struct Attack: Identifiable, Codable {
     }
 }
 
+// MARK: - Early Warning (Sprint D)
+
+/// Tracks an active early warning prediction from IDS investment
+struct EarlyWarning: Equatable {
+    let predictedAttackType: AttackType
+    let warningTicks: Int          // Total ticks of advance warning (2-5)
+    let accuracy: Double           // Probability the warning is correct (0.6-0.9)
+    var ticksRemaining: Int        // Countdown to predicted attack
+
+    var isExpired: Bool { ticksRemaining <= 0 }
+    var progress: Double { 1.0 - (Double(ticksRemaining) / Double(warningTicks)) }
+
+    /// Calculate warning parameters from total IDS level
+    static func parameters(forIdsLevel level: Int) -> (ticks: Int, accuracy: Double)? {
+        switch level {
+        case 0..<10:  return nil           // No warning below IDS level 10
+        case 10...20: return (2, 0.60)     // 2 ticks, 60% accuracy
+        case 21...40: return (3, 0.70)     // 3 ticks, 70% accuracy
+        case 41...60: return (4, 0.80)     // 4 ticks, 80% accuracy
+        default:      return (5, 0.90)     // 5 ticks, 90% accuracy (IDS 61+)
+        }
+    }
+
+    mutating func tick() {
+        ticksRemaining = max(0, ticksRemaining - 1)
+    }
+}
+
+// MARK: - Batch Upload State (Sprint D)
+
+/// Tracks state of a "Send ALL" batch intel upload
+struct BatchUploadState: Equatable {
+    let totalReports: Int
+    var reportsSent: Int = 0
+    let latencyTicks: Int          // Total ticks for upload (from latency formula)
+    var ticksElapsed: Int = 0
+    let bandwidthCost: Double      // Fraction of bandwidth consumed (0.0-0.8)
+
+    var isComplete: Bool { reportsSent >= totalReports }
+    var progress: Double { totalReports > 0 ? Double(reportsSent) / Double(totalReports) : 1.0 }
+    var tickProgress: Double { latencyTicks > 0 ? Double(ticksElapsed) / Double(latencyTicks) : 1.0 }
+
+    /// Calculate upload latency in ticks from report count
+    /// Formula: min(20, log2(reportCount) × 1.5)
+    static func latency(forReportCount count: Int) -> Int {
+        guard count > 0 else { return 0 }
+        let rawLatency = log2(Double(count)) * 1.5
+        return max(1, Int(min(20, rawLatency).rounded(.up)))
+    }
+
+    /// Calculate bandwidth cost fraction based on batch size
+    static func bandwidthImpact(forReportCount count: Int) -> Double {
+        switch count {
+        case 0...10:   return 0.0     // Instant, no bandwidth impact
+        case 11...50:  return 0.15    // Minor strain
+        case 51...200: return 0.30    // Moderate strain
+        case 201...500: return 0.55   // Heavy strain
+        default:       return 0.80    // Maximum strain
+        }
+    }
+}
+
 // MARK: - Attack Damage
 
 struct AttackDamage {

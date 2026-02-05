@@ -1185,6 +1185,11 @@ struct DefenseStack: Codable {
         applications[.ids]?.earlyWarningChance ?? 0
     }
 
+    /// Total IDS level — used for Sprint D early warning prediction system
+    var totalIdsLevel: Int {
+        applications[.ids]?.level ?? 0
+    }
+
     /// Total automation level - enables special features
     /// 0.25+ = auto-repair firewall
     /// 0.50+ = reduced attack duration
@@ -1381,6 +1386,21 @@ struct MalusIntelligence: Codable {
     /// Check if ready to send report
     var canSendReport: Bool {
         footprintData >= reportCost
+    }
+
+    /// Number of reports that can be sent with current footprint data
+    /// Used by "Send ALL" batch upload feature
+    var pendingReportCount: Int {
+        guard canSendReport else { return 0 }
+        var count = 0
+        var simulatedFootprint = footprintData
+        var simulatedSent = reportsSent
+        while simulatedFootprint >= 200.0 * (1.0 + Double(simulatedSent) * 0.05) {
+            simulatedFootprint -= 200.0 * (1.0 + Double(simulatedSent) * 0.05)
+            simulatedSent += 1
+            count += 1
+        }
+        return count
     }
 
     /// Cost to send next report (scales slightly with reports sent)

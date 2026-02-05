@@ -303,6 +303,10 @@ struct GlitchOverlay: View {
 struct MalusIntelPanel: View {
     let intel: MalusIntelligence
     let onSendReport: () -> Void
+    var onSendAll: (() -> Void)? = nil
+    var canSendAll: Bool = false
+    var batchUpload: BatchUploadState? = nil
+    var earlyWarning: EarlyWarning? = nil
 
     @State private var showingInfo = false
 
@@ -507,6 +511,123 @@ struct MalusIntelPanel: View {
                 .cornerRadius(4)
             }
             .disabled(!intel.canSendReport)
+
+            // Batch upload progress
+            if let upload = batchUpload {
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack {
+                        Image(systemName: "arrow.up.circle.fill")
+                            .font(.system(size: 10))
+                            .foregroundColor(.neonCyan)
+                        Text("UPLOADING \(upload.reportsSent)/\(upload.totalReports) REPORTS")
+                            .font(.system(size: 8, weight: .bold, design: .monospaced))
+                            .foregroundColor(.neonCyan)
+                        Spacer()
+                        Text("\(Int(upload.progress * 100))%")
+                            .font(.system(size: 8, weight: .bold, design: .monospaced))
+                            .foregroundColor(.neonCyan)
+                    }
+
+                    GeometryReader { geo in
+                        ZStack(alignment: .leading) {
+                            Rectangle()
+                                .fill(Color.terminalGray.opacity(0.3))
+                            Rectangle()
+                                .fill(Color.neonCyan)
+                                .frame(width: geo.size.width * upload.progress)
+                        }
+                    }
+                    .frame(height: 6)
+                    .cornerRadius(3)
+
+                    if upload.bandwidthCost > 0 {
+                        Text("⚠ Bandwidth reduced \(Int(upload.bandwidthCost * 100))% during upload")
+                            .font(.system(size: 7, design: .monospaced))
+                            .foregroundColor(.neonAmber)
+                    }
+                }
+                .padding(8)
+                .background(Color.neonCyan.opacity(0.1))
+                .cornerRadius(4)
+            }
+
+            // Early warning display
+            if let warning = earlyWarning {
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .font(.system(size: 10))
+                            .foregroundColor(.neonAmber)
+                        Text("⚡ IDS EARLY WARNING")
+                            .font(.system(size: 8, weight: .bold, design: .monospaced))
+                            .foregroundColor(.neonAmber)
+                        Spacer()
+                        Text("\(warning.ticksRemaining)s")
+                            .font(.system(size: 9, weight: .bold, design: .monospaced))
+                            .foregroundColor(.neonRed)
+                    }
+
+                    HStack(spacing: 4) {
+                        Text("Predicted: \(warning.predictedAttackType.rawValue)")
+                            .font(.system(size: 7, weight: .bold, design: .monospaced))
+                            .foregroundColor(.neonRed)
+                        Spacer()
+                        Text("Confidence: \(Int(warning.accuracy * 100))%")
+                            .font(.system(size: 7, design: .monospaced))
+                            .foregroundColor(.terminalGray)
+                    }
+
+                    GeometryReader { geo in
+                        ZStack(alignment: .leading) {
+                            Rectangle()
+                                .fill(Color.terminalGray.opacity(0.3))
+                            Rectangle()
+                                .fill(Color.neonAmber)
+                                .frame(width: geo.size.width * warning.progress)
+                        }
+                    }
+                    .frame(height: 4)
+                    .cornerRadius(2)
+                }
+                .padding(8)
+                .background(Color.neonAmber.opacity(0.1))
+                .cornerRadius(4)
+            }
+
+            // Send ALL button (requires 11+ pending reports)
+            if let onSendAll = onSendAll, canSendAll {
+                let pendingCount = intel.pendingReportCount
+                Button(action: onSendAll) {
+                    HStack {
+                        Image(systemName: "arrow.up.doc.fill")
+                            .font(.system(size: 10))
+                        VStack(alignment: .leading, spacing: 1) {
+                            Text("SEND ALL (\(pendingCount))")
+                                .font(.system(size: 9, weight: .bold, design: .monospaced))
+                            Text("Batch upload with latency")
+                                .font(.system(size: 7, design: .monospaced))
+                                .opacity(0.8)
+                        }
+                        Spacer()
+                        VStack(alignment: .trailing, spacing: 1) {
+                            let latency = BatchUploadState.latency(forReportCount: pendingCount)
+                            Text("~\(latency)s latency")
+                                .font(.system(size: 7, weight: .bold, design: .monospaced))
+                            let bwImpact = BatchUploadState.bandwidthImpact(forReportCount: pendingCount)
+                            if bwImpact > 0 {
+                                Text("-\(Int(bwImpact * 100))% bandwidth")
+                                    .font(.system(size: 7, design: .monospaced))
+                                    .opacity(0.8)
+                            }
+                        }
+                    }
+                    .foregroundColor(.terminalBlack)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 8)
+                    .background(Color.neonCyan)
+                    .cornerRadius(4)
+                }
+            }
 
             // Tip for new players
             if intel.reportsSent == 0 && intel.footprintData < 50 {

@@ -35,7 +35,8 @@ struct AlertBannerView: View {
     private func shouldShowBanner(for event: GameEvent) -> Bool {
         switch event {
         case .attackStarted, .malusMessage, .nodeDisabled, .milestone,
-             .randomEvent, .loreUnlocked, .milestoneCompleted:
+             .randomEvent, .loreUnlocked, .milestoneCompleted,
+             .earlyWarning, .batchUploadStarted, .batchUploadComplete:
             return true
         default:
             return false
@@ -65,6 +66,15 @@ struct AlertBannerView: View {
 
         case .milestoneCompleted(let title):
             MilestoneCompletedBanner(title: title)
+
+        case .earlyWarning(let type, let ticks, let accuracy):
+            EarlyWarningBanner(attackType: type, ticks: ticks, accuracy: accuracy)
+
+        case .batchUploadStarted(let count):
+            SystemAlertBanner(message: "Batch upload started: \(count) reports queued", color: .neonCyan)
+
+        case .batchUploadComplete(let count, let credits):
+            SystemAlertBanner(message: "Upload complete: \(count) reports sent (+₵\(credits.formatted))", color: .neonGreen)
 
         default:
             EmptyView()
@@ -454,6 +464,60 @@ struct MilestoneCompletedBanner: View {
     }
 }
 
+// MARK: - Early Warning Banner
+
+struct EarlyWarningBanner: View {
+    let attackType: AttackType
+    let ticks: Int
+    let accuracy: Double
+    @State private var isPulsing = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.system(size: 20, weight: .bold))
+                .foregroundColor(.neonAmber)
+                .opacity(reduceMotion ? 1.0 : (isPulsing ? 0.5 : 1.0))
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text("⚡ IDS EARLY WARNING")
+                    .font(.terminalSmall)
+                    .foregroundColor(.neonAmber)
+
+                Text("\(attackType.rawValue) predicted in \(ticks)s (\(Int(accuracy * 100))% confidence)")
+                    .font(.terminalMicro)
+                    .foregroundColor(.terminalGray)
+            }
+
+            Spacer()
+        }
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 4)
+                .fill(Color.dimAmber.opacity(0.5))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 4)
+                        .stroke(Color.neonAmber, lineWidth: 2)
+                        .opacity(reduceMotion ? 1.0 : (isPulsing ? 0.5 : 1.0))
+                )
+        )
+        .padding(.horizontal)
+        .onAppear {
+            guard !reduceMotion else { return }
+            withAnimation(
+                Animation.easeInOut(duration: 0.4)
+                    .repeatForever(autoreverses: true)
+            ) {
+                isPulsing = true
+            }
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Early warning: \(attackType.rawValue) attack predicted in \(ticks) seconds, \(Int(accuracy * 100)) percent confidence")
+        .accessibilityAddTraits(.updatesFrequently)
+    }
+}
+
 #Preview {
     VStack(spacing: 20) {
         AttackBanner(attackType: .ddos)
@@ -463,6 +527,7 @@ struct MilestoneCompletedBanner: View {
         RandomEventBanner(title: "DATA SURGE", message: "> Corporate firewall breach detected.")
         LoreUnlockedBanner(title: "The Mission")
         MilestoneCompletedBanner(title: "First Payday")
+        EarlyWarningBanner(attackType: .ddos, ticks: 3, accuracy: 0.70)
     }
     .background(Color.terminalBlack)
 }

@@ -71,8 +71,8 @@ GAMEPLAY, DEFENSE, and UNITS were authored separately. Cross-referencing formula
 | **A** | Balance Foundation | Highest | ✅ Complete | Campaign levels, unit costs, defense costs, Insane Mode numbers |
 | **B** | Defense System Overhaul | High | ✅ Complete | All 6 categories gain intel/risk bonuses, new caps, renamed apps |
 | **C** | Certification Maturity | Medium | ✅ Complete | 40h/60h maturity timers, partial bonuses, Settings UI |
-| **D** | Intel System Enhancements | Medium | 🔜 Next | Send ALL, batch latency, early warning system |
-| **E** | Link Latency & Protection | Medium | ⏳ Planned | Transfer delays, packet loss protection, credit protection |
+| **D** | Intel System Enhancements | Medium | ✅ Complete | Send ALL, batch latency, early warning system |
+| **E** | Link Latency & Protection | Medium | 🔜 Next | Transfer delays, packet loss protection, credit protection |
 | **F** | Insane Dossiers & Polish | Lower | ⏳ Planned | 6 new dossiers, story dialog updates, save migration |
 
 ---
@@ -159,6 +159,37 @@ Implement certification maturity system with real-time timers. Normal certs matu
 
 ---
 
+## Sprint D: Intel System Enhancements (Detail)
+
+### Objective
+Implement "Send ALL" batch intel upload with latency/bandwidth tradeoffs, and IDS-based early warning system that predicts attacks before they land.
+
+### Files Modified
+
+| File | Changes |
+|------|---------|
+| `Models/ThreatSystem.swift` | Added `EarlyWarning` struct (prediction countdown with IDS-level-based params), `BatchUploadState` struct (latency/bandwidth formulas) |
+| `Models/DefenseApplication.swift` | Added `pendingReportCount` to MalusIntelligence, `totalIdsLevel` to DefenseStack |
+| `Engine/GameEngine.swift` | New GameEvent cases (earlyWarning, batchUploadStarted/Complete), @Published state, processThreats() rewrite for IDS prediction, batch upload tick processing, sendAllMalusReports(), cancelBatchUpload() |
+| `Views/Components/CriticalAlarmView.swift` | MalusIntelPanel gains onSendAll callback, batch upload progress bar, early warning display, "Send ALL" button |
+| `Views/Components/ThreatIndicatorView.swift` | Added EarlyWarningIndicator component, earlyWarning parameter propagation |
+| `Views/Components/AlertBannerView.swift` | Added EarlyWarningBanner, banner cases for batch upload events |
+| `Views/DashboardView.swift` | Wired onSendAll/canSendAll/batchUpload/earlyWarning to MalusIntelPanel (3 sites), earlyWarning to ThreatBarView (2 sites) |
+
+### Acceptance Criteria (All Met)
+- [x] IDS Early Warning: IDS level 10-20 → 2 ticks/60%, 21-40 → 3 ticks/70%, 41-60 → 4 ticks/80%, 61+ → 5 ticks/90%
+- [x] Early warning replaces simple block-chance for IDS ≥ 10; legacy preserved for IDS < 10
+- [x] False positives possible (accuracy < 100%)
+- [x] Batch upload requires 11+ pending reports, no active attack
+- [x] Latency formula: `min(20, log₂(count) × 1.5)` ticks
+- [x] Bandwidth impact: 0-10=0%, 11-50=15%, 51-200=30%, 201-500=55%, 501+=80%
+- [x] Batch upload auto-cancels when attack starts
+- [x] Early warning banner + threat bar indicator with countdown
+- [x] Batch upload progress bar with bandwidth cost warning
+- [x] Builds cleanly with zero warnings
+
+---
+
 ## Version History
 
 | Date | Change |
@@ -168,3 +199,4 @@ Implement certification maturity system with real-time timers. Normal certs matu
 | 2026-02-05 | Sprint B completed — defense system overhaul with per-category rate tables |
 | 2026-02-05 | Sprint C completed — certification maturity system (40h/60h timers) |
 | 2026-02-05 | ISSUES.md archived (2003 → 636 lines), COMMIT.md + SESSIONS.md created |
+| 2026-02-05 | Sprint D completed — early warning system (IDS prediction) + batch intel upload |

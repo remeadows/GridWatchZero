@@ -7,6 +7,7 @@ import SwiftUI
 struct ThreatIndicatorView: View {
     let threatState: ThreatState
     let activeAttack: Attack?
+    var earlyWarning: EarlyWarning? = nil
 
     @State private var isPulsing = false
 
@@ -99,6 +100,15 @@ struct ThreatIndicatorView: View {
 
                 AttackIndicator(attack: attack)
             }
+
+            // Early warning countdown
+            if let warning = earlyWarning {
+                Divider()
+                    .frame(height: 10)
+                    .background(Color.terminalGray)
+
+                EarlyWarningIndicator(warning: warning)
+            }
         }
         .accessibilityElement(children: .combine)
         .accessibilityLabel(accessibilityDescription)
@@ -120,6 +130,9 @@ struct ThreatIndicatorView: View {
         description += ", effective risk \(effectiveRisk.name)"
         if let attack = activeAttack, attack.isActive {
             description += ". Active \(attack.type.rawValue) attack, \(Int(attack.progress * 100)) percent complete"
+        }
+        if let warning = earlyWarning {
+            description += ". Early warning: \(warning.predictedAttackType.rawValue) predicted in \(warning.ticksRemaining) seconds"
         }
         return description
     }
@@ -162,6 +175,42 @@ struct AttackIndicator: View {
                     .repeatForever(autoreverses: true)
             ) {
                 isFlashing = true
+            }
+        }
+    }
+}
+
+struct EarlyWarningIndicator: View {
+    let warning: EarlyWarning
+
+    @State private var isPulsing = false
+
+    var body: some View {
+        HStack(spacing: 4) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.system(size: 12))
+                .foregroundColor(.neonAmber)
+                .opacity(isPulsing ? 0.5 : 1.0)
+
+            Text("IDS")
+                .font(.terminalMicro)
+                .foregroundColor(.terminalGray)
+
+            Text("\(warning.predictedAttackType.shortName)")
+                .font(.terminalSmall)
+                .foregroundColor(.neonAmber)
+                .lineLimit(1)
+
+            Text("\(warning.ticksRemaining)s")
+                .font(.system(size: 10, weight: .bold, design: .monospaced))
+                .foregroundColor(.neonRed)
+        }
+        .onAppear {
+            withAnimation(
+                Animation.easeInOut(duration: 0.5)
+                    .repeatForever(autoreverses: true)
+            ) {
+                isPulsing = true
             }
         }
     }
