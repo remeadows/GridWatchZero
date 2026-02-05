@@ -362,9 +362,12 @@ final class GameEngine: ObservableObject {
 
         // === PRODUCTION PHASE ===
 
-        // Step 1: Source generates data (apply event + prestige multipliers)
+        // Sprint C: Compute certification multiplier once per tick
+        let certMultiplier = CertificateManager.shared.totalCertificationMultiplier
+
+        // Step 1: Source generates data (apply event + prestige + cert multipliers)
         var packet = source.produce(atTick: currentTick)
-        packet.amount *= sourceMultiplier * prestigeState.productionMultiplier
+        packet.amount *= sourceMultiplier * prestigeState.productionMultiplier * certMultiplier
         stats.dataGenerated = packet.amount
         totalDataGenerated += packet.amount
 
@@ -392,10 +395,10 @@ final class GameEngine: ObservableObject {
         // Step 5: Sink receives the transferred data
         _ = sink.receiveData(transferred)
 
-        // Step 6: Sink processes its buffer and generates credits (apply event + prestige + engagement multipliers)
+        // Step 6: Sink processes its buffer and generates credits (apply event + prestige + engagement + cert multipliers)
         let baseCredits = sink.process()
         let engagementBonus = EngagementManager.shared.activeMultiplier
-        let credits = baseCredits * creditMultiplier * prestigeState.creditMultiplier * engagementBonus
+        let credits = baseCredits * creditMultiplier * prestigeState.creditMultiplier * engagementBonus * certMultiplier
         stats.creditsEarned = credits
         resources.addCredits(credits)
         resources.totalDataProcessed += transferred
@@ -477,7 +480,7 @@ final class GameEngine: ObservableObject {
         // Only generates intel if defense apps are deployed (automation comes from apps anyway)
         if defenseStack.totalAutomation >= 0.75 && defenseStack.deployedCount >= 1 {
             let passiveIntel = 1.0 * defenseStack.totalAutomation
-            malusIntel.addFootprintData(passiveIntel, detectionMultiplier: defenseStack.totalDetectionBonus)
+            malusIntel.addFootprintData(passiveIntel, detectionMultiplier: defenseStack.totalIntelBonus)
         }
 
         // Process active attack
@@ -521,6 +524,12 @@ final class GameEngine: ObservableObject {
                 firewall = fw
             }
 
+            // Sprint B: Apply Encryption credit protection
+            let creditProtection = defenseStack.totalCreditProtection
+            if creditProtection > 0 {
+                damage.creditDrain *= (1.0 - creditProtection)
+            }
+
             // Apply remaining credit drain
             if damage.creditDrain > 0 {
                 let actualDrain = min(resources.credits, damage.creditDrain)
@@ -531,7 +540,9 @@ final class GameEngine: ObservableObject {
             }
 
             // Apply bandwidth reduction
-            bandwidthDebuff = damage.bandwidthReduction
+            // Sprint B: Network packet loss protection reduces bandwidth debuff
+            let packetLossProtection = defenseStack.totalPacketLossProtection
+            bandwidthDebuff = damage.bandwidthReduction * (1.0 - packetLossProtection)
 
             // Check for node disable
             if damage.nodeDisableChance > 0 {
@@ -585,8 +596,17 @@ final class GameEngine: ObservableObject {
             // No active attack - check for new attack
             bandwidthDebuff = 0
 
-            // Check for early warning (from intel milestone)
-            let warningChance = malusIntel.attackWarningChance
+            // ISSUE-020: Attack grace period — suppress new attacks early in level
+            // Gives player time to earn credits and deploy initial defenses
+            if isInCampaignMode,
+               let gracePeriod = levelConfiguration?.attackGracePeriod,
+               gracePeriod > 0,
+               currentTick < levelStartTick + gracePeriod {
+                return  // Skip attack generation during grace period
+            }
+
+            // Check for early warning (from intel milestone + IDS early warning)
+            let warningChance = malusIntel.attackWarningChance + defenseStack.totalEarlyWarningChance
             var attackBlocked = false
             if warningChance > 0 && Double.random(in: 0...1, using: &rng) < warningChance {
                 // Early warning - chance to prevent attack entirely
@@ -606,7 +626,7 @@ final class GameEngine: ObservableObject {
                     threatLevel: threatState.currentLevel,  // Raw threat, not effectiveRiskLevel
                     currentTick: currentTick,
                     random: &rng,
-                    frequencyReduction: 0.0,  // No longer reduce frequency - defense reduces damage instead
+                    frequencyReduction: defenseStack.attackFrequencyReduction + malusIntel.attackFrequencyReductionBonus,  // Sprint B: risk reduction from defense apps
                     frequencyMultiplier: frequencyMultiplier,
                     minimumChance: minimumAttackChance
                 ) {
@@ -623,7 +643,9 @@ final class GameEngine: ObservableObject {
         guard var fw = firewall, fw.currentHealth < fw.maxHealth else { return }
 
         // Auto-repair rate: 1% of max health per tick at 0.25 automation, up to 3% at 1.0
-        let repairRate = 0.01 + (defenseStack.totalAutomation - 0.25) * 0.027
+        // Sprint B: Endpoint recovery bonus boosts repair rate
+        let recoveryBonus = defenseStack.totalRecoveryBonus
+        let repairRate = 0.01 + (defenseStack.totalAutomation - 0.25) * 0.027 + recoveryBonus
         let repairAmount = fw.maxHealth * repairRate
         fw.currentHealth = min(fw.maxHealth, fw.currentHealth + repairAmount)
         firewall = fw
@@ -1097,7 +1119,8 @@ final class GameEngine: ObservableObject {
         let effectiveBandwidth = link.bandwidth
         let estimatedTransfer = min(estimatedProduction, effectiveBandwidth)
         let estimatedProcessing = min(estimatedTransfer, sink.processingPerTick)
-        let creditsPerTick = estimatedProcessing * sink.conversionRate * offlineEfficiency
+        let offlineCertMultiplier = CertificateManager.shared.totalCertificationMultiplier
+        let creditsPerTick = estimatedProcessing * sink.conversionRate * offlineEfficiency * offlineCertMultiplier
 
         // Calculate totals
         let totalCredits = creditsPerTick * Double(ticksToSimulate)
@@ -1144,7 +1167,8 @@ final class GameEngine: ObservableObject {
         let effectiveBandwidth = 15.0 * Double(checkpoint.linkLevel)     // ~15/tick at T1
         let estimatedTransfer = min(estimatedProduction, effectiveBandwidth)
         let estimatedProcessing = min(estimatedTransfer, 12.0 * Double(checkpoint.sinkLevel))
-        let creditsPerTick = estimatedProcessing * 1.0 * offlineEfficiency  // 1.0 conversion rate
+        let campaignCertMultiplier = CertificateManager.shared.totalCertificationMultiplier
+        let creditsPerTick = estimatedProcessing * 1.0 * offlineEfficiency * campaignCertMultiplier  // 1.0 conversion rate
 
         // Calculate totals
         let totalCredits = creditsPerTick * Double(ticksToSimulate)
@@ -1307,6 +1331,15 @@ final class GameEngine: ObservableObject {
 
     /// Check if critical alarm should show
     var shouldShowCriticalAlarm: Bool {
+        // ISSUE-020: Suppress critical alarm during attack grace period
+        // Without this, the alarm fires at tick 0 on elevated-threat levels and blocks the dashboard
+        if isInCampaignMode,
+           let gracePeriod = levelConfiguration?.attackGracePeriod,
+           gracePeriod > 0,
+           currentTick < levelStartTick + gracePeriod {
+            return false
+        }
+
         // Show if risk is HUNTED or MARKED and not acknowledged
         let riskLevel = threatState.effectiveRiskLevel
         return (riskLevel == .hunted || riskLevel == .marked) && !criticalAlarmAcknowledged
@@ -1321,6 +1354,14 @@ final class GameEngine: ObservableObject {
 
     /// Reset alarm acknowledgement (called when risk drops)
     private func checkCriticalAlarmReset() {
+        // ISSUE-020: Don't trigger alarm during attack grace period
+        if isInCampaignMode,
+           let gracePeriod = levelConfiguration?.attackGracePeriod,
+           gracePeriod > 0,
+           currentTick < levelStartTick + gracePeriod {
+            return
+        }
+
         let riskLevel = threatState.effectiveRiskLevel
         if riskLevel.rawValue < ThreatLevel.hunted.rawValue {
             criticalAlarmAcknowledged = false
@@ -1390,18 +1431,20 @@ final class GameEngine: ObservableObject {
         let severityBonus = attack.severity * 25.0
         let baseData = damageBlocked * 0.5 + durationBonus + severityBonus
 
-        // Apply detection bonus from SIEM/IDS systems
-        let detectionMultiplier = defenseStack.totalDetectionBonus
+        // Sprint B: Apply intel bonus from all defense categories
+        let detectionMultiplier = defenseStack.totalIntelBonus
         malusIntel.addFootprintData(baseData, detectionMultiplier: detectionMultiplier)
 
-        // Identify pattern based on attack type (with speed bonus from milestones)
+        // Identify pattern based on attack type
+        // Sprint B: SIEM pattern ID bonus added to milestone bonus
+        let totalPatternBonus = malusIntel.patternIdSpeedBonus + defenseStack.totalPatternIdBonus
         let pattern = "\(attack.type.rawValue)_v\(Int(attack.severity * 10))"
-        malusIntel.identifyPattern(pattern, patternSpeedBonus: malusIntel.patternIdSpeedBonus)
+        malusIntel.identifyPattern(pattern, patternSpeedBonus: totalPatternBonus)
 
         // Bonus pattern from high-tier attacks
         if attack.type == .malusStrike {
             let malusPattern = "MALUS_SIGNATURE_\(currentTick % 100)"
-            malusIntel.identifyPattern(malusPattern, patternSpeedBonus: malusIntel.patternIdSpeedBonus)
+            malusIntel.identifyPattern(malusPattern, patternSpeedBonus: totalPatternBonus)
         }
     }
 
@@ -1430,6 +1473,13 @@ final class GameEngine: ObservableObject {
         link = UnitFactory.createCopperVPNTunnel()
         sink = UnitFactory.createDataBroker()
         firewall = nil
+
+        // ISSUE-020: Auto-deploy starter firewall for elevated threat levels
+        // "Rusty rigged an emergency firewall before you went in."
+        if level.startingThreatLevel.rawValue >= ThreatLevel.target.rawValue {
+            firewall = UnitFactory.createBasicFirewall()
+        }
+
         defenseStack = DefenseStack()
         malusIntel = MalusIntelligence()
 

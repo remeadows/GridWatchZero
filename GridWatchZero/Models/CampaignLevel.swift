@@ -37,6 +37,10 @@ struct CampaignLevel: Identifiable, Codable, Equatable {
     // This ensures attacks keep happening even with high defense
     let minimumAttackChance: Double?
 
+    // ISSUE-020: Attack grace period — ticks at level start where attacks are suppressed
+    // Gives player time to earn credits and deploy initial defenses on elevated-threat levels
+    let attackGracePeriod: Int?
+
     static func == (lhs: CampaignLevel, rhs: CampaignLevel) -> Bool {
         lhs.id == rhs.id
     }
@@ -309,5 +313,13 @@ struct LevelConfiguration {
     /// Minimum attack chance per tick (ensures attacks keep happening)
     var minimumAttackChance: Double {
         level.minimumAttackChance ?? 0.0
+    }
+
+    /// Attack grace period in ticks (ISSUE-020)
+    /// Insane mode halves it (min 30 ticks to remain playable)
+    var attackGracePeriod: Int {
+        let base = level.attackGracePeriod ?? 0
+        guard base > 0 else { return 0 }
+        return isInsane ? max(base / 2, 30) : base
     }
 }

@@ -45,74 +45,38 @@ open "/Users/russmeadows/Dev/Games/GridWatchZero/GridWatchZero.xcodeproj"
 
 | Document | Purpose |
 |----------|---------|
+| [SKILLS.md](./SKILLS.md) | Contributor capability profile - required competencies |
 | [CLAUDE.md](./CLAUDE.md) | AI assistant context - project structure, patterns, commands |
 | [CONTEXT.md](./CONTEXT.md) | Game concept, narrative, design philosophy |
 | [PROJECT_STATUS.md](./PROJECT_STATUS.md) | Implementation progress, current version, next tasks |
 | [ISSUES.md](./ISSUES.md) | Bug tracking, enhancement requests |
+| [ISSUES_ARCHIVE.md](./ISSUES_ARCHIVE.md) | Archived/resolved issues and reference docs |
 | [DESIGN.md](./DESIGN.md) | Full game design document with mechanics |
+| [MIGRATION_PLAN.md](./MIGRATION_PLAN.md) | v2.0 balance migration sprint plan (A-F) |
+| [COMMIT.md](./COMMIT.md) | Session power-down checklist |
+| [SESSIONS.md](./SESSIONS.md) | Session prep template (optional) |
 
 ---
 
-## Current Sprint: Phase 9 - Character System & Polish ✅ COMPLETE
+## Current Work: v2.0 Balance Migration (Branch: `CLAUDE_UPDATE`)
 
-### ✅ Completed: App Store Preparation (2026-02-01)
-- Privacy Policy and Support URLs hosted on GitHub Pages
-- App Store screenshots captured and resized (iPhone 6.5", iPad 12.9")
-- Build 1.0(1) uploaded to App Store Connect
-- TestFlight internal testing configured
-- Export compliance completed
-- iCloud Diagnostic View added for troubleshooting
+> See [MIGRATION_PLAN.md](./MIGRATION_PLAN.md) for full sprint details.
 
-### ✅ Completed: Character Dossier System (2026-01-31)
-Unlockable character profiles with detailed BIOs:
-- 11 character dossiers (GridWatch Team + Prometheus AI)
-- Profiles unlock as players progress through campaign
-- Dossier Collection view accessible from Campaign Hub
-- Each profile has: Visual description, multi-paragraph BIO, combat style, weakness, secret intel
-- Faction filtering (GridWatch Team, Prometheus AI, Unknown)
-- "NEW" badges for unread dossiers
-
-### ✅ Completed: UI Fixes (2026-01-31)
-- Campaign hub now shows correct 20 missions (was 7)
-- Alert banner no longer pushes screen down (uses fixed height overlay)
-- Fixed large number precision warnings in UnitFactory (scientific notation)
-- Fixed Theme.swift number formatting for large values
-
-### Completed in Phase 8 (2026-01-27)
-- ✅ iPad Layout - Side-by-side panels, horizontal card layout
-- ✅ Accessibility - Reduce Motion support, VoiceOver labels
-- ✅ Game Balance - Level pacing (30-60 min), unit cost reductions
-- ✅ Center Panel Visibility - Brighter colors, thicker borders, larger fonts
-- ✅ iPhone Layout - Responsive card layouts for narrow screens
-- ✅ Helix Awakening - Cinematic sequence for Level 7 completion
-
-### Completed in Phase 7: Security Systems
-- Defense Application System (6 categories with progression chains)
-- Network Topology visualization
-- Critical Alarm full-screen overlay
-- Malus Intelligence tracking
-- Title changed to "GRID WATCH ZERO"
+| Sprint | Name | Status |
+|--------|------|--------|
+| **A** | Balance Foundation | ✅ Complete |
+| **B** | Defense System Overhaul | ✅ Complete |
+| **C** | Certification Maturity | ✅ Complete |
+| **D** | Intel System Enhancements | 🔜 Next |
+| **E** | Link Latency & Protection | ⏳ Planned |
+| **F** | Insane Dossiers & Polish | ⏳ Planned |
 
 ### Remaining Tasks
-1. **TestFlight Testing** - Verify app on device via TestFlight
-2. **App Store Submission** - Submit for Apple review when testing complete
-
-### New Files Added (Phase 9)
-- `Models/CharacterDossier.swift` - Dossier data model with all character BIOs
-- `Models/DossierManager.swift` - Unlock tracking and persistence
-- `Views/DossierView.swift` - Collection and detail views for dossiers
-
-### New Files Added (Phase 8)
-- `Models/DefenseApplication.swift` - Security app model
-- `Views/Components/DefenseApplicationView.swift` - Security app cards, topology
-- `Views/Components/CriticalAlarmView.swift` - Full-screen alarm
-- `Views/HelixAwakeningView.swift` - Level 7 completion cinematic
-
-### Files to Modify
-- `Views/DashboardView.swift` - iPad layout with NavigationSplitView
-- All Views - Accessibility labels and modifiers
-- `Info.plist` - App Store metadata
-- `Assets.xcassets` - App icons and screenshots
+1. **Sprint D** - Send ALL batch intel, early warning system
+2. **Sprint E** - Link latency, packet loss protection, credit protection
+3. **Sprint F** - 6 new Insane Mode dossiers, story dialog, save migration
+4. **TestFlight Testing** - Verify v2.0 balance on device
+5. **App Store Submission** - Submit for Apple review when testing complete
 
 ---
 

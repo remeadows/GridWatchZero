@@ -73,6 +73,12 @@ struct Certificate: Identifiable, Codable {
     let tier: CertificateTier
     let issuingBody: String    // Fictional cert authority
     let creditHours: Int       // Continuing education credits
+    var isInsane: Bool = false  // Sprint C: false for Normal, true for Insane Mode certs
+
+    /// Maturity period in hours (Normal = 40h, Insane = 60h)
+    var maturityHours: Double {
+        isInsane ? 60.0 : 40.0
+    }
 
     var displayName: String {
         "\(abbreviation) - \(name)"
@@ -314,15 +320,234 @@ struct CertificateDatabase {
             tier: .architect,
             issuingBody: "The Unified Consciousness",
             creditHours: 160
+        ),
+
+        // ===== INSANE MODE CERTIFICATES (I-1 through I-20) =====
+        // Same tiers and levels as Normal, but with 60-hour maturity
+
+        // ===== ARC 1: FOUNDATIONAL INSANE (Levels 1-4) =====
+        Certificate(
+            id: "insane_cert_level_1", levelId: 1,
+            name: "Network Fundamentals (Insane)",
+            fullName: "Certified Defense Operator - Network Fundamentals [INSANE]",
+            abbreviation: "CDO-NET-I",
+            description: "Mastery of network topology under 3.5× adversarial pressure. Extreme threat environment.",
+            tier: .foundational, issuingBody: "Helix Alliance Certification Board",
+            creditHours: 8, isInsane: true
+        ),
+        Certificate(
+            id: "insane_cert_level_2", levelId: 2,
+            name: "Security+ Equivalent (Insane)",
+            fullName: "Certified Defense Operator - Security Essentials [INSANE]",
+            abbreviation: "CDO-SEC-I",
+            description: "Validated security monitoring under relentless attack conditions. No margin for error.",
+            tier: .foundational, issuingBody: "Helix Alliance Certification Board",
+            creditHours: 16, isInsane: true
+        ),
+        Certificate(
+            id: "insane_cert_level_3", levelId: 3,
+            name: "Threat Intelligence (Insane)",
+            fullName: "Certified Defense Operator - Threat Intelligence [INSANE]",
+            abbreviation: "CDO-TI-I",
+            description: "Threat analysis under sustained assault. Intelligence collection while under fire.",
+            tier: .foundational, issuingBody: "Helix Alliance Certification Board",
+            creditHours: 24, isInsane: true
+        ),
+        Certificate(
+            id: "insane_cert_level_4", levelId: 4,
+            name: "Incident Response (Insane)",
+            fullName: "Certified Defense Operator - Incident Response [INSANE]",
+            abbreviation: "CDO-IR-I",
+            description: "Incident response with amplified damage vectors and reduced recovery windows.",
+            tier: .foundational, issuingBody: "Helix Alliance Certification Board",
+            creditHours: 32, isInsane: true
+        ),
+
+        // ===== ARC 1 CONTINUED: PRACTITIONER INSANE (Levels 5-7) =====
+        Certificate(
+            id: "insane_cert_level_5", levelId: 5,
+            name: "Advanced Defense Architect (Insane)",
+            fullName: "Certified Security Professional - Defense Architecture [INSANE]",
+            abbreviation: "CSP-DA-I",
+            description: "Multi-layered defense design under extreme resource constraints and persistent threats.",
+            tier: .practitioner, issuingBody: "Global Cyber Defense Institute",
+            creditHours: 40, isInsane: true
+        ),
+        Certificate(
+            id: "insane_cert_level_6", levelId: 6,
+            name: "Enterprise Security Manager (Insane)",
+            fullName: "Certified Security Professional - Enterprise Management [INSANE]",
+            abbreviation: "CSP-EM-I",
+            description: "Enterprise-scale operations under catastrophic threat conditions. Maximum pressure.",
+            tier: .practitioner, issuingBody: "Global Cyber Defense Institute",
+            creditHours: 48, isInsane: true
+        ),
+        Certificate(
+            id: "insane_cert_level_7", levelId: 7,
+            name: "Critical Infrastructure Protection (Insane)",
+            fullName: "Certified Security Professional - Critical Infrastructure [INSANE]",
+            abbreviation: "CSP-CI-I",
+            description: "City-scale defense under overwhelming adversarial forces. Last line of defense.",
+            tier: .practitioner, issuingBody: "Global Cyber Defense Institute",
+            creditHours: 56, isInsane: true
+        ),
+
+        // ===== ARC 2: PROFESSIONAL INSANE (Levels 8-10) =====
+        Certificate(
+            id: "insane_cert_level_8", levelId: 8,
+            name: "Offensive Security Specialist (Insane)",
+            fullName: "Certified Expert - Offensive Operations [INSANE]",
+            abbreviation: "CEX-OO-I",
+            description: "Offensive operations against hardened adversarial infrastructure with zero tolerance for failure.",
+            tier: .professional, issuingBody: "Helix Alliance Advanced Programs",
+            creditHours: 64, isInsane: true
+        ),
+        Certificate(
+            id: "insane_cert_level_9", levelId: 9,
+            name: "Data Extraction Specialist (Insane)",
+            fullName: "Certified Expert - Intelligence Extraction [INSANE]",
+            abbreviation: "CEX-IE-I",
+            description: "Intelligence extraction from maximally hostile environments. Survival not guaranteed.",
+            tier: .professional, issuingBody: "Helix Alliance Advanced Programs",
+            creditHours: 72, isInsane: true
+        ),
+        Certificate(
+            id: "insane_cert_level_10", levelId: 10,
+            name: "AI Adversary Specialist (Insane)",
+            fullName: "Certified Expert - AI Threat Neutralization [INSANE]",
+            abbreviation: "CEX-ATN-I",
+            description: "AI neutralization under peak adversarial conditions. Malus at full power.",
+            tier: .professional, issuingBody: "Helix Alliance Advanced Programs",
+            creditHours: 80, isInsane: true
+        ),
+
+        // ===== ARC 3: EXPERT INSANE (Levels 11-14) =====
+        Certificate(
+            id: "insane_cert_level_11", levelId: 11,
+            name: "Infiltration Countermeasures (Insane)",
+            fullName: "Master Security Expert - Infiltration Defense [INSANE]",
+            abbreviation: "MSE-ID-I",
+            description: "Counter-infiltration mastery against VEXIS-class threats at maximum aggression.",
+            tier: .expert, issuingBody: "Prometheus Research Consortium",
+            creditHours: 88, isInsane: true
+        ),
+        Certificate(
+            id: "insane_cert_level_12", levelId: 12,
+            name: "Temporal Defense Systems (Insane)",
+            fullName: "Master Security Expert - Temporal Operations [INSANE]",
+            abbreviation: "MSE-TO-I",
+            description: "Temporal defense against KRON-class threats with amplified time-shift vectors.",
+            tier: .expert, issuingBody: "Prometheus Research Consortium",
+            creditHours: 96, isInsane: true
+        ),
+        Certificate(
+            id: "insane_cert_level_13", levelId: 13,
+            name: "Counter-Logic Operations (Insane)",
+            fullName: "Master Security Expert - Adversarial Logic [INSANE]",
+            abbreviation: "MSE-AL-I",
+            description: "Logic bomb defense against AXIOM-class threats operating at peak efficiency.",
+            tier: .expert, issuingBody: "Prometheus Research Consortium",
+            creditHours: 104, isInsane: true
+        ),
+        Certificate(
+            id: "insane_cert_level_14", levelId: 14,
+            name: "Origins Investigation (Insane)",
+            fullName: "Master Security Expert - Deep Analysis [INSANE]",
+            abbreviation: "MSE-DA-I",
+            description: "Deep analysis under existential threat conditions. Truth extraction at any cost.",
+            tier: .expert, issuingBody: "Prometheus Research Consortium",
+            creditHours: 112, isInsane: true
+        ),
+
+        // ===== ARC 4: MASTER INSANE (Levels 15-17) =====
+        Certificate(
+            id: "insane_cert_level_15", levelId: 15,
+            name: "Transcendence Support (Insane)",
+            fullName: "Grandmaster - Consciousness Evolution Support [INSANE]",
+            abbreviation: "GM-CES-I",
+            description: "Consciousness anchoring while reality fractures. No safety net.",
+            tier: .master, issuingBody: "Architect's Council",
+            creditHours: 120, isInsane: true
+        ),
+        Certificate(
+            id: "insane_cert_level_16", levelId: 16,
+            name: "Dimensional Security (Insane)",
+            fullName: "Grandmaster - Multidimensional Defense [INSANE]",
+            abbreviation: "GM-MD-I",
+            description: "Cross-dimensional defense against ZERO-class threats. Reality itself is hostile.",
+            tier: .master, issuingBody: "Architect's Council",
+            creditHours: 128, isInsane: true
+        ),
+        Certificate(
+            id: "insane_cert_level_17", levelId: 17,
+            name: "Reality Nexus Operations (Insane)",
+            fullName: "Grandmaster - Reality Convergence [INSANE]",
+            abbreviation: "GM-RC-I",
+            description: "Convergence operations at maximum dimensional instability. Beyond all limits.",
+            tier: .master, issuingBody: "Architect's Council",
+            creditHours: 136, isInsane: true
+        ),
+
+        // ===== ARC 5: ARCHITECT INSANE (Levels 18-20) =====
+        Certificate(
+            id: "insane_cert_level_18", levelId: 18,
+            name: "Origin Contact Specialist (Insane)",
+            fullName: "Supreme Architect - First Contact Protocol [INSANE]",
+            abbreviation: "SA-FCP-I",
+            description: "Primordial contact under absolute adversarial conditions. The Architect observes.",
+            tier: .architect, issuingBody: "The Architect",
+            creditHours: 144, isInsane: true
+        ),
+        Certificate(
+            id: "insane_cert_level_19", levelId: 19,
+            name: "Integration Mediator (Insane)",
+            fullName: "Supreme Architect - Consciousness Integration [INSANE]",
+            abbreviation: "SA-CI-I",
+            description: "Consciousness mediation under cosmic-scale opposition. The final trial.",
+            tier: .architect, issuingBody: "The Architect",
+            creditHours: 152, isInsane: true
+        ),
+        Certificate(
+            id: "insane_cert_level_20", levelId: 20,
+            name: "Architect of Peace (Insane)",
+            fullName: "Supreme Architect - Universal Harmony [INSANE]",
+            abbreviation: "SA-UH-I",
+            description: "The ultimate certification: universal harmony achieved through impossible adversity.",
+            tier: .architect, issuingBody: "The Unified Consciousness",
+            creditHours: 160, isInsane: true
         )
     ]
 
     static func certificate(for levelId: Int) -> Certificate? {
-        allCertificates.first { $0.levelId == levelId }
+        allCertificates.first { $0.levelId == levelId && !$0.isInsane }
+    }
+
+    static func insaneCertificate(for levelId: Int) -> Certificate? {
+        allCertificates.first { $0.levelId == levelId && $0.isInsane }
+    }
+
+    static func certificate(byId certId: String) -> Certificate? {
+        allCertificates.first { $0.id == certId }
+    }
+
+    static var normalCertificates: [Certificate] {
+        allCertificates.filter { !$0.isInsane }
+    }
+
+    static var insaneCertificates: [Certificate] {
+        allCertificates.filter { $0.isInsane }
     }
 
     static func certificates(for tier: CertificateTier) -> [Certificate] {
         allCertificates.filter { $0.tier == tier }
+    }
+
+    static func normalCertificates(for tier: CertificateTier) -> [Certificate] {
+        allCertificates.filter { $0.tier == tier && !$0.isInsane }
+    }
+
+    static func insaneCertificates(for tier: CertificateTier) -> [Certificate] {
+        allCertificates.filter { $0.tier == tier && $0.isInsane }
     }
 
     static func totalCreditHours(for earnedCertificates: Set<String>) -> Int {
@@ -387,6 +612,79 @@ struct CertificateState: Codable {
         if earned.contains(.foundational) { return .foundational }
         return nil
     }
+
+    // MARK: - Sprint C: Maturity System
+
+    /// Maturity state for UI display
+    enum MaturityState {
+        case pending    // just earned, minimal time elapsed
+        case maturing   // partially mature
+        case mature     // fully mature (+0.20× bonus)
+    }
+
+    /// Hours elapsed since earning a cert
+    func hoursElapsed(for certId: String) -> Double {
+        guard let earnedDate = certificateEarnedDates[certId] else { return 0.0 }
+        return Date().timeIntervalSince(earnedDate) / 3600.0
+    }
+
+    /// Maturity progress (0.0 to 1.0) for a specific cert
+    func maturityProgress(for certId: String) -> Double {
+        guard certificateEarnedDates[certId] != nil else { return 0.0 }
+        let maturityHours: Double
+        if let cert = CertificateDatabase.certificate(byId: certId) {
+            maturityHours = cert.maturityHours
+        } else {
+            maturityHours = 40.0  // default fallback
+        }
+        let elapsed = hoursElapsed(for: certId)
+        return min(elapsed / maturityHours, 1.0)
+    }
+
+    /// Per-cert bonus: min(hoursElapsed / maturityPeriod, 1.0) × 0.20
+    func certBonus(for certId: String) -> Double {
+        maturityProgress(for: certId) * 0.20
+    }
+
+    /// Whether a cert is fully mature
+    func isMature(_ certId: String) -> Bool {
+        maturityProgress(for: certId) >= 1.0
+    }
+
+    /// Maturity state for UI display
+    func maturityState(for certId: String) -> MaturityState {
+        let progress = maturityProgress(for: certId)
+        if progress >= 1.0 { return .mature }
+        if progress > 0.025 { return .maturing }  // ~1hr of 40hr
+        return .pending
+    }
+
+    /// Total certification multiplier: 1.0 + sum(all cert bonuses)
+    /// Range: 1.0 (no certs) to 9.0 (40 fully mature certs)
+    var totalCertificationMultiplier: Double {
+        let sum = earnedCertificates.reduce(0.0) { total, certId in
+            total + certBonus(for: certId)
+        }
+        return 1.0 + sum
+    }
+
+    /// Count of normal mode earned certs
+    var normalCertCount: Int {
+        earnedCertificates.filter { !$0.hasPrefix("insane_") }.count
+    }
+
+    /// Count of insane mode earned certs
+    var insaneCertCount: Int {
+        earnedCertificates.filter { $0.hasPrefix("insane_") }.count
+    }
+
+    /// Count of currently maturing (not yet fully mature) certs
+    var maturingCount: Int {
+        earnedCertificates.filter { certId in
+            let progress = maturityProgress(for: certId)
+            return progress > 0.0 && progress < 1.0
+        }.count
+    }
 }
 
 // MARK: - Certificate Manager
@@ -447,5 +745,19 @@ final class CertificateManager: ObservableObject {
 
     var progressPercentage: Double {
         Double(state.totalCertificates) / Double(CertificateDatabase.allCertificates.count) * 100.0
+    }
+
+    // MARK: - Sprint C: Maturity Multiplier
+
+    /// The total certification multiplier applied to production and credits (1.0 to 9.0)
+    var totalCertificationMultiplier: Double {
+        state.totalCertificationMultiplier
+    }
+
+    /// Award an Insane Mode certificate for completing a level on Insane
+    func earnInsaneCertificateForLevel(_ levelId: Int) {
+        guard let cert = CertificateDatabase.insaneCertificate(for: levelId) else { return }
+        state.earnCertificate(cert.id)
+        save()
     }
 }

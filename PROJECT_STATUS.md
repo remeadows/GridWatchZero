@@ -186,6 +186,74 @@ See [ISSUES.md](./ISSUES.md) for detailed tracking.
 
 ---
 
+## Session Log: 2026-02-05 — v2.0 Balance Migration (Sprints A-C)
+
+### Summary
+Implemented Sprints A, B, and C of the v2.0 balance migration on `CLAUDE_UPDATE` branch. Rebalanced all 20 campaign levels, overhauled defense system with per-category rate tables, and added certification maturity system. Major documentation cleanup.
+
+### Sprint A: Balance Foundation
+- Rebalanced all 20 Normal Mode campaign levels (credits, DP, reports, attacks) per GAMEPLAY_20250204.md
+- Rebalanced all 20 Insane Mode levels per GAMEPLAY_20250204.md
+- Updated unit unlock costs for T1-T25 (Sources, Links, Sinks) per UNITS_20250204.md
+- Standardized defense app unlock costs (5K/25K/100K/400K/1.5M/5M) per DEFENSE_20250204.md
+- Defense app upgrade formula → `500 × 1.22^level`
+- Insane Mode modifiers updated (3.5× credits, +25% attack, 2× reports, 2× DP)
+- Fixed ISSUE-020: Zero-credit defense gap (grace period + starter firewall + alarm suppression)
+- Fixed ISSUE-021: Attack indicator text overflow layout shift
+
+### Sprint B: Defense System Overhaul
+- Added `CategoryRates` struct with per-category intel/risk/secondary bonus rates
+- 6 unique rate profiles: Firewall, SIEM, Endpoint, IDS, Network, Encryption
+- Base defense points: Category × Tier lookup table (6×6) + T7+ exponential scaling
+- Damage reduction: Firewall-only, +1.5%/level with tier caps (60%-95%)
+- Risk reduction: `min(0.80, totalRiskReduction / 100)` across all categories
+
+### Sprint C: Certification Maturity
+- New `CertificateManager` with maturity tracking and persistence
+- 20 Normal certs (40h maturity) + 20 Insane certs (60h maturity)
+- Per-cert bonus: `min(hoursElapsed / maturityHours, 1.0) × 0.20`
+- Total multiplier range: 1.0× to 9.0×
+- Applied to: source production, credit conversion, offline progress
+- Maturity UI: Pending (🔒) → Maturing (⏳) → Mature (✅) with progress bars
+
+### Documentation Overhaul
+- Created COMMIT.md (session exit checklist)
+- Created SESSIONS.md (session prep template)
+- Archived ISSUES.md (2,003 → 636 lines) → ISSUES_ARCHIVE.md
+- Updated CLAUDE.md (defense system section, cert maturity, cross-reference table)
+- Updated SKILLS.md (contributor capability profile)
+- Created MIGRATION_PLAN.md (sprint A-F plan)
+- Added spec snapshots: GAMEPLAY_20250204.md, DEFENSE_20250204.md, UNITS_20250204.md
+
+### Files Changed
+**Code (14 files)**:
+- `Engine/GameEngine.swift` — Insane Mode modifiers, cert multiplier integration, defense calculations
+- `Engine/UnitFactory.swift` — T1-T25 unlock costs
+- `Models/CampaignLevel.swift` — InsaneModifiers, Insane cert support
+- `Models/CertificateSystem.swift` — NEW: Maturity tracking + persistence
+- `Models/DefenseApplication.swift` — CategoryRates, base DP table, unlock costs, upgrade formula
+- `Models/LevelDatabase.swift` — All 20 level requirements (Normal + Insane)
+- `Models/ThreatSystem.swift` — Risk reduction integration
+- `Views/CertificateView.swift` — NEW: Maturity UI
+- `Views/Components/DefenseApplicationView.swift` — Category-specific bonus display
+- `Views/Components/ThreatIndicatorView.swift` — Attack text overflow fix
+- `Views/DashboardView.swift` — Certificate section link
+- `Navigation/NavigationCoordinator.swift` — Certificate navigation
+
+**Documentation (11 files)**:
+- CLAUDE.md, SKILLS.md, GO.md, PROJECT_STATUS.md, MIGRATION_PLAN.md
+- ISSUES.md (trimmed), ISSUES_ARCHIVE.md (new)
+- COMMIT.md (new), SESSIONS.md (new)
+- GAMEPLAY_20250204.md, DEFENSE_20250204.md, UNITS_20250204.md (spec snapshots)
+- CLAUDE.md.old.md, SKILLS.md.old.md (backups)
+
+### Next Session Tasks
+- Sprint D: "Send ALL" batch intel upload, early warning system
+- Sprint E: Link latency, packet loss/credit protection
+- Sprint F: 6 Insane Mode dossiers, story dialog updates, save migration v6→v7
+
+---
+
 ## Session Log: 2026-02-04 (Continued)
 
 ### Summary

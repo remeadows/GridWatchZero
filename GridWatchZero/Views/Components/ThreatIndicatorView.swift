@@ -137,9 +137,10 @@ struct AttackIndicator: View {
                 .foregroundColor(.neonRed)
                 .opacity(isFlashing ? 0.4 : 1.0)
 
-            Text(attack.type.rawValue)
+            Text(attack.type.shortName)
                 .font(.terminalSmall)
                 .foregroundColor(.neonRed)
+                .lineLimit(1)
 
             // Progress bar
             GeometryReader { geo in

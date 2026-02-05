@@ -109,6 +109,18 @@ struct DefenseStackSummary: View {
                     .font(.terminalSmall)
                     .foregroundColor(.neonRed)
             }
+
+            // Risk reduction (attack frequency)
+            if stack.attackFrequencyReduction > 0 {
+                VStack(alignment: .trailing, spacing: 2) {
+                    Text("RISK")
+                        .font(.system(size: 7, design: .monospaced))
+                        .foregroundColor(.terminalGray)
+                    Text("-\(Int(stack.attackFrequencyReduction * 100))%")
+                        .font(.terminalSmall)
+                        .foregroundColor(.neonCyan)
+                }
+            }
         }
         .padding(.horizontal, 8)
         .padding(.vertical, 6)
@@ -147,6 +159,28 @@ struct DefenseAppCard: View {
         case .degraded, .alert: return .neonAmber
         case .critical: return .neonRed
         case .offline: return .terminalGray
+        }
+    }
+
+    private func secondaryBonusText(for app: DefenseApplication) -> String {
+        switch category {
+        case .firewall:   return app.damageReduction.percentFormatted
+        case .siem:       return "+\(Int(app.patternIdBonus * 100))%"
+        case .endpoint:   return "+\(Int(app.recoveryBonus * 100))%"
+        case .ids:        return "+\(Int(app.earlyWarningChance * 100))%"
+        case .network:    return app.packetLossProtection.percentFormatted
+        case .encryption: return app.creditProtection.percentFormatted
+        }
+    }
+
+    private func secondaryBonusColor(for category: DefenseCategory) -> Color {
+        switch category {
+        case .firewall:   return .neonRed
+        case .siem:       return .neonCyan
+        case .endpoint:   return .neonGreen
+        case .ids:        return .neonAmber
+        case .network:    return .neonCyan
+        case .encryption: return .neonGreen
         }
     }
 
@@ -213,14 +247,14 @@ struct DefenseAppCard: View {
                                 .foregroundColor(.neonGreen)
                         }
 
-                        // Damage reduction
+                        // Category-specific secondary bonus
                         VStack(alignment: .leading, spacing: 1) {
-                            Text("DR")
+                            Text(category.rates.secondaryBonusLabel.uppercased())
                                 .font(.system(size: 6, design: .monospaced))
                                 .foregroundColor(.terminalGray)
-                            Text(app.damageReduction.percentFormatted)
+                            Text(secondaryBonusText(for: app))
                                 .font(.terminalMicro)
-                                .foregroundColor(.neonRed)
+                                .foregroundColor(secondaryBonusColor(for: category))
                         }
 
                         Spacer()
@@ -954,6 +988,15 @@ struct TopologyStatsBar: View {
                     value: "\(Int(stack.totalDamageReduction * 100))%",
                     color: .neonCyan
                 )
+
+                if stack.attackFrequencyReduction > 0 {
+                    TopologyStatPill(
+                        icon: "shield.lefthalf.filled",
+                        label: "RISK",
+                        value: "-\(Int(stack.attackFrequencyReduction * 100))%",
+                        color: .neonCyan
+                    )
+                }
             }
         }
         .padding(.horizontal, 8)

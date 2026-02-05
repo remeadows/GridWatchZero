@@ -161,8 +161,10 @@ class NavigationCoordinator: ObservableObject {
     func completeLevel(_ levelId: Int, stats: LevelCompletionStats) {
         lastCompletionStats = stats
 
-        // Award certificate for level completion (only on first completion of normal mode)
-        if !stats.isInsane {
+        // Award certificate for level completion (Normal or Insane track)
+        if stats.isInsane {
+            CertificateManager.shared.earnInsaneCertificateForLevel(levelId)
+        } else {
             CertificateManager.shared.earnCertificateForLevel(levelId)
         }
 
@@ -904,9 +906,12 @@ struct LevelCompleteView: View {
     }
 
     private var earnedCertificate: Certificate? {
-        // Only show certificate for normal mode completions
-        guard !isInsane else { return nil }
-        return CertificateDatabase.certificate(for: levelId)
+        // Show certificate for both Normal and Insane completions
+        if isInsane {
+            return CertificateDatabase.insaneCertificate(for: levelId)
+        } else {
+            return CertificateDatabase.certificate(for: levelId)
+        }
     }
 
     var body: some View {

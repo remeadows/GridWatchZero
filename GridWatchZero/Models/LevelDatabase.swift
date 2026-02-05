@@ -45,7 +45,8 @@ class LevelDatabase {
             introStoryId: "level1_intro",
             victoryStoryId: "level1_victory",
             insaneModifiers: .standard,
-            minimumAttackChance: nil  // Tutorial - no attack floor
+            minimumAttackChance: nil,  // Tutorial - no attack floor
+            attackGracePeriod: nil  // L1: .ghost — no grace needed
         ),
 
         // LEVEL 2: Small Office
@@ -78,7 +79,8 @@ class LevelDatabase {
             introStoryId: "level2_intro",
             victoryStoryId: "level2_victory",
             insaneModifiers: .standard,
-            minimumAttackChance: nil  // 0% attack chance per spec
+            minimumAttackChance: nil,  // 0% attack chance per spec
+            attackGracePeriod: nil  // L2: .blip — negligible threat
         ),
 
         // LEVEL 3: Office Network
@@ -112,7 +114,8 @@ class LevelDatabase {
             introStoryId: "level3_intro",
             victoryStoryId: "level3_victory",
             insaneModifiers: .standard,
-            minimumAttackChance: 2.0  // 2% attack chance per spec
+            minimumAttackChance: 2.0,  // 2% attack chance per spec
+            attackGracePeriod: 30  // L3: .signal — 30s grace
         ),
 
         // LEVEL 4: Large Office
@@ -145,7 +148,8 @@ class LevelDatabase {
             introStoryId: "level4_intro",
             victoryStoryId: "level4_victory",
             insaneModifiers: .standard,
-            minimumAttackChance: 2.0  // 2% attack chance per spec
+            minimumAttackChance: 2.0,  // 2% attack chance per spec
+            attackGracePeriod: 60  // L4: .target — 1 min grace
         ),
 
         // LEVEL 5: Campus Network (balanced for smooth T5 progression)
@@ -178,7 +182,8 @@ class LevelDatabase {
             introStoryId: "level5_intro",
             victoryStoryId: "level5_victory",
             insaneModifiers: .standard,
-            minimumAttackChance: 3.0  // 3% attack chance per spec
+            minimumAttackChance: 3.0,  // 3% attack chance per spec
+            attackGracePeriod: 90  // L5: .targeted — 1.5 min grace
         ),
 
         // LEVEL 6: Enterprise Network (balanced for T6 acquisition)
@@ -211,7 +216,8 @@ class LevelDatabase {
             introStoryId: "level6_intro",
             victoryStoryId: "level6_victory",
             insaneModifiers: .standard,
-            minimumAttackChance: 4.0  // 4% attack chance per spec
+            minimumAttackChance: 4.0,  // 4% attack chance per spec
+            attackGracePeriod: 120  // L6: .priority — 2 min grace
         ),
 
         // LEVEL 7: City Network
@@ -250,7 +256,8 @@ class LevelDatabase {
                 defensePointMultiplier: 2.0,
                 attackDamageMultiplier: 1.5
             ),
-            minimumAttackChance: 4.0  // 4% attack chance per spec
+            minimumAttackChance: 4.0,  // 4% attack chance per spec
+            attackGracePeriod: 180  // L7: .hammered — 3 min grace
         ),
 
         // ============================================
@@ -288,7 +295,8 @@ class LevelDatabase {
             introStoryId: "level8_intro",
             victoryStoryId: "level8_victory",
             insaneModifiers: .standard,
-            minimumAttackChance: 8.0  // 8% attack chance per spec
+            minimumAttackChance: 8.0,  // 8% attack chance per spec
+            attackGracePeriod: 180  // L8: .ascended — 3 min grace (cap)
         ),
 
         // LEVEL 9: Corporate Extraction
@@ -322,7 +330,8 @@ class LevelDatabase {
             introStoryId: "level9_intro",
             victoryStoryId: "level9_victory",
             insaneModifiers: .standard,
-            minimumAttackChance: 8.0  // 8% attack chance per spec
+            minimumAttackChance: 8.0,  // 8% attack chance per spec
+            attackGracePeriod: 180  // L9: .symbiont — 3 min grace (cap)
         ),
 
         // LEVEL 10: Malus Core Siege
@@ -356,7 +365,8 @@ class LevelDatabase {
             introStoryId: "level10_intro",
             victoryStoryId: "level10_victory",
             insaneModifiers: .standard,
-            minimumAttackChance: 10.0  // 10% attack chance per spec
+            minimumAttackChance: 10.0,  // 10% attack chance per spec
+            attackGracePeriod: 180  // L10: .transcendent — 3 min grace (cap)
         ),
 
         // ============================================
@@ -394,7 +404,8 @@ class LevelDatabase {
             introStoryId: "level11_intro",
             victoryStoryId: "level11_victory",
             insaneModifiers: .standard,
-            minimumAttackChance: 15.0  // 15% attack chance per spec
+            minimumAttackChance: 15.0,  // 15% attack chance per spec
+            attackGracePeriod: 180  // L11: 3 min grace (cap)
         ),
 
         // LEVEL 12: Temporal Incursion
@@ -428,7 +439,8 @@ class LevelDatabase {
             introStoryId: "level12_intro",
             victoryStoryId: "level12_victory",
             insaneModifiers: .standard,
-            minimumAttackChance: 15.0  // 15% attack chance per spec
+            minimumAttackChance: 15.0,  // 15% attack chance per spec
+            attackGracePeriod: 180  // L12: 3 min grace (cap)
         ),
 
         // LEVEL 13: Logic Bomb
@@ -462,7 +474,8 @@ class LevelDatabase {
             introStoryId: "level13_intro",
             victoryStoryId: "level13_victory",
             insaneModifiers: .standard,
-            minimumAttackChance: 18.0  // 18% attack chance per spec
+            minimumAttackChance: 18.0,  // 18% attack chance per spec
+            attackGracePeriod: 180  // L13: 3 min grace (cap)
         ),
 
         // LEVEL 14: The Black Site
@@ -495,7 +508,8 @@ class LevelDatabase {
             introStoryId: "level14_intro",
             victoryStoryId: "level14_victory",
             insaneModifiers: .standard,
-            minimumAttackChance: 22.0  // 22% attack chance per spec
+            minimumAttackChance: 22.0,  // 22% attack chance per spec
+            attackGracePeriod: 180  // L14: 3 min grace (cap)
         ),
 
         // ============================================
@@ -533,7 +547,8 @@ class LevelDatabase {
             introStoryId: "level15_intro",
             victoryStoryId: "level15_victory",
             insaneModifiers: .standard,
-            minimumAttackChance: 25.0  // 25% attack chance per spec
+            minimumAttackChance: 25.0,  // 25% attack chance per spec
+            attackGracePeriod: 180  // L15: 3 min grace (cap)
         ),
 
         // LEVEL 16: Dimensional Breach
@@ -567,7 +582,8 @@ class LevelDatabase {
             introStoryId: "level16_intro",
             victoryStoryId: "level16_victory",
             insaneModifiers: .standard,
-            minimumAttackChance: 30.0  // 30% attack chance per spec
+            minimumAttackChance: 30.0,  // 30% attack chance per spec
+            attackGracePeriod: 180  // L16: 3 min grace (cap)
         ),
 
         // LEVEL 17: The Convergence
@@ -601,7 +617,8 @@ class LevelDatabase {
             introStoryId: "level17_intro",
             victoryStoryId: "level17_victory",
             insaneModifiers: .standard,
-            minimumAttackChance: 35.0  // 35% attack chance per spec
+            minimumAttackChance: 35.0,  // 35% attack chance per spec
+            attackGracePeriod: 180  // L17: 3 min grace (cap)
         ),
 
         // LEVEL 18: The Origin
@@ -636,7 +653,8 @@ class LevelDatabase {
             introStoryId: "level18_intro",
             victoryStoryId: "level18_victory",
             insaneModifiers: .standard,
-            minimumAttackChance: 40.0  // 40% attack chance per spec
+            minimumAttackChance: 40.0,  // 40% attack chance per spec
+            attackGracePeriod: 180  // L18: 3 min grace (cap)
         ),
 
         // ============================================
@@ -674,7 +692,8 @@ class LevelDatabase {
             introStoryId: "level19_intro",
             victoryStoryId: "level19_victory",
             insaneModifiers: .standard,
-            minimumAttackChance: 45.0  // 45% attack chance per spec
+            minimumAttackChance: 45.0,  // 45% attack chance per spec
+            attackGracePeriod: 180  // L19: 3 min grace (cap)
         ),
 
         // LEVEL 20: The New Dawn
@@ -716,7 +735,8 @@ class LevelDatabase {
                 defensePointMultiplier: 2.0,
                 attackDamageMultiplier: 2.0
             ),
-            minimumAttackChance: 50.0  // 50% attack chance per spec
+            minimumAttackChance: 50.0,  // 50% attack chance per spec
+            attackGracePeriod: 180  // L20: 3 min grace (cap)
         )
     ]
 

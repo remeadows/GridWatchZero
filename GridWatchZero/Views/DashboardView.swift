@@ -1023,12 +1023,25 @@ struct DashboardView: View {
                 onPauseCampaign: onCampaignExit
             )
 
-            // Threat / Defense / Risk bar
+            // Threat / Defense / Risk bar (fixed height to prevent layout shift)
             ThreatBarView(
                 threatState: engine.threatState,
                 activeAttack: engine.activeAttack,
                 attacksSurvived: engine.threatState.attacksSurvived
             )
+            .frame(height: 32)
+            .clipped()
+
+            // Reserved alert space — alerts populate here without pushing content
+            // Maintains fixed height so ScrollView never shifts position
+            ZStack {
+                // Subtle background keeps the space from looking empty
+                Color.terminalDarkGray.opacity(0.3)
+
+                AlertBannerView(event: showingEvent)
+            }
+            .frame(height: 60)
+            .clipped()
 
             // Network Map
             ScrollView {
@@ -1193,16 +1206,8 @@ struct DashboardView: View {
             }
             }  // End of main VStack
 
-            // Alert banner overlay (floats on top without pushing content)
-            // Uses .overlay modifier approach for true floating behavior
-            Color.clear
-                .frame(height: 0)
-                .overlay(alignment: .top) {
-                    AlertBannerView(event: showingEvent)
-                        .padding(.top, tutorialManager.shouldShowTutorial && !tutorialManager.isShowingDialogue ? 44 : 0)
-                }
-                .allowsHitTesting(false)
-                .zIndex(100)
+            // Alert banner moved to reserved space between ThreatBarView and ScrollView
+            // (see "Reserved alert space" above — replaces old floating overlay)
         }  // End of ZStack
         .offset(x: reduceMotion ? 0 : screenShake)
     }

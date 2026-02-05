@@ -11,6 +11,14 @@ struct CertificateCardView: View {
     let isEarned: Bool
     let earnedDate: Date?
     var showFullDetails: Bool = false
+    var maturityProgress: Double = 0.0  // Sprint C: 0.0-1.0
+    var certBonus: Double = 0.0         // Sprint C: 0.0-0.20
+
+    private var maturityStateIcon: String {
+        if maturityProgress >= 1.0 { return "checkmark.circle.fill" }
+        if maturityProgress > 0.025 { return "clock.fill" }
+        return "lock.circle"
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -88,6 +96,45 @@ struct CertificateCardView: View {
                             .foregroundColor(tierColor)
                     }
                 }
+
+                // Sprint C: Maturity status
+                if isEarned {
+                    HStack(spacing: 6) {
+                        Image(systemName: maturityStateIcon)
+                            .font(.system(size: 10))
+                            .foregroundColor(maturityProgress >= 1.0 ? .neonGreen : .neonAmber)
+
+                        Text(String(format: "+%.2f\u{00D7}", certBonus))
+                            .font(.system(size: 10, weight: .bold, design: .monospaced))
+                            .foregroundColor(maturityProgress >= 1.0 ? .neonGreen : .neonAmber)
+
+                        Spacer()
+
+                        if maturityProgress >= 1.0 {
+                            Text("[MATURE]")
+                                .font(.system(size: 9, weight: .bold, design: .monospaced))
+                                .foregroundColor(.neonGreen)
+                        } else {
+                            let elapsed = Int(maturityProgress * certificate.maturityHours)
+                            let total = Int(certificate.maturityHours)
+                            Text("[\(elapsed)/\(total)h]")
+                                .font(.system(size: 9, weight: .bold, design: .monospaced))
+                                .foregroundColor(.terminalGray)
+                        }
+                    }
+
+                    // Maturity progress bar
+                    GeometryReader { geo in
+                        ZStack(alignment: .leading) {
+                            RoundedRectangle(cornerRadius: 2)
+                                .fill(Color.terminalGray.opacity(0.3))
+                            RoundedRectangle(cornerRadius: 2)
+                                .fill(maturityProgress >= 1.0 ? Color.neonGreen : Color.neonAmber)
+                                .frame(width: geo.size.width * maturityProgress)
+                        }
+                    }
+                    .frame(height: 3)
+                }
             }
         }
         .padding(12)
@@ -132,13 +179,24 @@ struct CertificateGridView: View {
 
                 Spacer()
 
-                // Total credit hours
+                // Sprint C: Total certification multiplier
                 VStack(alignment: .trailing, spacing: 2) {
-                    Text("\(certificateManager.state.totalCreditHours)")
+                    Text(String(format: "%.2f\u{00D7}", certificateManager.state.totalCertificationMultiplier))
                         .font(.terminalTitle)
                         .foregroundColor(.neonGreen)
 
-                    Text("Credit Hours")
+                    Text("Total Bonus")
+                        .font(.system(size: 9, design: .monospaced))
+                        .foregroundColor(.terminalGray)
+                }
+
+                // Credit hours
+                VStack(alignment: .trailing, spacing: 2) {
+                    Text("\(certificateManager.state.totalCreditHours)")
+                        .font(.terminalTitle)
+                        .foregroundColor(.neonAmber)
+
+                    Text("Credit Hrs")
                         .font(.system(size: 9, design: .monospaced))
                         .foregroundColor(.terminalGray)
                 }
@@ -157,10 +215,49 @@ struct CertificateGridView: View {
             }
             .frame(height: 8)
 
-            // Certificates by tier
-            ForEach(CertificateTier.allCases, id: \.self) { tier in
-                tierSection(tier)
+            // NORMAL MODE section
+            HStack {
+                Text("NORMAL MODE")
+                    .font(.terminalBody)
+                    .foregroundColor(.neonCyan)
+                Spacer()
+                Text("\(certificateManager.state.normalCertCount)/20")
+                    .font(.terminalSmall)
+                    .foregroundColor(.terminalGray)
             }
+            .padding(.top, 4)
+
+            ForEach(CertificateTier.allCases, id: \.self) { tier in
+                normalTierSection(tier)
+            }
+
+            // INSANE MODE section
+            HStack {
+                Text("INSANE MODE")
+                    .font(.terminalBody)
+                    .foregroundColor(.neonRed)
+                Spacer()
+                Text("\(certificateManager.state.insaneCertCount)/20")
+                    .font(.terminalSmall)
+                    .foregroundColor(.terminalGray)
+            }
+            .padding(.top, 8)
+
+            ForEach(CertificateTier.allCases, id: \.self) { tier in
+                insaneTierSection(tier)
+            }
+
+            // Footer stats
+            HStack {
+                Text("Normal: \(certificateManager.state.normalCertCount)/20")
+                Text("·")
+                Text("Insane: \(certificateManager.state.insaneCertCount)/20")
+                Text("·")
+                Text("Maturing: \(certificateManager.state.maturingCount)")
+            }
+            .font(.system(size: 10, design: .monospaced))
+            .foregroundColor(.terminalGray)
+            .padding(.top, 8)
         }
         .sheet(item: $selectedCertificate) { cert in
             CertificateDetailView(
@@ -172,44 +269,81 @@ struct CertificateGridView: View {
     }
 
     @ViewBuilder
-    private func tierSection(_ tier: CertificateTier) -> some View {
-        let tierCerts = certificateManager.certificatesForTier(tier)
-        let earnedCount = tierCerts.filter { $0.earned }.count
+    private func normalTierSection(_ tier: CertificateTier) -> some View {
+        let tierCerts = CertificateDatabase.normalCertificates(for: tier)
+        let earnedCount = tierCerts.filter { certificateManager.state.hasEarned($0.id) }.count
 
-        VStack(alignment: .leading, spacing: 8) {
-            // Tier header
-            HStack {
-                Image(systemName: tier.icon)
-                    .foregroundColor(Color.tierColor(named: tier.color))
+        if !tierCerts.isEmpty {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack {
+                    Image(systemName: tier.icon)
+                        .foregroundColor(Color.tierColor(named: tier.color))
+                    Text(tier.rawValue.uppercased())
+                        .font(.terminalBody)
+                        .foregroundColor(Color.tierColor(named: tier.color))
+                    Spacer()
+                    Text("\(earnedCount)/\(tierCerts.count)")
+                        .font(.terminalSmall)
+                        .foregroundColor(.terminalGray)
+                }
+                .padding(.horizontal, 4)
 
-                Text(tier.rawValue.uppercased())
-                    .font(.terminalBody)
-                    .foregroundColor(Color.tierColor(named: tier.color))
-
-                Spacer()
-
-                Text("\(earnedCount)/\(tierCerts.count)")
-                    .font(.terminalSmall)
-                    .foregroundColor(.terminalGray)
-            }
-            .padding(.horizontal, 4)
-
-            // Certificates grid
-            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
-                ForEach(tierCerts, id: \.certificate.id) { item in
-                    CertificateCardView(
-                        certificate: item.certificate,
-                        isEarned: item.earned,
-                        earnedDate: certificateManager.state.earnedDate(for: item.certificate.id),
-                        showFullDetails: false
-                    )
-                    .onTapGesture {
-                        selectedCertificate = item.certificate
+                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
+                    ForEach(tierCerts) { cert in
+                        let isEarned = certificateManager.state.hasEarned(cert.id)
+                        CertificateCardView(
+                            certificate: cert,
+                            isEarned: isEarned,
+                            earnedDate: certificateManager.state.earnedDate(for: cert.id),
+                            showFullDetails: false,
+                            maturityProgress: certificateManager.state.maturityProgress(for: cert.id),
+                            certBonus: certificateManager.state.certBonus(for: cert.id)
+                        )
+                        .onTapGesture { selectedCertificate = cert }
                     }
                 }
             }
+            .padding(.vertical, 4)
         }
-        .padding(.vertical, 8)
+    }
+
+    @ViewBuilder
+    private func insaneTierSection(_ tier: CertificateTier) -> some View {
+        let tierCerts = CertificateDatabase.insaneCertificates(for: tier)
+        let earnedCount = tierCerts.filter { certificateManager.state.hasEarned($0.id) }.count
+
+        if !tierCerts.isEmpty {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack {
+                    Image(systemName: tier.icon)
+                        .foregroundColor(Color.tierColor(named: tier.color))
+                    Text(tier.rawValue.uppercased())
+                        .font(.terminalBody)
+                        .foregroundColor(Color.tierColor(named: tier.color).opacity(0.8))
+                    Spacer()
+                    Text("\(earnedCount)/\(tierCerts.count)")
+                        .font(.terminalSmall)
+                        .foregroundColor(.terminalGray)
+                }
+                .padding(.horizontal, 4)
+
+                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
+                    ForEach(tierCerts) { cert in
+                        let isEarned = certificateManager.state.hasEarned(cert.id)
+                        CertificateCardView(
+                            certificate: cert,
+                            isEarned: isEarned,
+                            earnedDate: certificateManager.state.earnedDate(for: cert.id),
+                            showFullDetails: false,
+                            maturityProgress: certificateManager.state.maturityProgress(for: cert.id),
+                            certBonus: certificateManager.state.certBonus(for: cert.id)
+                        )
+                        .onTapGesture { selectedCertificate = cert }
+                    }
+                }
+            }
+            .padding(.vertical, 4)
+        }
     }
 }
 
@@ -480,6 +614,12 @@ struct CertificateUnlockPopupView: View {
                 .font(.terminalBody)
                 .opacity(showContent ? 1.0 : 0.0)
 
+                // Sprint C: Maturity timer hint
+                Text("Matures in \(Int(certificate.maturityHours))h → +0.20\u{00D7}")
+                    .font(.system(size: 11, weight: .medium, design: .monospaced))
+                    .foregroundColor(.neonAmber)
+                    .opacity(showContent ? 1.0 : 0.0)
+
                 // Dismiss button
                 Button {
                     onDismiss()
@@ -550,13 +690,13 @@ struct CertificateSummaryBadge: View {
 
             Spacer()
 
-            // Progress
+            // Sprint C: Certification multiplier
             VStack(alignment: .trailing, spacing: 2) {
-                Text(String(format: "%.0f%%", certificateManager.progressPercentage))
+                Text(String(format: "%.2f\u{00D7}", certificateManager.state.totalCertificationMultiplier))
                     .font(.terminalTitle)
-                    .foregroundColor(.neonCyan)
+                    .foregroundColor(.neonAmber)
 
-                Text("Complete")
+                Text("Cert Bonus")
                     .font(.system(size: 9, design: .monospaced))
                     .foregroundColor(.terminalGray)
             }

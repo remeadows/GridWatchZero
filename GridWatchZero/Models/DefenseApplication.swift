@@ -100,6 +100,60 @@ enum DefenseCategory: String, Codable, CaseIterable {
             ]
         }
     }
+
+    // MARK: - Sprint B: Category Rate Tables
+
+    /// Per-level bonus rates for each defense category
+    struct CategoryRates {
+        let intelBonusPerLevel: Double       // Intel collection bonus per level
+        let riskReductionPerLevel: Double    // Attack chance reduction per level (percentage points)
+        let secondaryBonusPerLevel: Double   // Category-specific secondary bonus per level
+        let secondaryBonusLabel: String      // UI label for secondary bonus
+        let secondaryBonusCap: Double        // Cap for secondary bonus (0 = no cap)
+    }
+
+    /// Category-specific bonus rates per spec (DEFENSE_20250204.md)
+    var rates: CategoryRates {
+        switch self {
+        case .firewall:
+            return CategoryRates(intelBonusPerLevel: 0.05, riskReductionPerLevel: 3.0,
+                                 secondaryBonusPerLevel: 0.015, secondaryBonusLabel: "DR", secondaryBonusCap: 0)
+        case .siem:
+            return CategoryRates(intelBonusPerLevel: 0.12, riskReductionPerLevel: 1.0,
+                                 secondaryBonusPerLevel: 0.05, secondaryBonusLabel: "Pattern ID", secondaryBonusCap: 0)
+        case .endpoint:
+            return CategoryRates(intelBonusPerLevel: 0.06, riskReductionPerLevel: 2.0,
+                                 secondaryBonusPerLevel: 0.03, secondaryBonusLabel: "Recovery", secondaryBonusCap: 0)
+        case .ids:
+            return CategoryRates(intelBonusPerLevel: 0.10, riskReductionPerLevel: 2.5,
+                                 secondaryBonusPerLevel: 0.015, secondaryBonusLabel: "Warning", secondaryBonusCap: 0)
+        case .network:
+            return CategoryRates(intelBonusPerLevel: 0.07, riskReductionPerLevel: 2.0,
+                                 secondaryBonusPerLevel: 0.02, secondaryBonusLabel: "Pkt Loss", secondaryBonusCap: 0.80)
+        case .encryption:
+            return CategoryRates(intelBonusPerLevel: 0.04, riskReductionPerLevel: 1.5,
+                                 secondaryBonusPerLevel: 0.025, secondaryBonusLabel: "Credit Prot", secondaryBonusCap: 0.90)
+        }
+    }
+
+    /// Base defense points per tier (T1-T6 from spec, T7+ exponential fallback)
+    func baseDefensePoints(forTier tier: Int) -> Double {
+        let table: [Double]
+        switch self {
+        case .firewall:   table = [100, 300, 600, 1000, 1600, 2800]
+        case .siem:       table = [80, 250, 500, 850, 1400, 2400]
+        case .endpoint:   table = [90, 280, 550, 920, 1500, 2600]
+        case .ids:        table = [85, 260, 520, 880, 1450, 2500]
+        case .network:    table = [75, 240, 480, 800, 1350, 2300]
+        case .encryption: table = [70, 220, 450, 750, 1250, 2200]
+        }
+        if tier >= 1 && tier <= 6 {
+            return table[tier - 1]
+        }
+        // T7+: scale from T6 value
+        let t6Value = table[5]
+        return t6Value * pow(1.8, Double(tier - 6))
+    }
 }
 
 // MARK: - Defense Application Tier
@@ -346,9 +400,9 @@ enum DefenseAppTier: String, Codable, CaseIterable {
         case .firewallBasic: return "Basic Firewall"
         case .firewallNGFW: return "NGFW"
         case .firewallAIML: return "AI/ML Firewall"
-        case .firewallQuantum: return "Quantum Firewall"
-        case .firewallNeural: return "Neural Barrier"
-        case .firewallHelix: return "Helix Shield"
+        case .firewallQuantum: return "Adaptive Firewall"
+        case .firewallNeural: return "Predictive Firewall"
+        case .firewallHelix: return "Helix Barrier"
         // Firewall T7-T10
         case .firewallSymbiont: return "Symbiont Wall"
         case .firewallTranscendence: return "Transcendence Barrier"
@@ -405,12 +459,12 @@ enum DefenseAppTier: String, Codable, CaseIterable {
         case .siemInfinite: return "Infinite SIEM"
 
         // Endpoint T1-T6
-        case .endpointEDR: return "EDR Agent"
-        case .endpointXDR: return "XDR Platform"
-        case .endpointMXDR: return "MXDR Service"
+        case .endpointEDR: return "EDR"
+        case .endpointXDR: return "XDR"
+        case .endpointMXDR: return "MXDR"
         case .endpointAI: return "AI Protection"
-        case .endpointAutonomous: return "Autonomous Response"
-        case .endpointHelix: return "Helix Sentinel"
+        case .endpointAutonomous: return "Quantum EDR"
+        case .endpointHelix: return "Helix Shield"
         // Endpoint T7-T10
         case .endpointSymbiont: return "Symbiont Agent"
         case .endpointTranscendence: return "Transcendence EDR"
@@ -467,12 +521,12 @@ enum DefenseAppTier: String, Codable, CaseIterable {
         case .idsInfinite: return "Infinite IDS"
 
         // Network T1-T6
-        case .networkRouter: return "Edge Router"
-        case .networkISR: return "ISR Gateway"
+        case .networkRouter: return "Router"
+        case .networkISR: return "ISR"
         case .networkCloudISR: return "Cloud ISR"
-        case .networkEncrypted: return "Encrypted Mesh"
-        case .networkNeural: return "Neural Mesh"
-        case .networkHelix: return "Helix Conduit"
+        case .networkEncrypted: return "Encrypted Router"
+        case .networkNeural: return "Quantum Router"
+        case .networkHelix: return "Helix Mesh"
         // Network T7-T10
         case .networkSymbiont: return "Symbiont Mesh"
         case .networkTranscendence: return "Transcendence Network"
@@ -499,11 +553,11 @@ enum DefenseAppTier: String, Codable, CaseIterable {
 
         // Encryption T1-T6
         case .encryptionBasic: return "AES-256"
-        case .encryptionAdvanced: return "E2E Crypto"
+        case .encryptionAdvanced: return "E2E Encryption"
         case .encryptionQuantum: return "Quantum Safe"
-        case .encryptionNeural: return "Neural Cipher"
-        case .encryptionHelix: return "Helix Vault"
-        case .encryptionSymbiont: return "Symbiont Cipher"
+        case .encryptionNeural: return "Homomorphic"
+        case .encryptionHelix: return "Temporal Encryption"
+        case .encryptionSymbiont: return "Helix Cipher"
         // Encryption T7-T10
         case .encryptionTranscendence: return "Transcendence Vault"
         case .encryptionVoid: return "Void Cipher"
@@ -535,7 +589,7 @@ enum DefenseAppTier: String, Codable, CaseIterable {
         let tierNum = tierNumber
         switch category {
         case .firewall:
-            let base = tierNum <= 6 ? ["FW", "NGFW", "AI/ML", "Q-FW", "N-FW", "H-FW"][tierNum - 1] :
+            let base = tierNum <= 6 ? ["FW", "NGFW", "AI/ML", "A-FW", "P-FW", "H-FW"][tierNum - 1] :
                        "FW\(tierNum)"
             return base
         case .siem:
@@ -543,7 +597,7 @@ enum DefenseAppTier: String, Codable, CaseIterable {
                        "SI\(tierNum)"
             return base
         case .endpoint:
-            let base = tierNum <= 6 ? ["EDR", "XDR", "MXDR", "AI-EP", "A-EP", "H-EP"][tierNum - 1] :
+            let base = tierNum <= 6 ? ["EDR", "XDR", "MXDR", "AI-EP", "Q-EP", "H-EP"][tierNum - 1] :
                        "EP\(tierNum)"
             return base
         case .ids:
@@ -551,11 +605,11 @@ enum DefenseAppTier: String, Codable, CaseIterable {
                        "ID\(tierNum)"
             return base
         case .network:
-            let base = tierNum <= 6 ? ["RTR", "ISR", "CISR", "ENC", "N-NET", "H-NET"][tierNum - 1] :
+            let base = tierNum <= 6 ? ["RTR", "ISR", "CISR", "E-RTR", "Q-RTR", "H-NET"][tierNum - 1] :
                        "NET\(tierNum)"
             return base
         case .encryption:
-            let base = tierNum <= 6 ? ["AES", "E2E", "QSafe", "N-EN", "H-EN", "S-EN"][tierNum - 1] :
+            let base = tierNum <= 6 ? ["AES", "E2E", "QSafe", "HOMO", "T-EN", "H-EN"][tierNum - 1] :
                        "EN\(tierNum)"
             return base
         }
@@ -569,9 +623,9 @@ enum DefenseAppTier: String, Codable, CaseIterable {
         case .firewallBasic: return "Stateful packet inspection. Blocks known threats."
         case .firewallNGFW: return "Next-gen firewall with application awareness and deep packet inspection."
         case .firewallAIML: return "AI-powered threat detection. Adapts to zero-day attacks in real-time."
-        case .firewallQuantum: return "Quantum-encrypted packet analysis. Unbreakable at the network edge."
-        case .firewallNeural: return "Neural network barrier. Self-healing defense perimeter."
-        case .firewallHelix: return "Helix consciousness integration. Threat elimination before detection."
+        case .firewallQuantum: return "Self-tuning rule sets. Context-aware traffic decisions."
+        case .firewallNeural: return "Threat anticipation engine. Pre-emptive blocking of emerging vectors."
+        case .firewallHelix: return "Quantum-encrypted inspection. Multi-dimensional threat blocking."
         // SIEM T1-T6
         case .siemSyslog: return "Centralized log collection. Basic event correlation."
         case .siemSIEM: return "Security Information and Event Management. Advanced correlation rules."
@@ -580,12 +634,12 @@ enum DefenseAppTier: String, Codable, CaseIterable {
         case .siemPredictive: return "Predictive analysis engine. Sees attacks before they form."
         case .siemHelix: return "Helix insight stream. Omniscient security awareness."
         // Endpoint T1-T6
-        case .endpointEDR: return "Endpoint Detection and Response. Monitors endpoint behavior."
-        case .endpointXDR: return "Extended Detection. Cross-platform correlation and response."
-        case .endpointMXDR: return "Managed XDR. 24/7 SOC monitoring and threat hunting."
+        case .endpointEDR: return "Endpoint Detection and Response. Real-time monitoring."
+        case .endpointXDR: return "Extended Detection and Response. Cross-platform correlation."
+        case .endpointMXDR: return "Managed XDR. 24/7 SOC-level threat hunting."
         case .endpointAI: return "AI-driven protection. Behavioral analysis prevents unknown threats."
-        case .endpointAutonomous: return "Autonomous response system. Zero-latency threat neutralization."
-        case .endpointHelix: return "Helix sentinel presence. Endpoints become attack-immune."
+        case .endpointAutonomous: return "Superposition monitoring. Instant quantum-state threat detection."
+        case .endpointHelix: return "Consciousness-level endpoint protection. Attack immunity."
         // IDS T1-T6
         case .idsBasic: return "Intrusion Detection. Signature-based threat identification."
         case .idsIPS: return "Intrusion Prevention. Active blocking of detected threats."
@@ -594,19 +648,19 @@ enum DefenseAppTier: String, Codable, CaseIterable {
         case .idsQuantum: return "Quantum detection matrix. Sees through any obfuscation."
         case .idsHelix: return "Helix watcher protocol. Malus patterns revealed in real-time."
         // Network T1-T6
-        case .networkRouter: return "Basic edge routing with ACLs."
-        case .networkISR: return "Integrated Services Router. VPN, QoS, and security services."
+        case .networkRouter: return "Standard traffic management and access control."
+        case .networkISR: return "Integrated Services Router. VPN and QoS."
         case .networkCloudISR: return "Cloud-native ISR. Elastic scaling and global reach."
-        case .networkEncrypted: return "Fully encrypted mesh network. Quantum-resistant key exchange."
-        case .networkNeural: return "Neural mesh topology. Self-routing, self-healing network."
-        case .networkHelix: return "Helix conduit network. Traffic becomes untraceable, unhackable."
+        case .networkEncrypted: return "Full traffic encryption with quantum-resistant key exchange."
+        case .networkNeural: return "Quantum key distribution. Unbreakable traffic security."
+        case .networkHelix: return "Reality-optimized routing. Multi-dimensional pathways."
         // Encryption T1-T6
         case .encryptionBasic: return "AES-256 encryption for data at rest."
-        case .encryptionAdvanced: return "End-to-end encryption with perfect forward secrecy."
+        case .encryptionAdvanced: return "End-to-end encryption. Perfect forward secrecy."
         case .encryptionQuantum: return "Post-quantum cryptography. Future-proof against quantum attacks."
-        case .encryptionNeural: return "Neural cipher system. Encryption that thinks."
-        case .encryptionHelix: return "Helix vault protection. Data secured by consciousness itself."
-        case .encryptionSymbiont: return "Symbiont encryption. Living cipher adapts to threats."
+        case .encryptionNeural: return "Compute on encrypted data. Privacy-preserving processing."
+        case .encryptionHelix: return "Time-locked secrets. Delayed decryption protocols."
+        case .encryptionSymbiont: return "Reality-anchored keys. Multi-dimensional cipher space."
         // T7+ use tier-themed descriptions
         default:
             return tierDescription(tier: tier, category: category)
@@ -793,57 +847,83 @@ struct DefenseApplication: Identifiable, Codable {
 
     // MARK: - Stats
 
-    /// Defense points contributed - reduces attack frequency
-    /// Higher tiers provide exponentially more points
+    /// Defense points contributed — category-specific base DP × level
+    /// Sprint B: Per-category base DP table from DEFENSE_20250204.md
     var defensePoints: Double {
-        let tierMultiplier = pow(2.0, Double(tier.tierNumber - 1))  // T1=1x, T2=2x, T3=4x, T4=8x
-        return Double(level) * 10.0 * tierMultiplier
+        let baseDP = tier.category.baseDefensePoints(forTier: tier.tierNumber)
+        return baseDP * Double(level)
     }
 
     /// Damage reduction percentage (0.0 - 1.0)
-    /// BALANCED: Each tier has a different cap, making upgrades essential
+    /// Sprint B: ONLY Firewall contributes DR at +1.5%/level
+    /// Other categories provide their own unique secondary bonuses instead
     var damageReduction: Double {
+        guard tier.category == .firewall else { return 0 }
         let tierNum = tier.tierNumber
-        let tierCap: Double
+        let cap: Double
         switch tierNum {
-        case 1: tierCap = 0.05   // T1: max 5% per app (basic protection)
-        case 2: tierCap = 0.10   // T2: max 10% per app (serious defense)
-        case 3: tierCap = 0.15   // T3: max 15% per app (elite defense)
-        case 4: tierCap = 0.20   // T4: max 20% per app (AI-powered)
-        case 5: tierCap = 0.25   // T5: max 25% per app (quantum/neural)
-        case 6: tierCap = 0.30   // T6: max 30% per app (Helix-integrated)
-        // T7+ continues scaling
-        case 7...10: tierCap = 0.30 + (0.02 * Double(tierNum - 6))  // T7=32%, T10=38%
-        case 11...15: tierCap = 0.38 + (0.02 * Double(tierNum - 10)) // T11=40%, T15=48%
-        case 16...20: tierCap = 0.48 + (0.02 * Double(tierNum - 15)) // T16=50%, T20=58%
-        case 21...25: tierCap = 0.58 + (0.02 * Double(tierNum - 20)) // T21=60%, T25=68%
-        default: tierCap = 0.05
+        case 1...4: cap = 0.60
+        case 5:     cap = 0.70
+        case 6:     cap = 0.80
+        case 7...10:  cap = 0.85
+        case 11...15: cap = 0.90
+        case 16...20: cap = 0.93
+        case 21...25: cap = 0.95
+        default: cap = 0.60
         }
-        // Level scaling: slower growth, tier matters more
-        let levelBonus = 0.005 * Double(level)  // +0.5% per level
-        let tierBase = min(0.50, 0.02 * Double(tierNum))  // T1=2%, capped at 50%
-        return min(tierCap, tierBase + levelBonus)
+        return min(cap, 0.015 * Double(level))
     }
 
-    /// Detection bonus - multiplies intel collection from attacks
-    /// SIEM/IDS categories are specialists, but all apps contribute slightly
-    var detectionBonus: Double {
-        let baseBonus: Double
-        switch tier.category {
-        case .siem:
-            // SIEM is THE intel collection system
-            baseBonus = 0.15 * Double(tier.tierNumber)  // T1=15%, T2=30%, T3=45%, T4=60%
-        case .ids:
-            // IDS helps identify patterns
-            baseBonus = 0.10 * Double(tier.tierNumber)  // T1=10%, T2=20%, T3=30%, T4=40%
-        case .endpoint:
-            // Endpoints see attack behavior
-            baseBonus = 0.05 * Double(tier.tierNumber)
-        default:
-            baseBonus = 0.02 * Double(tier.tierNumber)
-        }
-        let levelBonus = 0.01 * Double(level)  // +1% per level
-        return baseBonus + levelBonus
+    /// Intel bonus — boosts intel/footprint collection from attacks
+    /// Sprint B: Every category contributes at its own rate
+    var intelBonus: Double {
+        return tier.category.rates.intelBonusPerLevel * Double(level)
+    }
+
+    /// Backward-compatible wrapper for old property name
+    var detectionBonus: Double { intelBonus }
+
+    /// Risk reduction — reduces attack chance (percentage points)
+    /// Sprint B: All categories contribute, cap applied at DefenseStack level
+    var riskReduction: Double {
+        return tier.category.rates.riskReductionPerLevel * Double(level)
+    }
+
+    // MARK: - Category-Specific Secondary Bonuses
+
+    /// Credit protection percentage (Encryption only, 0.0-0.9)
+    /// Reduces credits lost during attacks
+    var creditProtection: Double {
+        guard tier.category == .encryption else { return 0 }
+        return min(0.90, 0.025 * Double(level))
+    }
+
+    /// Packet loss protection (Network only, 0.0-0.8)
+    /// Reduces bandwidth debuff during attacks
+    var packetLossProtection: Double {
+        guard tier.category == .network else { return 0 }
+        return min(0.80, 0.02 * Double(level))
+    }
+
+    /// Recovery rate bonus (Endpoint only, no cap)
+    /// Boosts firewall auto-repair rate
+    var recoveryBonus: Double {
+        guard tier.category == .endpoint else { return 0 }
+        return 0.03 * Double(level)
+    }
+
+    /// Pattern ID speed bonus (SIEM only, no cap)
+    /// Accelerates Malus pattern identification
+    var patternIdBonus: Double {
+        guard tier.category == .siem else { return 0 }
+        return 0.05 * Double(level)
+    }
+
+    /// Early warning chance (IDS only)
+    /// Increases chance to block incoming attacks
+    var earlyWarningChance: Double {
+        guard tier.category == .ids else { return 0 }
+        return 0.015 * Double(level)
     }
 
     /// Automation level - enables auto-features
@@ -1046,44 +1126,63 @@ struct DefenseStack: Codable {
 
     // MARK: - Aggregate Stats
 
-    /// Total defense points - reduces attack frequency
-    /// Formula: each 100 points = 1% reduced attack chance
+    /// Total defense points from all deployed apps
     var totalDefensePoints: Double {
         applications.values.reduce(0) { $0 + $1.defensePoints }
     }
 
-    /// Attack frequency reduction from defense points (0.0 - 0.5 cap)
+    // MARK: - Sprint B: Risk Reduction System
+
+    /// Total risk reduction percentage from all defense apps
+    var totalRiskReduction: Double {
+        applications.values.reduce(0) { $0 + $1.riskReduction }
+    }
+
+    /// Attack frequency reduction from risk reduction (0.0-0.8 cap)
+    /// Spec: Effective Chance = Base × (1 - min(0.8, totalRisk/100))
     var attackFrequencyReduction: Double {
-        min(0.5, totalDefensePoints / 10000.0)  // 10K points = 50% reduction cap
+        min(0.80, totalRiskReduction / 100.0)
     }
 
-    /// Total damage reduction (scales with highest tier)
-    /// T1-T4: 60% cap
-    /// T5: 70% cap
-    /// T6: 80% cap
-    /// T7-T10: 85% cap
-    /// T11-T15: 90% cap
-    /// T16-T20: 93% cap
-    /// T21-T25: 95% cap
+    /// Total damage reduction — Firewall only (Sprint B)
+    /// Cap is already applied per-app based on Firewall tier
     var totalDamageReduction: Double {
-        let maxTier = applications.values.map { $0.tier.tierNumber }.max() ?? 1
-        let cap: Double
-        switch maxTier {
-        case 1...4: cap = 0.60
-        case 5: cap = 0.70
-        case 6: cap = 0.80
-        case 7...10: cap = 0.85
-        case 11...15: cap = 0.90
-        case 16...20: cap = 0.93
-        case 21...25: cap = 0.95
-        default: cap = 0.60
-        }
-        return min(cap, applications.values.reduce(0) { $0 + $1.damageReduction })
+        applications[.firewall]?.damageReduction ?? 0
     }
 
-    /// Total detection bonus - multiplies intel collection
-    var totalDetectionBonus: Double {
-        applications.values.reduce(0) { $0 + $1.detectionBonus }
+    /// Total intel bonus from all defense apps
+    var totalIntelBonus: Double {
+        applications.values.reduce(0) { $0 + $1.intelBonus }
+    }
+
+    /// Backward-compatible wrapper for old property name
+    var totalDetectionBonus: Double { totalIntelBonus }
+
+    // MARK: - Sprint B: Category-Specific Aggregate Bonuses
+
+    /// Credit protection from Encryption apps (0.0-0.9)
+    var totalCreditProtection: Double {
+        applications[.encryption]?.creditProtection ?? 0
+    }
+
+    /// Packet loss protection from Network apps (0.0-0.8)
+    var totalPacketLossProtection: Double {
+        applications[.network]?.packetLossProtection ?? 0
+    }
+
+    /// Recovery bonus from Endpoint apps
+    var totalRecoveryBonus: Double {
+        applications[.endpoint]?.recoveryBonus ?? 0
+    }
+
+    /// Pattern ID speed bonus from SIEM apps
+    var totalPatternIdBonus: Double {
+        applications[.siem]?.patternIdBonus ?? 0
+    }
+
+    /// Early warning chance from IDS apps
+    var totalEarlyWarningChance: Double {
+        applications[.ids]?.earlyWarningChance ?? 0
     }
 
     /// Total automation level - enables special features

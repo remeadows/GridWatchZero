@@ -11,44 +11,46 @@ This is an iOS idle/strategy game built with SwiftUI and Swift 6. The player ope
 - **UI**: SwiftUI
 - **Architecture**: MVVM
 - **Target**: iOS 17+ (iPhone/iPad)
-- **Persistence**: UserDefaults with Codable
+- **Persistence**: UserDefaults with Codable + iCloud (NSUbiquitousKeyValueStore)
+
+> **Cross-Reference**: This document defines *implementation details*. For required contributor skills and competencies, see [SKILLS.md](./SKILLS.md). These documents must stay synchronized—skill requirements in SKILLS.md should reflect patterns documented here, and new patterns added here may require skill updates there.
 
 ## Project Structure
 ```
 GridWatchZero/
-├── GridWatchZero.xcodeproj/
-└── GridWatchZero/
-    ├── GridWatchZeroApp.swift       # App entry point
-    ├── Models/
-    │   ├── Resource.swift           # ResourceType, DataPacket, PlayerResources
-    │   ├── Node.swift               # NodeProtocol, SourceNode, SinkNode, FirewallNode
-    │   ├── Link.swift               # LinkProtocol, TransportLink
-    │   ├── ThreatSystem.swift       # ThreatLevel, Attack, DefenseStats
-    │   ├── EventSystem.swift        # RandomEvent, EventGenerator, EventEffect
-    │   ├── LoreSystem.swift         # LoreFragment, LoreDatabase, LoreState
-    │   ├── MilestoneSystem.swift    # Milestone, MilestoneDatabase, MilestoneState
-    │   ├── DefenseApplication.swift # DefenseStack, MalusIntelligence, 6 security categories
-    │   ├── CharacterDossier.swift   # Character profiles, BIOs, DossierDatabase
-    │   └── DossierManager.swift     # Unlock tracking, persistence
-    ├── Engine/
-    │   ├── GameEngine.swift         # Core tick loop, game state, all systems
-    │   ├── UnitFactory.swift        # Unit creation factory, unit catalog
-    │   └── AudioManager.swift       # Sound effects, haptics, ambient audio
-    └── Views/
-        ├── Theme.swift              # Colors, fonts, view modifiers
-        ├── DashboardView.swift      # Main game screen
-        ├── UnitShopView.swift       # Unit shop modal
-        ├── LoreView.swift           # Intel/lore viewer
-        └── Components/
-            ├── NodeCardView.swift       # Source/Link/Sink cards
-            ├── FirewallCardView.swift   # Defense node card
-            ├── DefenseApplicationView.swift # Security apps, topology view
-            ├── CriticalAlarmView.swift  # Full-screen critical alarm
-            ├── ConnectionLineView.swift
-            ├── StatsHeaderView.swift
-            ├── ThreatIndicatorView.swift
-            └── AlertBannerView.swift
-        ├── DossierView.swift            # Character dossier collection & detail views
+â”œâ”€â”€ GridWatchZero.xcodeproj/
+â””â”€â”€ GridWatchZero/
+    â”œâ”€â”€ GridWatchZeroApp.swift       # App entry point
+    â”œâ”€â”€ Models/
+    â”‚   â”œâ”€â”€ Resource.swift           # ResourceType, DataPacket, PlayerResources
+    â”‚   â”œâ”€â”€ Node.swift               # NodeProtocol, SourceNode, SinkNode, FirewallNode
+    â”‚   â”œâ”€â”€ Link.swift               # LinkProtocol, TransportLink
+    â”‚   â”œâ”€â”€ ThreatSystem.swift       # ThreatLevel, Attack, DefenseStats
+    â”‚   â”œâ”€â”€ EventSystem.swift        # RandomEvent, EventGenerator, EventEffect
+    â”‚   â”œâ”€â”€ LoreSystem.swift         # LoreFragment, LoreDatabase, LoreState
+    â”‚   â”œâ”€â”€ MilestoneSystem.swift    # Milestone, MilestoneDatabase, MilestoneState
+    â”‚   â”œâ”€â”€ DefenseApplication.swift # DefenseStack, MalusIntelligence, 6 security categories
+    â”‚   â”œâ”€â”€ CharacterDossier.swift   # Character profiles, BIOs, DossierDatabase
+    â”‚   â””â”€â”€ DossierManager.swift     # Unlock tracking, persistence
+    â”œâ”€â”€ Engine/
+    â”‚   â”œâ”€â”€ GameEngine.swift         # Core tick loop, game state, all systems
+    â”‚   â”œâ”€â”€ UnitFactory.swift        # Unit creation factory, unit catalog
+    â”‚   â””â”€â”€ AudioManager.swift       # Sound effects, haptics, ambient audio
+    â””â”€â”€ Views/
+        â”œâ”€â”€ Theme.swift              # Colors, fonts, view modifiers
+        â”œâ”€â”€ DashboardView.swift      # Main game screen
+        â”œâ”€â”€ UnitShopView.swift       # Unit shop modal
+        â”œâ”€â”€ LoreView.swift           # Intel/lore viewer
+        â””â”€â”€ Components/
+            â”œâ”€â”€ NodeCardView.swift       # Source/Link/Sink cards
+            â”œâ”€â”€ FirewallCardView.swift   # Defense node card
+            â”œâ”€â”€ DefenseApplicationView.swift # Security apps, topology view
+            â”œâ”€â”€ CriticalAlarmView.swift  # Full-screen critical alarm
+            â”œâ”€â”€ ConnectionLineView.swift
+            â”œâ”€â”€ StatsHeaderView.swift
+            â”œâ”€â”€ ThreatIndicatorView.swift
+            â””â”€â”€ AlertBannerView.swift
+        â”œâ”€â”€ DossierView.swift            # Character dossier collection & detail views
 ```
 
 ## Key Commands
@@ -68,7 +70,7 @@ open "/Users/russmeadows/Dev/Games/GridWatchZero/GridWatchZero.xcodeproj"
 5. **Production phase**:
    - **Source** generates data packets (with prestige multipliers)
    - **Link** transfers data (bandwidth-limited, packet loss on overflow)
-   - **Sink** processes data → credits (with prestige multipliers)
+   - **Sink** processes data â†’ credits (with prestige multipliers)
 6. **Progression phase** - Update threat level, check milestones/lore
 7. **UI updates** with new stats
 
@@ -98,25 +100,25 @@ open "/Users/russmeadows/Dev/Games/GridWatchZero/GridWatchZero.xcodeproj"
 | 8 | CRITICAL | 5,000,000 | 10% |
 | 9 | UNKNOWN | 25,000,000 | 12% |
 | 10 | COSMIC | 100,000,000 | 15% |
-| 11-20 | PARADOX → OMEGA | Endgame | Scaling |
+| 11-20 | PARADOX â†’ OMEGA | Endgame | Scaling |
 
 ## Common Issues
 - Swift 6 concurrency: Use `@MainActor`, `@unchecked Sendable`, or `Task { @MainActor in }`
-- Adding new files: Must manually add to Xcode project (right-click → Add Files)
+- Adding new files: Must manually add to Xcode project (right-click â†’ Add Files)
 - Save migration: Increment save key version when changing GameState structure
 
 ## Key Systems
 
 ### Prestige System ("Network Wipe")
-- Requires minimum credits (100K × 5^level)
+- Requires minimum credits (100K Ã— 5^level)
 - Awards Helix Cores for permanent bonuses
-- Production multiplier: 1.0 + (prestigeLevel × 0.1) + (totalCores × 0.05)
-- Credit multiplier: 1.0 + (prestigeLevel × 0.15)
+- Production multiplier: 1.0 + (prestigeLevel Ã— 0.1) + (totalCores Ã— 0.05)
+- Credit multiplier: 1.0 + (prestigeLevel Ã— 0.15)
 
 ### Unit Tiers (25 Total)
 | Tier Group | Tiers | Theme | Max Level |
 |------------|-------|-------|-----------|
-| RealWorld | T1-T6 | Cybersecurity → Helix integration | 10-40 |
+| RealWorld | T1-T6 | Cybersecurity â†’ Helix integration | 10-40 |
 | Transcendence | T7-T10 | Post-Helix, merged with consciousness | 50 |
 | Dimensional | T11-T15 | Reality-bending, multiverse access | 50 |
 | Cosmic | T16-T20 | Universal scale, entropy, singularity | 50 |
@@ -126,28 +128,63 @@ open "/Users/russmeadows/Dev/Games/GridWatchZero/GridWatchZero.xcodeproj"
 
 ### Defense System
 - FirewallNode absorbs attack damage before credits
-- Damage reduction scales with level (20% base + 5%/level, max 60%)
 - Health regenerates 2%/tick × level
 - Can be repaired for credits
 
 ### Security Applications (DefenseStack)
-6 categories with progression chains:
-| Category | Chain |
-|----------|-------|
-| Firewall | FW -> NGFW -> AI/ML |
-| SIEM | Syslog -> SIEM -> SOAR -> AI Analytics |
-| Endpoint | EDR -> XDR -> MXDR -> AI Protection |
-| IDS | IDS -> IPS -> ML/IPS -> AI Detection |
-| Network | Router -> ISR -> Cloud ISR -> Encrypted |
-| Encryption | AES-256 -> E2E -> Quantum Safe |
+6 categories with progression chains and **category-specific rate tables**:
 
-Each deployed app adds:
-- Defense Points (tier × level × 10)
-- Damage Reduction (stacks with firewall, cap 60%)
-- Detection Bonus (SIEM/IDS categories)
-- Automation Level (SOAR/AI tiers)
+| Category | Chain | Secondary Bonus |
+|----------|-------|-----------------|
+| Firewall | FW -> NGFW -> AI/ML | Damage Reduction (+1.5%/lvl) |
+| SIEM | Syslog -> SIEM -> SOAR -> AI Analytics | Pattern ID (+5%/lvl) |
+| Endpoint | EDR -> XDR -> MXDR -> AI Protection | Recovery (+3%/lvl) |
+| IDS | IDS -> IPS -> ML/IPS -> AI Detection | Early Warning (+1.5%/lvl) |
+| Network | Router -> ISR -> Cloud ISR -> Encrypted | Pkt Loss Prot (+2%/lvl, cap 80%) |
+| Encryption | AES-256 -> E2E -> Quantum Safe | Credit Prot (+2.5%/lvl, cap 90%) |
+
+**Category Rates** (per-level bonuses):
+| Category | Intel Bonus | Risk Reduction | Secondary Bonus |
+|----------|-------------|----------------|-----------------|
+| Firewall | 0.05 | 3.0 | DR: 0.015 |
+| SIEM | 0.12 | 1.0 | Pattern ID: 0.05 |
+| Endpoint | 0.06 | 2.0 | Recovery: 0.03 |
+| IDS | 0.10 | 2.5 | Warning: 0.015 |
+| Network | 0.07 | 2.0 | Pkt Loss: 0.02 |
+| Encryption | 0.04 | 1.5 | Credit Prot: 0.025 |
+
+**Base Defense Points** (Category × Tier lookup):
+| Category | T1 | T2 | T3 | T4 | T5 | T6 |
+|----------|-----|-----|------|------|------|------|
+| Firewall | 100 | 300 | 600 | 1000 | 1600 | 2800 |
+| SIEM | 80 | 250 | 500 | 850 | 1400 | 2400 |
+| Endpoint | 90 | 280 | 550 | 920 | 1500 | 2600 |
+| IDS | 85 | 260 | 520 | 880 | 1450 | 2500 |
+| Network | 75 | 240 | 480 | 800 | 1350 | 2300 |
+| Encryption | 70 | 220 | 450 | 750 | 1250 | 2200 |
+
+T7+ scales exponentially: `T6Value × 1.8^(tier-6)`
+
+**Damage Reduction**: Firewall-only, +1.5%/level with tier caps:
+- T1-T4: 60% cap | T5: 70% | T6: 80% | T7-T10: 85% | T11-T15: 90% | T16-T20: 93% | T21-T25: 95%
+
+**Risk Reduction** (attack frequency):
+- All categories contribute: `riskReductionPerLevel × level`
+- Total: `min(0.80, totalRiskReduction / 100)`
+- Effective attack chance = Base × (1 - attackFrequencyReduction)
 
 **Defense App Tier Gates**: Same as units - must max current tier before unlocking next tier in the progression chain.
+
+### Certification Maturity System
+- 20 Normal Mode certs + 20 Insane Mode certs (40 total)
+- Each cert earned on level completion (Normal or Insane track)
+- **Maturity timer**: Normal = 40 real hours, Insane = 60 real hours
+- **Per-cert bonus**: `min(hoursElapsed / maturityHours, 1.0) × 0.20`
+- **Total multiplier**: `1.0 + Σ(all cert bonuses)` — range 1.0× to 9.0×
+- Multiplier applies to: source production, credit conversion, offline progress
+- Uses existing `certificateEarnedDates` for time tracking (no save migration)
+- Persistence: Separate from GameState via CertificateManager
+- Maturity states: Pending (🔒) → Maturing (⏳) → Mature (✅)
 
 ### Malus Intelligence & Intel Reports
 - Collect footprint data from survived attacks
@@ -164,7 +201,7 @@ Each deployed app adds:
 
 ### Campaign Level Requirements (20 Levels)
 
-**Arc 1: The Awakening (Levels 1-7)** - Tutorial → Helix awakens
+**Arc 1: The Awakening (Levels 1-7)** - Tutorial â†’ Helix awakens
 | Level | Credits | Reports | Tiers |
 |-------|---------|---------|-------|
 | 1 | 50K | 5 | T1 |
@@ -228,11 +265,11 @@ The game features main characters with art assets in `AppPhoto/`:
 ### Project Prometheus AIs (Arc 3+)
 | Character | Introduced | Role | Image File |
 |-----------|------------|------|------------|
-| **VEXIS** | Level 11 | Infiltrator AI - mimics friendly systems | `VEXIS.jpg` ✅ |
-| **KRON** | Level 12 | Temporal AI - attacks from "the future" | `KRON.jpg` ✅ |
-| **AXIOM** | Level 13 | Logic AI - pure efficiency engine | `AXIOM.jpg` ✅ |
-| **ZERO** | Level 16 | Parallel AI - Helix's dark mirror | `ZERO.jpg` ✅ |
-| **The Architect** | Level 18 | First consciousness - neutral cosmic entity | `The Architect.png` ✅ |
+| **VEXIS** | Level 11 | Infiltrator AI - mimics friendly systems | `VEXIS.jpg` âœ… |
+| **KRON** | Level 12 | Temporal AI - attacks from "the future" | `KRON.jpg` âœ… |
+| **AXIOM** | Level 13 | Logic AI - pure efficiency engine | `AXIOM.jpg` âœ… |
+| **ZERO** | Level 16 | Parallel AI - Helix's dark mirror | `ZERO.jpg` âœ… |
+| **The Architect** | Level 18 | First consciousness - neutral cosmic entity | `The Architect.png` âœ… |
 
 See `DESIGN.md` for detailed character profiles, visual descriptions, and full bios.
 
@@ -260,3 +297,23 @@ Current implementation uses `AVAudioPlayer` with custom .m4a files in `GridWatch
 - Core Haptics with custom AHAP patterns
 - PHASE for spatial audio (iOS 15+)
 - Xcode Haptic Composer for pattern authoring
+
+---
+
+## Cross-Reference: CLAUDE.md ↔ SKILLS.md
+
+| Topic | CLAUDE.md | SKILLS.md |
+|-------|-----------|-----------|
+| Swift 6 concurrency | Important Patterns | Section 1 (Swift 6) |
+| Save system & versioning | Save System | Section 1 (Persistence) |
+| Game economics formulas | GAMEPLAY.md | Section 2 (Idle Game) |
+| Defense stack categories | Defense System | Section 3 (Security) |
+| Certification maturity | Certification Maturity System | Section 2 (Game Architecture) |
+| Color palette | Color Palette | Section 4 (Visual) |
+| File workflow | Adding New Files | Section 6 (Tooling) |
+
+**Rule**: When either document changes, check the other for required updates.
+
+- **CLAUDE.md** is the source of truth for *what* and *how*
+- **SKILLS.md** is the source of truth for *who* and *why*
+- **GAMEPLAY.md** is the source of truth for *numbers* and *balance*

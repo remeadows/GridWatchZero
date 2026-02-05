@@ -417,6 +417,28 @@ enum AttackType: String, Codable, CaseIterable {
         }
     }
 
+    /// Compact name for tight UI layouts (ThreatBarView attack indicator)
+    var shortName: String {
+        switch self {
+        case .probe: return "PROBE"
+        case .ddos: return "DDoS"
+        case .intrusion: return "INTRUSION"
+        case .malusStrike: return "MALUS_STK"
+        case .coordinatedAssault: return "COORD_ASLT"
+        case .neuralHijack: return "NEURAL_HJK"
+        case .quantumBreach: return "QNTM_BRCH"
+        case .symbioticInvasion: return "SYMB_INV"
+        case .voidRift: return "VOID_RIFT"
+        case .dimensionalTear: return "DIM_TEAR"
+        case .causalityLoop: return "CAUS_LOOP"
+        case .timelineCollapse: return "TIME_CLPS"
+        case .singularityBomb: return "SING_BOMB"
+        case .realityUnravel: return "REAL_UNRL"
+        case .omegaStrike: return "OMEGA_STK"
+        case .existentialThreat: return "EXIST_THR"
+        }
+    }
+
     /// Duration in ticks
     var baseDuration: Int {
         switch self {

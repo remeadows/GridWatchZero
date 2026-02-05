@@ -66,14 +66,14 @@ GAMEPLAY, DEFENSE, and UNITS were authored separately. Cross-referencing formula
 
 ## Sprint Plan Summary
 
-| Sprint | Name | Priority | Scope |
-|--------|------|----------|-------|
-| **A** | Balance Foundation | Highest | Campaign levels, unit costs, defense costs, Insane Mode numbers |
-| **B** | Defense System Overhaul | High | All 6 categories gain intel/risk bonuses, new caps, renamed apps |
-| **C** | Certification Maturity | Medium | 40-hour maturity timer, partial bonuses, Settings UI |
-| **D** | Intel System Enhancements | Medium | Send ALL, batch latency, early warning system |
-| **E** | Link Latency & Protection | Medium | Transfer delays, packet loss protection, credit protection |
-| **F** | Insane Dossiers & Polish | Lower | 6 new dossiers, story dialog updates, save migration |
+| Sprint | Name | Priority | Status | Scope |
+|--------|------|----------|--------|-------|
+| **A** | Balance Foundation | Highest | ✅ Complete | Campaign levels, unit costs, defense costs, Insane Mode numbers |
+| **B** | Defense System Overhaul | High | ✅ Complete | All 6 categories gain intel/risk bonuses, new caps, renamed apps |
+| **C** | Certification Maturity | Medium | ✅ Complete | 40h/60h maturity timers, partial bonuses, Settings UI |
+| **D** | Intel System Enhancements | Medium | 🔜 Next | Send ALL, batch latency, early warning system |
+| **E** | Link Latency & Protection | Medium | ⏳ Planned | Transfer delays, packet loss protection, credit protection |
+| **F** | Insane Dossiers & Polish | Lower | ⏳ Planned | 6 new dossiers, story dialog updates, save migration |
 
 ---
 
@@ -110,8 +110,61 @@ Rebalance all 20 campaign levels, unit unlock costs, and defense app costs to ma
 
 ---
 
+## Sprint B: Defense System Overhaul (Detail)
+
+### Objective
+Add per-category intel/risk/secondary bonuses to all 6 defense categories per DEFENSE_20250204.md. Replace generic defense point formula with category-specific rate tables.
+
+### Files Modified
+
+| File | Changes |
+|------|---------|
+| `Models/DefenseApplication.swift` | Added `CategoryRates` struct, per-category rate tables, base DP lookup table, Firewall-only DR with tier caps, risk reduction formula |
+| `Engine/GameEngine.swift` | Updated defense calculations to use category-specific rates |
+| `Views/Components/DefenseApplicationView.swift` | Updated UI to show category-specific bonuses |
+
+### Acceptance Criteria (All Met)
+- [x] Each of 6 categories has unique intel/risk/secondary bonus per level
+- [x] Base defense points use Category × Tier lookup table (6×6)
+- [x] T7+ scales exponentially: `T6Value × 1.8^(tier-6)`
+- [x] Damage reduction is Firewall-only (+1.5%/lvl, tier caps)
+- [x] Risk reduction formula: `min(0.80, totalRisk/100)`
+- [x] Builds cleanly with zero warnings
+
+---
+
+## Sprint C: Certification Maturity (Detail)
+
+### Objective
+Implement certification maturity system with real-time timers. Normal certs mature in 40 hours, Insane certs in 60 hours. Partial bonuses accumulate linearly.
+
+### Files Modified
+
+| File | Changes |
+|------|---------|
+| `Models/CertificateSystem.swift` | NEW — `CertificateManager` with maturity tracking, per-cert bonus calculation, persistence via UserDefaults |
+| `Models/CampaignLevel.swift` | Added Insane Mode certification support (20 Insane certs) |
+| `Engine/GameEngine.swift` | Integrated cert multiplier into production pipeline (source, credit, offline) |
+| `Views/CertificateView.swift` | NEW — Maturity state UI (Pending 🔒 / Maturing ⏳ / Mature ✅), progress bars |
+| `Views/DashboardView.swift` | Added certificate section link |
+
+### Acceptance Criteria (All Met)
+- [x] 20 Normal certs (40h maturity) + 20 Insane certs (60h maturity)
+- [x] Per-cert bonus: `min(hoursElapsed / maturityHours, 1.0) × 0.20`
+- [x] Total multiplier range: 1.0× to 9.0×
+- [x] Multiplier applies to source production, credit conversion, offline progress
+- [x] Maturity states display correctly in UI
+- [x] No save migration needed (uses separate persistence key)
+- [x] Builds cleanly with zero warnings
+
+---
+
 ## Version History
 
 | Date | Change |
 |------|--------|
 | 2026-02-05 | Initial migration plan created |
+| 2026-02-05 | Sprint A completed — all 20 levels rebalanced, unit/defense costs updated, Insane Mode modifiers |
+| 2026-02-05 | Sprint B completed — defense system overhaul with per-category rate tables |
+| 2026-02-05 | Sprint C completed — certification maturity system (40h/60h timers) |
+| 2026-02-05 | ISSUES.md archived (2003 → 636 lines), COMMIT.md + SESSIONS.md created |
