@@ -664,8 +664,33 @@ No save migration needed — `claimedMilestones` is `Set<Int>`, new raw values s
 
 ### ENH-017: Audio System Upgrade Using Apple Dev Tools
 **Priority**: High
-**Status**: Open
+**Status**: ✅ Implemented
+**Closed**: 2026-02-05
 **Description**: Upgrade audio system using better Apple development tools available in Xcode.
+**Implementation**:
+- Migrated from AVAudioPlayer to AVAudioEngine with unified node graph (SFX + music buses)
+- 8 AVAudioPlayerNode pool for concurrent SFX playback
+- Core Haptics (CHHapticEngine) with 8 custom AHAP pattern files, UIKit fallback for Simulator
+- Automatic music ducking during attacks (duck on attackIncoming, restore on attackEnd)
+- Fixed bug: `attack_end.m4a` was defined but never played — now triggers on attack end
+- Zero call-site changes: all 27 existing call sites preserved via AmbientAudioManager facade
+**Files Changed**: `Engine/AudioManager.swift` (rewrite), `Engine/GameEngine.swift` (+1 line), 8 new `.ahap` files in `Resources/Haptics/`
+
+---
+
+## 🔧 Open TODOs
+
+### TODO-001: Xcode Cloud Cannot See `main` Branch
+**Priority**: High
+**Status**: Open
+**Reported**: 2026-02-05
+**Description**: Xcode Cloud's "Start Build" dialog shows no branches available when trying to build from `main`. The workflow is configured for `main` but Xcode Cloud only indexed the legacy `master` branch from a previous successful build. An empty commit was pushed to `main` to trigger detection but the issue persists.
+**Impact**: Cannot trigger Xcode Cloud builds from `main` branch via App Store Connect.
+**Workaround**: Builds may still trigger automatically on push if the workflow's auto-build is enabled.
+**Next Steps**:
+- Try deleting the old `master` workflow and creating a new one targeting `main`
+- Contact Apple Developer Support if branch detection continues to fail
+- Verify repository connection settings in App Store Connect → Xcode Cloud
 
 ---
 
