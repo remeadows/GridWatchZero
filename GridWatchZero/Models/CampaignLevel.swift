@@ -175,14 +175,27 @@ enum NetworkSize: String, Codable, CaseIterable {
 // MARK: - Insane Mode Modifiers
 
 struct InsaneModifiers: Codable {
-    let threatFrequencyMultiplier: Double   // 2.0 = 2x more attacks
-    let attackDamageMultiplier: Double      // 1.5 = 50% more damage
-    let creditIncomeMultiplier: Double      // 0.75 = 25% less income
+    /// Credit requirement multiplier (3.5 = need 3.5× normal credits)
+    let creditRequirementMultiplier: Double
+    /// Absolute attack chance bonus added to base (0.25 = +25%)
+    let attackChanceBonus: Double
+    /// Report requirement multiplier (2.0 = need 2× normal reports)
+    let reportMultiplier: Double
+    /// Defense point requirement multiplier (2.0 = need 2× normal DP)
+    let defensePointMultiplier: Double
+    /// Attack damage multiplier (1.5 = 50% more damage)
+    let attackDamageMultiplier: Double
+
+    // Legacy properties preserved for backward compatibility during migration
+    var threatFrequencyMultiplier: Double { 1.0 + attackChanceBonus }
+    var creditIncomeMultiplier: Double { 1.0 / creditRequirementMultiplier }
 
     static let standard = InsaneModifiers(
-        threatFrequencyMultiplier: 2.0,
-        attackDamageMultiplier: 1.5,
-        creditIncomeMultiplier: 0.75
+        creditRequirementMultiplier: 3.5,
+        attackChanceBonus: 0.25,
+        reportMultiplier: 2.0,
+        defensePointMultiplier: 2.0,
+        attackDamageMultiplier: 1.5
     )
 }
 
@@ -253,7 +266,7 @@ struct LevelConfiguration {
 
     // Computed modifiers
     var threatMultiplier: Double {
-        isInsane ? (level.insaneModifiers?.threatFrequencyMultiplier ?? 2.0) : 1.0
+        isInsane ? (level.insaneModifiers?.threatFrequencyMultiplier ?? 1.25) : 1.0
     }
 
     var damageMultiplier: Double {
@@ -261,7 +274,32 @@ struct LevelConfiguration {
     }
 
     var incomeMultiplier: Double {
-        isInsane ? (level.insaneModifiers?.creditIncomeMultiplier ?? 0.75) : 1.0
+        isInsane ? (level.insaneModifiers?.creditIncomeMultiplier ?? 0.286) : 1.0
+    }
+
+    /// Credit requirement multiplier for insane mode (3.5× base)
+    var creditRequirementMultiplier: Double {
+        isInsane ? (level.insaneModifiers?.creditRequirementMultiplier ?? 3.5) : 1.0
+    }
+
+    /// Absolute attack chance bonus for insane mode (+25%)
+    var attackChanceBonus: Double {
+        isInsane ? (level.insaneModifiers?.attackChanceBonus ?? 0.25) : 0.0
+    }
+
+    /// Report requirement multiplier for insane mode (2× base)
+    var reportRequirementMultiplier: Double {
+        isInsane ? (level.insaneModifiers?.reportMultiplier ?? 2.0) : 1.0
+    }
+
+    /// Defense point requirement multiplier for insane mode (2× base)
+    var defensePointRequirementMultiplier: Double {
+        isInsane ? (level.insaneModifiers?.defensePointMultiplier ?? 2.0) : 1.0
+    }
+
+    /// Starting credits (always 0 for insane mode)
+    var startingCredits: Double {
+        isInsane ? 0 : level.startingCredits
     }
 
     var maxTier: Int {

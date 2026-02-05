@@ -66,11 +66,11 @@ class LevelDatabase {
             availableTiers: [1, 2],
             victoryConditions: VictoryConditions(
                 requiredDefenseTier: 2,
-                requiredDefensePoints: 150,
+                requiredDefensePoints: 100,
                 requiredRiskLevel: .ghost,
                 requiredCredits: 250000,
-                requiredAttacksSurvived: nil,  // Removed - conflicts with keeping risk low
-                requiredReportsSent: 10,       // Send 10 intel reports
+                requiredAttacksSurvived: nil,
+                requiredReportsSent: 10,
                 timeLimit: nil
             ),
             unlockRequirement: .previousLevel(1),
@@ -78,7 +78,7 @@ class LevelDatabase {
             introStoryId: "level2_intro",
             victoryStoryId: "level2_victory",
             insaneModifiers: .standard,
-            minimumAttackChance: 0.3  // Minimum 0.3% attack chance per tick
+            minimumAttackChance: nil  // 0% attack chance per spec
         ),
 
         // LEVEL 3: Office Network
@@ -100,11 +100,11 @@ class LevelDatabase {
             availableTiers: [1, 2, 3],
             victoryConditions: VictoryConditions(
                 requiredDefenseTier: 3,
-                requiredDefensePoints: 350,
+                requiredDefensePoints: 200,
                 requiredRiskLevel: .blip,
-                requiredCredits: 750000,
-                requiredAttacksSurvived: 15,
-                requiredReportsSent: 20,       // Send 20 intel reports
+                requiredCredits: 625000,
+                requiredAttacksSurvived: nil,
+                requiredReportsSent: 18,
                 timeLimit: nil
             ),
             unlockRequirement: .previousLevel(2),
@@ -112,10 +112,10 @@ class LevelDatabase {
             introStoryId: "level3_intro",
             victoryStoryId: "level3_victory",
             insaneModifiers: .standard,
-            minimumAttackChance: 0.5  // Minimum 0.5% attack chance per tick
+            minimumAttackChance: 2.0  // 2% attack chance per spec
         ),
 
-        // LEVEL 4: Large Office (balanced: +50% starting, -30% credit requirement)
+        // LEVEL 4: Large Office
         CampaignLevel(
             id: 4,
             name: "Large Office",
@@ -133,11 +133,11 @@ class LevelDatabase {
             availableTiers: [1, 2, 3, 4],
             victoryConditions: VictoryConditions(
                 requiredDefenseTier: 4,
-                requiredDefensePoints: 500,
+                requiredDefensePoints: 350,
                 requiredRiskLevel: .blip,
-                requiredCredits: 2000000,
-                requiredAttacksSurvived: 20,
-                requiredReportsSent: 40,       // Send 40 intel reports
+                requiredCredits: 1560000,
+                requiredAttacksSurvived: nil,
+                requiredReportsSent: 30,
                 timeLimit: nil
             ),
             unlockRequirement: .previousLevel(3),
@@ -145,7 +145,7 @@ class LevelDatabase {
             introStoryId: "level4_intro",
             victoryStoryId: "level4_victory",
             insaneModifiers: .standard,
-            minimumAttackChance: 1.0  // Minimum 1.0% attack chance per tick
+            minimumAttackChance: 2.0  // 2% attack chance per spec
         ),
 
         // LEVEL 5: Campus Network (balanced for smooth T5 progression)
@@ -166,11 +166,11 @@ class LevelDatabase {
             availableTiers: [1, 2, 3, 4, 5],
             victoryConditions: VictoryConditions(
                 requiredDefenseTier: 5,
-                requiredDefensePoints: 800,
+                requiredDefensePoints: 550,
                 requiredRiskLevel: .blip,
-                requiredCredits: 6000000,
-                requiredAttacksSurvived: 25,
-                requiredReportsSent: 80,       // Send 80 intel reports
+                requiredCredits: 3900000,
+                requiredAttacksSurvived: nil,
+                requiredReportsSent: 50,       // Send 50 intel reports
                 timeLimit: nil
             ),
             unlockRequirement: .previousLevel(4),
@@ -178,7 +178,7 @@ class LevelDatabase {
             introStoryId: "level5_intro",
             victoryStoryId: "level5_victory",
             insaneModifiers: .standard,
-            minimumAttackChance: 1.5  // Minimum 1.5% attack chance per tick
+            minimumAttackChance: 3.0  // 3% attack chance per spec
         ),
 
         // LEVEL 6: Enterprise Network (balanced for T6 acquisition)
@@ -194,16 +194,16 @@ class LevelDatabase {
 
             Neural Mesh Defense and Helix integration are your only hope.
             """,
-            startingCredits: 1000,  // Starting credits to establish initial defenses
-            startingThreatLevel: .priority,  // Reduced from .hammered for smoother progression
+            startingCredits: 0,
+            startingThreatLevel: .priority,
             availableTiers: [1, 2, 3, 4, 5, 6],
             victoryConditions: VictoryConditions(
                 requiredDefenseTier: 6,
-                requiredDefensePoints: 1000,  // Reduced from 1200
-                requiredRiskLevel: .blip,     // Changed from .signal to .blip
-                requiredCredits: 10000000,    // Reduced from 15M to 10M
-                requiredAttacksSurvived: 25,  // Reduced from 35
-                requiredReportsSent: 100,     // Reduced from 160
+                requiredDefensePoints: 800,
+                requiredRiskLevel: .blip,
+                requiredCredits: 9750000,
+                requiredAttacksSurvived: nil,
+                requiredReportsSent: 80,
                 timeLimit: nil
             ),
             unlockRequirement: .previousLevel(5),
@@ -211,7 +211,7 @@ class LevelDatabase {
             introStoryId: "level6_intro",
             victoryStoryId: "level6_victory",
             insaneModifiers: .standard,
-            minimumAttackChance: 1.5  // Reduced from 2.0%
+            minimumAttackChance: 4.0  // 4% attack chance per spec
         ),
 
         // LEVEL 7: City Network
@@ -227,16 +227,16 @@ class LevelDatabase {
 
             Channel Helix. Prepare for what comes next.
             """,
-            startingCredits: 2000,  // Starting credits - critical for surviving early attacks
-            startingThreatLevel: .hammered,  // Reduced from .critical for fairness
+            startingCredits: 0,
+            startingThreatLevel: .hammered,
             availableTiers: [1, 2, 3, 4, 5, 6],
             victoryConditions: VictoryConditions(
                 requiredDefenseTier: 6,
-                requiredDefensePoints: 1500,  // Reduced from 2000
-                requiredRiskLevel: .ghost,    // Changed from .blip to .ghost
-                requiredCredits: 25000000,    // Reduced from 40M to 25M
-                requiredAttacksSurvived: 35,  // Reduced from 50
-                requiredReportsSent: 200,     // Reduced from 320
+                requiredDefensePoints: 1100,
+                requiredRiskLevel: .ghost,
+                requiredCredits: 24400000,
+                requiredAttacksSurvived: nil,
+                requiredReportsSent: 125,
                 timeLimit: nil
             ),
             unlockRequirement: .previousLevel(6),
@@ -244,11 +244,13 @@ class LevelDatabase {
             introStoryId: "level7_intro",
             victoryStoryId: "level7_victory",
             insaneModifiers: InsaneModifiers(
-                threatFrequencyMultiplier: 2.0,
-                attackDamageMultiplier: 1.5,
-                creditIncomeMultiplier: 0.7
+                creditRequirementMultiplier: 3.5,
+                attackChanceBonus: 0.25,
+                reportMultiplier: 2.0,
+                defensePointMultiplier: 2.0,
+                attackDamageMultiplier: 1.5
             ),
-            minimumAttackChance: 2.0  // Reduced from 2.5%
+            minimumAttackChance: 4.0  // 4% attack chance per spec
         ),
 
         // ============================================
@@ -274,11 +276,11 @@ class LevelDatabase {
             availableTiers: [1, 2, 3, 4, 5, 6, 7],
             victoryConditions: VictoryConditions(
                 requiredDefenseTier: 7,
-                requiredDefensePoints: 3000,
+                requiredDefensePoints: 1800,
                 requiredRiskLevel: .target,
-                requiredCredits: 100_000_000,
-                requiredAttacksSurvived: 60,
-                requiredReportsSent: 400,
+                requiredCredits: 55_000_000,
+                requiredAttacksSurvived: nil,
+                requiredReportsSent: 180,
                 timeLimit: nil
             ),
             unlockRequirement: .previousLevel(7),
@@ -286,7 +288,7 @@ class LevelDatabase {
             introStoryId: "level8_intro",
             victoryStoryId: "level8_victory",
             insaneModifiers: .standard,
-            minimumAttackChance: 3.0
+            minimumAttackChance: 8.0  // 8% attack chance per spec
         ),
 
         // LEVEL 9: Corporate Extraction
@@ -308,11 +310,11 @@ class LevelDatabase {
             availableTiers: [1, 2, 3, 4, 5, 6, 7, 8],
             victoryConditions: VictoryConditions(
                 requiredDefenseTier: 8,
-                requiredDefensePoints: 4500,
+                requiredDefensePoints: 2600,
                 requiredRiskLevel: .priority,
-                requiredCredits: 250_000_000,
-                requiredAttacksSurvived: 75,
-                requiredReportsSent: 500,
+                requiredCredits: 124_000_000,
+                requiredAttacksSurvived: nil,
+                requiredReportsSent: 250,
                 timeLimit: nil
             ),
             unlockRequirement: .previousLevel(8),
@@ -320,7 +322,7 @@ class LevelDatabase {
             introStoryId: "level9_intro",
             victoryStoryId: "level9_victory",
             insaneModifiers: .standard,
-            minimumAttackChance: 4.0
+            minimumAttackChance: 8.0  // 8% attack chance per spec
         ),
 
         // LEVEL 10: Malus Core Siege
@@ -342,11 +344,11 @@ class LevelDatabase {
             availableTiers: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
             victoryConditions: VictoryConditions(
                 requiredDefenseTier: 10,
-                requiredDefensePoints: 6000,
+                requiredDefensePoints: 3600,
                 requiredRiskLevel: .hunted,
-                requiredCredits: 500_000_000,
-                requiredAttacksSurvived: 90,
-                requiredReportsSent: 640,
+                requiredCredits: 279_000_000,
+                requiredAttacksSurvived: nil,
+                requiredReportsSent: 350,
                 timeLimit: nil
             ),
             unlockRequirement: .previousLevel(9),
@@ -354,7 +356,7 @@ class LevelDatabase {
             introStoryId: "level10_intro",
             victoryStoryId: "level10_victory",
             insaneModifiers: .standard,
-            minimumAttackChance: 5.0
+            minimumAttackChance: 10.0  // 10% attack chance per spec
         ),
 
         // ============================================
@@ -380,11 +382,11 @@ class LevelDatabase {
             availableTiers: Array(1...12),
             victoryConditions: VictoryConditions(
                 requiredDefenseTier: 12,
-                requiredDefensePoints: 8000,
+                requiredDefensePoints: 5000,
                 requiredRiskLevel: .marked,
-                requiredCredits: 1_000_000_000,
-                requiredAttacksSurvived: 100,
-                requiredReportsSent: 800,
+                requiredCredits: 628_000_000,
+                requiredAttacksSurvived: nil,
+                requiredReportsSent: 480,
                 timeLimit: nil
             ),
             unlockRequirement: .previousLevel(10),
@@ -392,7 +394,7 @@ class LevelDatabase {
             introStoryId: "level11_intro",
             victoryStoryId: "level11_victory",
             insaneModifiers: .standard,
-            minimumAttackChance: 6.0
+            minimumAttackChance: 15.0  // 15% attack chance per spec
         ),
 
         // LEVEL 12: Temporal Incursion
@@ -414,11 +416,11 @@ class LevelDatabase {
             availableTiers: Array(1...14),
             victoryConditions: VictoryConditions(
                 requiredDefenseTier: 14,
-                requiredDefensePoints: 10000,
+                requiredDefensePoints: 6500,
                 requiredRiskLevel: .targeted,
-                requiredCredits: 2_500_000_000,
-                requiredAttacksSurvived: 120,
-                requiredReportsSent: 1000,
+                requiredCredits: 1_410_000_000,
+                requiredAttacksSurvived: nil,
+                requiredReportsSent: 650,
                 timeLimit: nil
             ),
             unlockRequirement: .previousLevel(11),
@@ -426,7 +428,7 @@ class LevelDatabase {
             introStoryId: "level12_intro",
             victoryStoryId: "level12_victory",
             insaneModifiers: .standard,
-            minimumAttackChance: 8.0
+            minimumAttackChance: 15.0  // 15% attack chance per spec
         ),
 
         // LEVEL 13: Logic Bomb
@@ -448,11 +450,11 @@ class LevelDatabase {
             availableTiers: Array(1...15),
             victoryConditions: VictoryConditions(
                 requiredDefenseTier: 15,
-                requiredDefensePoints: 12000,
+                requiredDefensePoints: 8500,
                 requiredRiskLevel: .hammered,
-                requiredCredits: 5_000_000_000,
-                requiredAttacksSurvived: 140,
-                requiredReportsSent: 1280,
+                requiredCredits: 2_820_000_000,
+                requiredAttacksSurvived: nil,
+                requiredReportsSent: 875,
                 timeLimit: nil
             ),
             unlockRequirement: .previousLevel(12),
@@ -460,7 +462,7 @@ class LevelDatabase {
             introStoryId: "level13_intro",
             victoryStoryId: "level13_victory",
             insaneModifiers: .standard,
-            minimumAttackChance: 10.0
+            minimumAttackChance: 18.0  // 18% attack chance per spec
         ),
 
         // LEVEL 14: The Black Site
@@ -481,11 +483,11 @@ class LevelDatabase {
             availableTiers: Array(1...17),
             victoryConditions: VictoryConditions(
                 requiredDefenseTier: 17,
-                requiredDefensePoints: 15000,
+                requiredDefensePoints: 11000,
                 requiredRiskLevel: .critical,
-                requiredCredits: 10_000_000_000,
-                requiredAttacksSurvived: 160,
-                requiredReportsSent: 1600,
+                requiredCredits: 5_640_000_000,
+                requiredAttacksSurvived: nil,
+                requiredReportsSent: 1150,
                 timeLimit: nil
             ),
             unlockRequirement: .previousLevel(13),
@@ -493,7 +495,7 @@ class LevelDatabase {
             introStoryId: "level14_intro",
             victoryStoryId: "level14_victory",
             insaneModifiers: .standard,
-            minimumAttackChance: 12.0
+            minimumAttackChance: 22.0  // 22% attack chance per spec
         ),
 
         // ============================================
@@ -519,11 +521,11 @@ class LevelDatabase {
             availableTiers: Array(1...19),
             victoryConditions: VictoryConditions(
                 requiredDefenseTier: 19,
-                requiredDefensePoints: 20000,
+                requiredDefensePoints: 14000,
                 requiredRiskLevel: .ascended,
-                requiredCredits: 25_000_000_000,
-                requiredAttacksSurvived: 180,
-                requiredReportsSent: 2000,
+                requiredCredits: 11_300_000_000,
+                requiredAttacksSurvived: nil,
+                requiredReportsSent: 1500,
                 timeLimit: nil
             ),
             unlockRequirement: .previousLevel(14),
@@ -531,7 +533,7 @@ class LevelDatabase {
             introStoryId: "level15_intro",
             victoryStoryId: "level15_victory",
             insaneModifiers: .standard,
-            minimumAttackChance: 15.0
+            minimumAttackChance: 25.0  // 25% attack chance per spec
         ),
 
         // LEVEL 16: Dimensional Breach
@@ -553,11 +555,11 @@ class LevelDatabase {
             availableTiers: Array(1...20),
             victoryConditions: VictoryConditions(
                 requiredDefenseTier: 20,
-                requiredDefensePoints: 25000,
+                requiredDefensePoints: 18000,
                 requiredRiskLevel: .symbiont,
-                requiredCredits: 50_000_000_000,
-                requiredAttacksSurvived: 200,
-                requiredReportsSent: 2560,
+                requiredCredits: 22_600_000_000,
+                requiredAttacksSurvived: nil,
+                requiredReportsSent: 1950,
                 timeLimit: nil
             ),
             unlockRequirement: .previousLevel(15),
@@ -565,7 +567,7 @@ class LevelDatabase {
             introStoryId: "level16_intro",
             victoryStoryId: "level16_victory",
             insaneModifiers: .standard,
-            minimumAttackChance: 18.0
+            minimumAttackChance: 30.0  // 30% attack chance per spec
         ),
 
         // LEVEL 17: The Convergence
@@ -587,11 +589,11 @@ class LevelDatabase {
             availableTiers: Array(1...21),
             victoryConditions: VictoryConditions(
                 requiredDefenseTier: 21,
-                requiredDefensePoints: 30000,
+                requiredDefensePoints: 23000,
                 requiredRiskLevel: .transcendent,
-                requiredCredits: 100_000_000_000,
-                requiredAttacksSurvived: 220,
-                requiredReportsSent: 3200,
+                requiredCredits: 39_500_000_000,
+                requiredAttacksSurvived: nil,
+                requiredReportsSent: 2500,
                 timeLimit: nil
             ),
             unlockRequirement: .previousLevel(16),
@@ -599,7 +601,7 @@ class LevelDatabase {
             introStoryId: "level17_intro",
             victoryStoryId: "level17_victory",
             insaneModifiers: .standard,
-            minimumAttackChance: 20.0
+            minimumAttackChance: 35.0  // 35% attack chance per spec
         ),
 
         // LEVEL 18: The Origin
@@ -622,11 +624,11 @@ class LevelDatabase {
             availableTiers: Array(1...23),
             victoryConditions: VictoryConditions(
                 requiredDefenseTier: 23,
-                requiredDefensePoints: 40000,
+                requiredDefensePoints: 30000,
                 requiredRiskLevel: .unknown,
-                requiredCredits: 250_000_000_000,
-                requiredAttacksSurvived: 250,
-                requiredReportsSent: 4000,
+                requiredCredits: 69_200_000_000,
+                requiredAttacksSurvived: nil,
+                requiredReportsSent: 3200,
                 timeLimit: nil
             ),
             unlockRequirement: .previousLevel(17),
@@ -634,7 +636,7 @@ class LevelDatabase {
             introStoryId: "level18_intro",
             victoryStoryId: "level18_victory",
             insaneModifiers: .standard,
-            minimumAttackChance: 25.0
+            minimumAttackChance: 40.0  // 40% attack chance per spec
         ),
 
         // ============================================
@@ -660,11 +662,11 @@ class LevelDatabase {
             availableTiers: Array(1...24),
             victoryConditions: VictoryConditions(
                 requiredDefenseTier: 24,
-                requiredDefensePoints: 50000,
+                requiredDefensePoints: 40000,
                 requiredRiskLevel: .dimensional,
-                requiredCredits: 500_000_000_000,
-                requiredAttacksSurvived: 280,
-                requiredReportsSent: 5000,
+                requiredCredits: 121_000_000_000,
+                requiredAttacksSurvived: nil,
+                requiredReportsSent: 4100,
                 timeLimit: nil
             ),
             unlockRequirement: .previousLevel(18),
@@ -672,7 +674,7 @@ class LevelDatabase {
             introStoryId: "level19_intro",
             victoryStoryId: "level19_victory",
             insaneModifiers: .standard,
-            minimumAttackChance: 30.0
+            minimumAttackChance: 45.0  // 45% attack chance per spec
         ),
 
         // LEVEL 20: The New Dawn
@@ -696,11 +698,11 @@ class LevelDatabase {
             availableTiers: Array(1...25),
             victoryConditions: VictoryConditions(
                 requiredDefenseTier: 25,
-                requiredDefensePoints: 100000,
+                requiredDefensePoints: 55000,
                 requiredRiskLevel: .cosmic,
-                requiredCredits: 1_000_000_000_000,
-                requiredAttacksSurvived: 320,
-                requiredReportsSent: 10000,
+                requiredCredits: 212_000_000_000,
+                requiredAttacksSurvived: nil,
+                requiredReportsSent: 5500,
                 timeLimit: nil
             ),
             unlockRequirement: .previousLevel(19),
@@ -708,11 +710,13 @@ class LevelDatabase {
             introStoryId: "level20_intro",
             victoryStoryId: "level20_victory_final",
             insaneModifiers: InsaneModifiers(
-                threatFrequencyMultiplier: 2.5,
-                attackDamageMultiplier: 2.0,
-                creditIncomeMultiplier: 0.6
+                creditRequirementMultiplier: 3.5,
+                attackChanceBonus: 0.25,
+                reportMultiplier: 2.0,
+                defensePointMultiplier: 2.0,
+                attackDamageMultiplier: 2.0
             ),
-            minimumAttackChance: 40.0
+            minimumAttackChance: 50.0  // 50% attack chance per spec
         )
     ]
 
@@ -810,31 +814,31 @@ extension LevelDatabase {
     /// Estimated playtime per level (in minutes)
     func estimatedPlaytime(for levelId: Int) -> Int {
         switch levelId {
-        case 1: return 5
-        case 2: return 10
-        case 3: return 15
-        case 4: return 20
-        case 5: return 25
-        case 6: return 30
+        case 1: return 30   // Tutorial
+        case 2: return 35
+        case 3: return 40
+        case 4: return 40
+        case 5: return 45
+        case 6: return 45
         case 7: return 45
         // Transcendence Era
-        case 8: return 50
-        case 9: return 55
-        case 10: return 60
+        case 8: return 45
+        case 9: return 45
+        case 10: return 45
         // Dimensional Era
-        case 11: return 65
-        case 12: return 70
-        case 13: return 75
-        case 14: return 80
+        case 11: return 45
+        case 12: return 45
+        case 13: return 50
+        case 14: return 55
         // Cosmic Era
-        case 15: return 90
-        case 16: return 100
-        case 17: return 110
-        case 18: return 120
+        case 15: return 60
+        case 16: return 60
+        case 17: return 60
+        case 18: return 60
         // Omega Era
-        case 19: return 150
-        case 20: return 180
-        default: return 15
+        case 19: return 60
+        case 20: return 60
+        default: return 30
         }
     }
 

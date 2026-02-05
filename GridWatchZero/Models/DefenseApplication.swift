@@ -720,15 +720,15 @@ enum DefenseAppTier: String, Codable, CaseIterable {
         }
     }
 
-    /// Cost to unlock this tier (balanced with unit costs)
+    /// Cost to unlock this tier (per DEFENSE spec v2.0)
     var unlockCost: Double {
         switch tierNumber {
-        case 1: return 500
-        case 2: return 5_000
-        case 3: return 40_000
-        case 4: return 120_000
-        case 5: return 500_000
-        case 6: return 2_000_000
+        case 1: return 5_000
+        case 2: return 25_000
+        case 3: return 100_000
+        case 4: return 400_000
+        case 5: return 1_500_000
+        case 6: return 5_000_000
         // T7+ scale exponentially (similar to unit costs)
         case 7: return 10_000_000           // 10M
         case 8: return 50_000_000           // 50M
@@ -905,10 +905,9 @@ struct DefenseApplication: Identifiable, Codable {
 
     // MARK: - Upgrade
 
-    /// Upgrade cost uses exponential scaling like other units
-    /// Costs are higher than units since apps provide permanent defense bonuses
+    /// Upgrade cost per DEFENSE spec v2.0: 500 × 1.22^level
     var upgradeCost: Double {
-        250.0 * Double(tier.tierNumber) * pow(1.25, Double(level))
+        500.0 * pow(1.22, Double(level))
     }
 
     /// Maximum level for this tier (same as unit tiers)
