@@ -168,7 +168,7 @@ The game's identity is rooted in authentic cybersecurity terminology. Contributo
 
 ### Documentation-Driven Development
 
-- Reads GO.md, CONTEXT.md, PROJECT_STATUS.md, ISSUES.md before coding
+- Reads GO.md, project/PROJECT_STATUS.md, project/ISSUES.md before coding
 - Updates documentation when behavior changes
 - Treats docs as part of the product
 - **Cross-references CLAUDE.md for implementation specifics**

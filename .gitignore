@@ -38,7 +38,7 @@ iOSInjectionProject/
 .agents/
 .claude/
 .codex/
-SPRINT_BALANCE.md
+project/SPRINT_BALANCE.md
 
 # Xcode Test Results
 *.xcresult/

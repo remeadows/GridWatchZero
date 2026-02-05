@@ -9,10 +9,9 @@ You must read the project docs in this exact order:
 1) **SKILLS.md**  ✅ (mandatory first)
 2) GO.md
 3) CLAUDE.md
-4) CONTEXT.md
-5) PROJECT_STATUS.md
-6) ISSUES.md
-7) README.md
+4) project/PROJECT_STATUS.md
+5) project/ISSUES.md
+6) README.md
 
 If you have not read **SKILLS.md first**, you are **not authorized to modify code**.
 
@@ -47,12 +46,13 @@ open "/Users/russmeadows/Dev/Games/GridWatchZero/GridWatchZero.xcodeproj"
 |----------|---------|
 | [SKILLS.md](./SKILLS.md) | Contributor capability profile - required competencies |
 | [CLAUDE.md](./CLAUDE.md) | AI assistant context - project structure, patterns, commands |
-| [CONTEXT.md](./CONTEXT.md) | Game concept, narrative, design philosophy |
-| [PROJECT_STATUS.md](./PROJECT_STATUS.md) | Implementation progress, current version, next tasks |
-| [ISSUES.md](./ISSUES.md) | Bug tracking, enhancement requests |
-| [ISSUES_ARCHIVE.md](./ISSUES_ARCHIVE.md) | Archived/resolved issues and reference docs |
-| [DESIGN.md](./DESIGN.md) | Full game design document with mechanics |
-| [MIGRATION_PLAN.md](./MIGRATION_PLAN.md) | v2.0 balance migration sprint plan (A-F) |
+| [project/PROJECT_STATUS.md](./project/PROJECT_STATUS.md) | Implementation progress, current version, next tasks |
+| [project/ISSUES.md](./project/ISSUES.md) | Bug tracking, enhancement requests |
+| [project/ISSUES_ARCHIVE.md](./project/ISSUES_ARCHIVE.md) | Archived/resolved issues and reference docs |
+| [project/MIGRATION_PLAN.md](./project/MIGRATION_PLAN.md) | v2.0 balance migration sprint plan (A-F) |
+| [design/DESIGN.md](./design/DESIGN.md) | Full game design document with mechanics |
+| [design/GAMEPLAY.md](./design/GAMEPLAY.md) | Full gameplay balance and economics |
+| [archive/CONTEXT.md](./archive/CONTEXT.md) | Game concept, narrative (legacy — see DESIGN.md) |
 | [COMMIT.md](./COMMIT.md) | Session power-down checklist |
 | [SESSIONS.md](./SESSIONS.md) | Session prep template (optional) |
 
@@ -60,7 +60,7 @@ open "/Users/russmeadows/Dev/Games/GridWatchZero/GridWatchZero.xcodeproj"
 
 ## Current Work: v2.0 Balance Migration (Branch: `CLAUDE_UPDATE`)
 
-> See [MIGRATION_PLAN.md](./MIGRATION_PLAN.md) for full sprint details.
+> See [project/MIGRATION_PLAN.md](./project/MIGRATION_PLAN.md) for full sprint details.
 
 | Sprint | Name | Status |
 |--------|------|--------|
@@ -168,7 +168,7 @@ To reset: Delete app from simulator or call `engine.resetGame()`
 ## Session Checklist
 
 Before ending a session:
-- [ ] Update PROJECT_STATUS.md with progress
-- [ ] Log any new issues in ISSUES.md
+- [ ] Update project/PROJECT_STATUS.md with progress
+- [ ] Log any new issues in project/ISSUES.md
 - [ ] Commit changes (if using git)
 - [ ] Note next tasks in PROJECT_STATUS.md

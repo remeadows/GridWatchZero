@@ -9,11 +9,11 @@
 ### 1. Update Project Documentation
 
 - [ ] **GO.md** — Update if documentation index or sprint references changed
-- [ ] **PROJECT_STATUS.md** — Add session log entry documenting work done
-- [ ] **ISSUES.md** — Update any issues fixed or progressed
+- [ ] **project/PROJECT_STATUS.md** — Add session log entry documenting work done
+- [ ] **project/ISSUES.md** — Update any issues fixed or progressed
 - [ ] **CLAUDE.md** — Update if game systems or project structure changed
 - [ ] **SKILLS.md** — Update if new patterns or capabilities were introduced
-- [ ] **MIGRATION_PLAN.md** — Update sprint status and add version history entries
+- [ ] **project/MIGRATION_PLAN.md** — Update sprint status and add version history entries
 - [ ] *SESSIONS.md* — Optional: fill in session template if useful for next session
 
 ### 2. Stage and Commit

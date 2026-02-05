@@ -4,7 +4,7 @@
 This is an iOS idle/strategy game built with SwiftUI and Swift 6. The player operates a grey-hat data brokerage network, harvesting and selling data while defending against an AI antagonist named **Malus**.
 
 **Game Name**: Grid Watch Zero
-**Developer**: War Signal
+**Developer**: War Signal Labs
 
 ## Tech Stack
 - **Language**: Swift 6 (strict concurrency)
@@ -243,7 +243,7 @@ T7+ scales exponentially: `T6Value × 1.8^(tier-6)`
 
 ## Characters
 
-The game features main characters with art assets in `AppPhoto/`:
+The game features main characters with art assets in `archive/AppPhoto/` (and in `Assets.xcassets`):
 
 ### The Team
 | Character | Role | Image File |
@@ -271,7 +271,7 @@ The game features main characters with art assets in `AppPhoto/`:
 | **ZERO** | Level 16 | Parallel AI - Helix's dark mirror | `ZERO.jpg` âœ… |
 | **The Architect** | Level 18 | First consciousness - neutral cosmic entity | `The Architect.png` âœ… |
 
-See `DESIGN.md` for detailed character profiles, visual descriptions, and full bios.
+See `design/DESIGN.md` for detailed character profiles, visual descriptions, and full bios.
 
 ## Repository & Deployment
 
@@ -292,7 +292,7 @@ Current implementation uses `AVAudioPlayer` with custom .m4a files in `GridWatch
 - `button_tap.m4a`, `upgrade.m4a`, `attack_incoming.m4a`, `attack_end.m4a`
 - `milestone.m4a`, `warning.m4a`, `error.m4a`, `malus_message.m4a`
 
-**Audio Upgrade Opportunity** (ENH-017 in ISSUES.md):
+**Audio Upgrade Opportunity** (ENH-017 in project/ISSUES.md):
 - AVAudioEngine for real-time mixing and effects
 - Core Haptics with custom AHAP patterns
 - PHASE for spatial audio (iOS 15+)

@@ -3,7 +3,7 @@
 ## App Information
 
 **App Name:** Grid Watch Zero: Neural Grid
-**Developer:** War Signal
+**Developer:** War Signal Labs
 **Bundle ID:** WarSignal.GridWatchZero
 **Category:** Games > Strategy
 **Version:** 1.0.0

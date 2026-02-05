@@ -102,9 +102,9 @@ What happens when you launch and play:
 
 ### Architecture Docs
 - `CLAUDE.md` — Project structure, patterns, commands
-- `CONTEXT.md` — Narrative, design philosophy
+- `archive/CONTEXT.md` — Narrative, design philosophy (legacy — see design/DESIGN.md)
 - `SKILLS.md` — Required skill set, Definition of Done
-- `GAMEPLAY.md` — Balance, unit stats, formulas
+- `design/GAMEPLAY.md` — Balance, unit stats, formulas
 
 ### Key Files (Read First)
 - `Engine/GameEngine.swift` — Core tick loop, all systems
@@ -132,7 +132,7 @@ Example:
 - `GridWatchZeroApp.swift` — Entry point, stable
 - `Engine/AudioManager.swift` — Working, complex state
 - `Views/Theme.swift` — Shared across all views
-- Any file in `AppPhoto/` — Art assets, not code
+- Any file in `archive/AppPhoto/` — Art assets, not code
 
 ---
 
@@ -214,6 +214,6 @@ engine.addDebugCredits(100000)
 2. ✅ State acknowledgment before coding
 3. ✅ Update this file BEFORE starting
 4. ✅ ONE goal per session
-5. ✅ Update PROJECT_STATUS.md when done
-6. ✅ Log issues in ISSUES.md
+5. ✅ Update project/PROJECT_STATUS.md when done
+6. ✅ Log issues in project/ISSUES.md
 7. ✅ Leave codebase cleaner than you found it
