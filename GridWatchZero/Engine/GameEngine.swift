@@ -654,6 +654,7 @@ final class GameEngine: ObservableObject {
             if !attack.isActive {
                 threatState.attacksSurvived += 1
                 emitEvent(.attackEnded(attack.type, survived: true))
+                AudioManager.shared.playSound(.attackEnd)
 
                 // Unlock Malus dossier on first survived attack
                 if threatState.attacksSurvived == 1 {

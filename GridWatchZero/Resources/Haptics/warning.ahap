@@ -1,0 +1,30 @@
+{
+    "Version": 1.0,
+    "Metadata": {
+        "Project": "GridWatchZero",
+        "Description": "Warning - continuous vibration pulse + transient"
+    },
+    "Pattern": [
+        {
+            "Event": {
+                "Time": 0.0,
+                "EventType": "HapticContinuous",
+                "EventDuration": 0.3,
+                "EventParameters": [
+                    { "ParameterID": "HapticIntensity", "ParameterValue": 0.6 },
+                    { "ParameterID": "HapticSharpness", "ParameterValue": 0.5 }
+                ]
+            }
+        },
+        {
+            "Event": {
+                "Time": 0.4,
+                "EventType": "HapticTransient",
+                "EventParameters": [
+                    { "ParameterID": "HapticIntensity", "ParameterValue": 0.9 },
+                    { "ParameterID": "HapticSharpness", "ParameterValue": 0.7 }
+                ]
+            }
+        }
+    ]
+}
