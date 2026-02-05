@@ -1,0 +1,60 @@
+# .swiftlint.yml — Grid Watch Zero
+# SwiftLint configuration for CI and local development
+# Run locally: swiftlint lint --config .swiftlint.yml
+
+included:
+  - GridWatchZero
+
+excluded:
+  - GridWatchZero/Assets.xcassets
+  - GridWatchZero/Resources
+  - GridWatchZero/Preview Content
+  - archive
+  - docs
+  - scripts
+  - ci_scripts
+  - AppStoreAssets
+  - legacy
+  - "*.xcodeproj"
+
+# Relaxed limits for existing large files (GameEngine, DashboardView, etc.)
+line_length:
+  warning: 200
+  error: 300
+  ignores_comments: true
+  ignores_urls: true
+
+file_length:
+  warning: 1500
+  error: 2500
+
+type_body_length:
+  warning: 500
+  error: 1000
+
+function_body_length:
+  warning: 80
+  error: 150
+
+# Disabled rules — too noisy for game code patterns
+disabled_rules:
+  - force_cast
+  - force_try
+  - large_tuple
+  - cyclomatic_complexity
+  - nesting
+  - type_name
+  - identifier_name
+  - trailing_comma
+
+# Opt-in rules
+opt_in_rules:
+  - sorted_imports
+  - redundant_optional_initialization
+  - empty_count
+  - closure_spacing
+  - contains_over_filter_count
+  - discouraged_optional_boolean
+  - empty_string
+  - first_where
+  - modifier_order
