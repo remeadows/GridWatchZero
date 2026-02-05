@@ -1233,6 +1233,16 @@ enum IntelMilestone: Int, CaseIterable {
     case malusTracker = 15     // 15 reports - tracking Malus movements
     case originDiscovery = 20  // 20 reports - discover Malus origin
     case counterIntel = 25     // 25 reports - counter-intelligence ops
+    // --- Endgame milestones (aligned with campaign progression) ---
+    case signalAnalyst = 50
+    case networkSentinel = 100
+    case cipherBreaker = 200
+    case gridWatcher = 400
+    case shadowOperator = 800
+    case phantomProtocol = 1500
+    case architectsEye = 3000
+    case omegaAnalyst = 5000
+    case gridWatchZero = 10000
 
     var title: String {
         switch self {
@@ -1243,6 +1253,15 @@ enum IntelMilestone: Int, CaseIterable {
         case .malusTracker: return "Malus Tracker"
         case .originDiscovery: return "Origin Discovery"
         case .counterIntel: return "Counter-Intelligence"
+        case .signalAnalyst: return "Signal Analyst"
+        case .networkSentinel: return "Network Sentinel"
+        case .cipherBreaker: return "Cipher Breaker"
+        case .gridWatcher: return "Grid Watcher"
+        case .shadowOperator: return "Shadow Operator"
+        case .phantomProtocol: return "Phantom Protocol"
+        case .architectsEye: return "Architect's Eye"
+        case .omegaAnalyst: return "Omega Analyst"
+        case .gridWatchZero: return "Grid Watch Zero"
         }
     }
 
@@ -1255,6 +1274,15 @@ enum IntelMilestone: Int, CaseIterable {
         case .malusTracker: return "Team is tracking Malus movements"
         case .originDiscovery: return "Discovered Malus's true origin"
         case .counterIntel: return "Counter-intelligence operations enabled"
+        case .signalAnalyst: return "Advanced signal analysis capabilities online"
+        case .networkSentinel: return "Full network monitoring perimeter established"
+        case .cipherBreaker: return "Breaking Malus encryption in real-time"
+        case .gridWatcher: return "Comprehensive grid surveillance active"
+        case .shadowOperator: return "Operating in Malus's blind spots"
+        case .phantomProtocol: return "Ghost-level operational security achieved"
+        case .architectsEye: return "Seeing through the Architect's lens"
+        case .omegaAnalyst: return "Omega-class intelligence capability"
+        case .gridWatchZero: return "Grid Watch Zero protocol fully operational"
         }
     }
 
@@ -1267,6 +1295,15 @@ enum IntelMilestone: Int, CaseIterable {
         case .malusTracker: return "malus_tracked"
         case .originDiscovery: return "malus_origin"
         case .counterIntel: return "intel_counter_ops"
+        case .signalAnalyst: return "intel_signal_analyst"
+        case .networkSentinel: return "intel_network_sentinel"
+        case .cipherBreaker: return "intel_cipher_breaker"
+        case .gridWatcher: return "intel_grid_watcher"
+        case .shadowOperator: return "intel_shadow_operator"
+        case .phantomProtocol: return "intel_phantom_protocol"
+        case .architectsEye: return "intel_architects_eye"
+        case .omegaAnalyst: return "intel_omega_analyst"
+        case .gridWatchZero: return "intel_grid_watch_zero"
         }
     }
 
@@ -1280,6 +1317,15 @@ enum IntelMilestone: Int, CaseIterable {
         case .malusTracker: return 100_000
         case .originDiscovery: return 250_000
         case .counterIntel: return 500_000
+        case .signalAnalyst: return 750_000
+        case .networkSentinel: return 1_500_000
+        case .cipherBreaker: return 3_000_000
+        case .gridWatcher: return 7_500_000
+        case .shadowOperator: return 20_000_000
+        case .phantomProtocol: return 50_000_000
+        case .architectsEye: return 150_000_000
+        case .omegaAnalyst: return 500_000_000
+        case .gridWatchZero: return 2_000_000_000
         }
     }
 
@@ -1293,6 +1339,15 @@ enum IntelMilestone: Int, CaseIterable {
         case .malusTracker: return .damageReduction(0.05)         // +5% damage reduction
         case .originDiscovery: return .intelCollectionRate(0.25)  // +25% more intel
         case .counterIntel: return .attackFrequencyReduction(0.10) // 10% fewer attacks
+        case .signalAnalyst: return .creditProtection(0.05)
+        case .networkSentinel: return .intelCollectionRate(0.10)
+        case .cipherBreaker: return .damageReduction(0.05)
+        case .gridWatcher: return .patternIdSpeed(0.10)
+        case .shadowOperator: return .attackFrequencyReduction(0.10)
+        case .phantomProtocol: return .intelCollectionRate(0.15)
+        case .architectsEye: return .damageReduction(0.10)
+        case .omegaAnalyst: return .creditProtection(0.10)
+        case .gridWatchZero: return .intelCollectionRate(0.20)
         }
     }
 
@@ -1306,6 +1361,15 @@ enum IntelMilestone: Int, CaseIterable {
         case .malusTracker: return "Malus Tracker"
         case .originDiscovery: return "Origin Found"
         case .counterIntel: return "Counter-Intel"
+        case .signalAnalyst: return "Signal Analyst"
+        case .networkSentinel: return "Net Sentinel"
+        case .cipherBreaker: return "Cipher Breaker"
+        case .gridWatcher: return "Grid Watcher"
+        case .shadowOperator: return "Shadow Ops"
+        case .phantomProtocol: return "Phantom"
+        case .architectsEye: return "Architect's Eye"
+        case .omegaAnalyst: return "Omega Analyst"
+        case .gridWatchZero: return "GW Zero"
         }
     }
 
@@ -1319,6 +1383,15 @@ enum IntelMilestone: Int, CaseIterable {
         case .malusTracker: return "+5% damage reduction"
         case .originDiscovery: return "+25% intel collection"
         case .counterIntel: return "10% fewer attacks"
+        case .signalAnalyst: return "+5% credit protection"
+        case .networkSentinel: return "+10% intel collection"
+        case .cipherBreaker: return "+5% damage reduction"
+        case .gridWatcher: return "+10% pattern ID speed"
+        case .shadowOperator: return "10% fewer attacks"
+        case .phantomProtocol: return "+15% intel collection"
+        case .architectsEye: return "+10% damage reduction"
+        case .omegaAnalyst: return "+10% credit protection"
+        case .gridWatchZero: return "+20% intel collection"
         }
     }
 }
@@ -1329,6 +1402,7 @@ enum IntelBonus {
     case attackWarning(Double)
     case damageReduction(Double)
     case attackFrequencyReduction(Double)
+    case creditProtection(Double)          // Reduces credit loss during attacks
 }
 
 /// Tracks what we know about Malus
@@ -1522,6 +1596,18 @@ struct MalusIntelligence: Codable {
             guard claimedMilestones.contains(milestone.rawValue) else { continue }
             if case .attackFrequencyReduction(let reduction) = milestone.permanentBonus {
                 bonus += reduction
+            }
+        }
+        return bonus
+    }
+
+    /// Credit protection bonus from intel milestones (reduces credit drain during attacks)
+    var creditProtectionBonus: Double {
+        var bonus = 0.0
+        for milestone in IntelMilestone.allCases {
+            guard claimedMilestones.contains(milestone.rawValue) else { continue }
+            if case .creditProtection(let protection) = milestone.permanentBonus {
+                bonus += protection
             }
         }
         return bonus

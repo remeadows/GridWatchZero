@@ -44,7 +44,7 @@ enum GameEvent: Equatable {
     case milestoneCompleted(String)  // milestone title
     case earlyWarning(AttackType, Int, Double)  // predicted type, ticks until attack, accuracy %
     case batchUploadStarted(Int)   // total reports in batch
-    case batchUploadComplete(Int, Double)  // reports sent, total credits earned
+    case batchUploadComplete(Int, Double)  // reports sent, batch credits earned
 
     var isAlert: Bool {
         switch self {
@@ -384,11 +384,13 @@ final class GameEngine: ObservableObject {
                 let reportsPerTick = max(1, upload.totalReports / max(1, upload.latencyTicks))
                 let reportsThisTick = min(reportsPerTick, upload.totalReports - upload.reportsSent)
 
+                var batchCreditsEarned: Double = 0
                 for _ in 0..<reportsThisTick {
                     if malusIntel.canSendReport {
                         let intelMultiplier = defenseStack.totalIntelMultiplier
                         if let result = malusIntel.sendReport(intelMultiplier: intelMultiplier) {
                             resources.addCredits(result.creditsEarned)
+                            batchCreditsEarned += result.creditsEarned
                             upload.reportsSent += 1
                         }
                     } else {
@@ -400,7 +402,7 @@ final class GameEngine: ObservableObject {
 
                 if upload.isComplete || upload.ticksElapsed >= upload.latencyTicks || !malusIntel.canSendReport {
                     // Upload finished
-                    emitEvent(.batchUploadComplete(upload.reportsSent, malusIntel.totalIntelCredits))
+                    emitEvent(.batchUploadComplete(upload.reportsSent, batchCreditsEarned))
                     AudioManager.shared.playSound(.milestone)
                     batchUploadState = nil
                 } else {
@@ -605,8 +607,8 @@ final class GameEngine: ObservableObject {
                 firewall = fw
             }
 
-            // Sprint B: Apply Encryption credit protection
-            let creditProtection = defenseStack.totalCreditProtection
+            // Sprint B: Apply Encryption credit protection + intel milestone bonus
+            let creditProtection = min(0.90, defenseStack.totalCreditProtection + malusIntel.creditProtectionBonus)
             if creditProtection > 0 {
                 damage.creditDrain *= (1.0 - creditProtection)
             }
