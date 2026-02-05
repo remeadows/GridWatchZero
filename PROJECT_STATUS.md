@@ -186,6 +186,31 @@ See [ISSUES.md](./ISSUES.md) for detailed tracking.
 
 ---
 
+## Session Log: 2026-02-05 — Sprint E: Link Latency & Protection
+
+### Summary
+Implemented Sprint E of the v2.0 balance migration on `CLAUDE_UPDATE` branch. Added link latency buffer system — T1-T3 links delay data transfer 1-3 ticks, T4+ remain instant. Packet loss protection and credit protection were already functional from Sprint B.
+
+### Link Latency Buffer
+- Fixed `latency` computed property bug: T4+ links (baseLatency=0) previously returned 1, now correctly return 0
+- Added `latencyBuffer` array to GameEngine (transient, not persisted — no save migration)
+- Production phase rewritten: source data routes through buffer for latency > 0, instant transfer for latency == 0
+- Buffer drains on tick, matured entries transfer through bandwidth-limited link
+- LAT indicator + buffered data display added to LinkCardView (iPhone + iPad)
+
+### Files Changed
+- `Models/Link.swift` — latency guard for baseLatency=0
+- `Engine/GameEngine.swift` — latencyBuffer, buffer drain logic, conditional production path
+- `Views/Components/NodeCardView.swift` — LAT indicator, bufferedData param, buffer display
+- `Views/DashboardView.swift` — Wired bufferedData to LinkCardView (2 sites)
+- `GO.md`, `MIGRATION_PLAN.md`, `PROJECT_STATUS.md` — Doc updates
+
+### Next Session Tasks
+- Sprint F: 6 new Insane Mode dossiers, story dialog, save migration
+- TestFlight validation of Sprints A-E
+
+---
+
 ## Session Log: 2026-02-05 — Sprint D: Intel System Enhancements
 
 ### Summary

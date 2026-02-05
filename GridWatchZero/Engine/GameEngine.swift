@@ -247,6 +247,9 @@ final class GameEngine: ObservableObject {
     // Sprint D: Batch Upload State
     @Published private(set) var batchUploadState: BatchUploadState? = nil
 
+    // Sprint E: Link Latency Buffer (transient, not persisted)
+    @Published private(set) var latencyBuffer: [(amount: Double, ticksRemaining: Int)] = []
+
     // MARK: - Event Multipliers (from random events)
 
     private var sourceMultiplier: Double = 1.0
@@ -411,24 +414,59 @@ final class GameEngine: ObservableObject {
         // Sprint C: Compute certification multiplier once per tick
         let certMultiplier = CertificateManager.shared.totalCertificationMultiplier
 
+        // Shared bandwidth calculation (used by both buffer drain and direct transfer)
+        let effectiveBandwidth = link.bandwidth * (1.0 - bandwidthDebuff) * (1.0 - batchBandwidthCost) * bandwidthMultiplier
+
+        // Sprint E: Step 0 — Drain latency buffer (matured entries transfer this tick)
+        var bufferTransferred: Double = 0
+        var bufferDropped: Double = 0
+        if !latencyBuffer.isEmpty {
+            // Decrement all countdowns
+            for i in latencyBuffer.indices {
+                latencyBuffer[i].ticksRemaining -= 1
+            }
+            // Collect matured entries (ticksRemaining <= 0)
+            let maturedAmount = latencyBuffer.filter { $0.ticksRemaining <= 0 }.reduce(0.0) { $0 + $1.amount }
+            latencyBuffer.removeAll { $0.ticksRemaining <= 0 }
+
+            // Transfer matured data through link
+            if maturedAmount > 0 {
+                let sinkCanAcceptForBuffer = sink.bufferRemaining
+                let bufferPacket = DataPacket(type: .rawNoise, amount: maturedAmount, createdAtTick: currentTick)
+                var bufferLink = link
+                let (bt, bd) = bufferLink.transfer(bufferPacket, maxAcceptable: min(sinkCanAcceptForBuffer, effectiveBandwidth))
+                bufferTransferred = bt
+                bufferDropped = bd
+                _ = sink.receiveData(bt)
+            }
+        }
+
         // Step 1: Source generates data (apply event + prestige + cert multipliers)
         var packet = source.produce(atTick: currentTick)
         packet.amount *= sourceMultiplier * prestigeState.productionMultiplier * certMultiplier
         stats.dataGenerated = packet.amount
         totalDataGenerated += packet.amount
 
-        // Step 2: Check how much the sink can accept
-        let sinkCanAccept = sink.bufferRemaining
+        // Sprint E: Step 2 — Route data through latency buffer or direct transfer
+        var directTransferred: Double = 0
+        var directDropped: Double = 0
 
-        // Step 3: Apply bandwidth debuff from attacks, events, AND batch upload
-        let effectiveBandwidth = link.bandwidth * (1.0 - bandwidthDebuff) * (1.0 - batchBandwidthCost) * bandwidthMultiplier
+        if link.latency > 0 {
+            // Buffer the data — it will transfer after latency ticks
+            latencyBuffer.append((amount: packet.amount, ticksRemaining: link.latency))
+        } else {
+            // Instant transfer (T4+ links, or leveled-up links that reach 0 latency)
+            let sinkCanAccept = sink.bufferRemaining - bufferTransferred
+            var modifiedLink = link
+            let (dt, dd) = modifiedLink.transfer(packet, maxAcceptable: min(max(0, sinkCanAccept), effectiveBandwidth))
+            directTransferred = dt
+            directDropped = dd
+            _ = sink.receiveData(dt)
+        }
 
-        // Step 4: Link transfers data (applies bandwidth cap + packet loss)
-        var modifiedLink = link
-        let (transferred, dropped) = modifiedLink.transfer(
-            packet,
-            maxAcceptable: min(sinkCanAccept, effectiveBandwidth)
-        )
+        // Combine buffer + direct transfer stats
+        let transferred = bufferTransferred + directTransferred
+        let dropped = bufferDropped + directDropped
         link.lastTickTransferred = transferred
         link.lastTickDropped = dropped
 
@@ -437,9 +475,6 @@ final class GameEngine: ObservableObject {
         totalDataTransferred += transferred
         totalDataDropped += dropped
         resources.totalPacketsLost += dropped
-
-        // Step 5: Sink receives the transferred data
-        _ = sink.receiveData(transferred)
 
         // Step 6: Sink processes its buffer and generates credits (apply event + prestige + engagement + cert multipliers)
         let baseCredits = sink.process()

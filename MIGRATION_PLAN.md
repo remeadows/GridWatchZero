@@ -72,8 +72,8 @@ GAMEPLAY, DEFENSE, and UNITS were authored separately. Cross-referencing formula
 | **B** | Defense System Overhaul | High | ✅ Complete | All 6 categories gain intel/risk bonuses, new caps, renamed apps |
 | **C** | Certification Maturity | Medium | ✅ Complete | 40h/60h maturity timers, partial bonuses, Settings UI |
 | **D** | Intel System Enhancements | Medium | ✅ Complete | Send ALL, batch latency, early warning system |
-| **E** | Link Latency & Protection | Medium | 🔜 Next | Transfer delays, packet loss protection, credit protection |
-| **F** | Insane Dossiers & Polish | Lower | ⏳ Planned | 6 new dossiers, story dialog updates, save migration |
+| **E** | Link Latency & Protection | Medium | ✅ Complete | Transfer delays, packet loss protection, credit protection |
+| **F** | Insane Dossiers & Polish | Lower | 🔜 Next | 6 new dossiers, story dialog updates, save migration |
 
 ---
 
@@ -190,6 +190,35 @@ Implement "Send ALL" batch intel upload with latency/bandwidth tradeoffs, and ID
 
 ---
 
+## Sprint E: Link Latency & Protection (Detail)
+
+### Objective
+Implement link-level transfer delays (latency buffer) based on link tier. Packet loss protection and credit protection were already implemented in Sprint B.
+
+### Files Modified
+
+| File | Changes |
+|------|---------|
+| `Models/Link.swift` | Fixed `latency` computed property — returns 0 for `baseLatency=0` (T4+), previously returned 1 |
+| `Engine/GameEngine.swift` | Added `latencyBuffer` array, buffer drain logic in production phase, conditional buffering for latency > 0 |
+| `Views/Components/NodeCardView.swift` | Added `bufferedData` param, LAT indicator, buffered data display for iPhone + iPad |
+| `Views/DashboardView.swift` | Wired `bufferedData` to LinkCardView (2 call sites) |
+
+### Acceptance Criteria (All Met)
+- [x] T1 link (baseLatency=3): 3-tick delay before transfer
+- [x] T2 link (baseLatency=2): 2-tick delay
+- [x] T3 link (baseLatency=1): 1-tick delay
+- [x] T4+ links (baseLatency=0): instant transfer (unchanged behavior)
+- [x] Latency decreases with level upgrades: `max(1, baseLatency - level/3)`
+- [x] Buffer drains through bandwidth-limited link (bandwidth debuff applies)
+- [x] No save migration needed (buffer is transient)
+- [x] LAT indicator shown on link card, buffered data amount shown when non-empty
+- [x] Packet loss protection (Sprint B) already active: Network apps +2%/level, cap 80%
+- [x] Credit protection (Sprint B) already active: Encryption apps +2.5%/level, cap 90%
+- [x] Builds cleanly with zero warnings
+
+---
+
 ## Version History
 
 | Date | Change |
@@ -200,3 +229,4 @@ Implement "Send ALL" batch intel upload with latency/bandwidth tradeoffs, and ID
 | 2026-02-05 | Sprint C completed — certification maturity system (40h/60h timers) |
 | 2026-02-05 | ISSUES.md archived (2003 → 636 lines), COMMIT.md + SESSIONS.md created |
 | 2026-02-05 | Sprint D completed — early warning system (IDS prediction) + batch intel upload |
+| 2026-02-05 | Sprint E completed — link latency buffer (packet loss + credit protection already done in Sprint B) |

@@ -418,7 +418,8 @@ struct DashboardView: View {
                     LinkCardView(
                         link: engine.link,
                         credits: engine.resources.credits,
-                        onUpgrade: { _ = engine.upgradeLink() }
+                        onUpgrade: { _ = engine.upgradeLink() },
+                        bufferedData: engine.latencyBuffer.reduce(0.0) { $0 + $1.amount }
                     )
                     if let attack = engine.activeAttack,
                        attack.type == .ddos && attack.isActive {
@@ -1092,7 +1093,8 @@ struct DashboardView: View {
                         LinkCardView(
                             link: engine.link,
                             credits: engine.resources.credits,
-                            onUpgrade: { _ = engine.upgradeLink() }
+                            onUpgrade: { _ = engine.upgradeLink() },
+                            bufferedData: engine.latencyBuffer.reduce(0.0) { $0 + $1.amount }
                         )
 
                         // DDoS attack overlay

@@ -240,6 +240,7 @@ struct LinkCardView: View {
     let link: TransportLink
     let credits: Double
     let onUpgrade: () -> Void
+    var bufferedData: Double = 0
 
     @State private var isPulsing = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -323,6 +324,16 @@ struct LinkCardView: View {
                                     .foregroundColor(.neonCyan)
                             }
 
+                            // Latency indicator
+                            HStack(spacing: 4) {
+                                Text("LAT:")
+                                    .font(.terminalSmall)
+                                    .foregroundColor(.terminalGray)
+                                Text(link.latency > 0 ? "\(link.latency)t" : "0")
+                                    .font(.terminalBody)
+                                    .foregroundColor(link.latency > 0 ? .neonAmber : .neonGreen)
+                            }
+
                             // Efficiency with inline bar
                             HStack(spacing: 4) {
                                 Text("EFF:")
@@ -335,6 +346,18 @@ struct LinkCardView: View {
                                     .fill(efficiencyColor)
                                     .frame(width: 40 * link.throughputEfficiency, height: 6)
                                     .cornerRadius(2)
+                            }
+                        }
+
+                        // Buffered data indicator
+                        if bufferedData > 0 {
+                            HStack(spacing: 4) {
+                                Image(systemName: "clock.fill")
+                                    .font(.system(size: 8))
+                                    .foregroundColor(.neonAmber)
+                                Text("BUFFERED: \(bufferedData.formatted)")
+                                    .font(.system(size: 8, design: .monospaced))
+                                    .foregroundColor(.neonAmber)
                             }
                         }
 
@@ -368,57 +391,81 @@ struct LinkCardView: View {
                     }
                 } else {
                     // iPad: Horizontal inline layout
-                    HStack(spacing: 16) {
-                        // Bandwidth
-                        HStack(spacing: 4) {
-                            Text("BW:")
-                                .font(.terminalSmall)
-                                .foregroundColor(.terminalGray)
-                            Text("\(link.bandwidth.formatted)/t")
-                                .font(.terminalBody)
-                                .foregroundColor(.neonCyan)
-                        }
-
-                        // Efficiency with inline bar
-                        HStack(spacing: 4) {
-                            Text("EFF:")
-                                .font(.terminalSmall)
-                                .foregroundColor(.terminalGray)
-                            Text(link.throughputEfficiency.percentFormatted)
-                                .font(.terminalBody)
-                                .foregroundColor(efficiencyColor)
-                            Rectangle()
-                                .fill(efficiencyColor)
-                                .frame(width: 40 * link.throughputEfficiency, height: 6)
-                                .cornerRadius(2)
-                        }
-
-                        Spacer()
-
-                        // Upgrade button or MAX badge
-                        if link.isAtMaxLevel {
-                            Text("MAX")
-                                .font(.terminalSmall)
-                                .foregroundColor(.terminalBlack)
-                                .padding(.horizontal, 10)
-                                .padding(.vertical, 4)
-                                .background(Color.neonCyan.opacity(0.8))
-                                .cornerRadius(2)
-                        } else {
-                            Button(action: onUpgrade) {
-                                HStack(spacing: 4) {
-                                    Text("+\(bandwidthGain.formatted)")
-                                        .font(.terminalSmall)
-                                    Text("¢\(link.upgradeCost.formatted)")
-                                        .font(.terminalSmall)
-                                }
-                                .foregroundColor(credits >= link.upgradeCost ? .terminalBlack : .terminalGray)
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 4)
-                                .background(credits >= link.upgradeCost ? Color.neonCyan : Color.terminalGray.opacity(0.3))
-                                .cornerRadius(2)
+                    VStack(alignment: .leading, spacing: 6) {
+                        HStack(spacing: 16) {
+                            // Bandwidth
+                            HStack(spacing: 4) {
+                                Text("BW:")
+                                    .font(.terminalSmall)
+                                    .foregroundColor(.terminalGray)
+                                Text("\(link.bandwidth.formatted)/t")
+                                    .font(.terminalBody)
+                                    .foregroundColor(.neonCyan)
                             }
-                            .disabled(credits < link.upgradeCost)
+
+                            // Latency indicator
+                            HStack(spacing: 4) {
+                                Text("LAT:")
+                                    .font(.terminalSmall)
+                                    .foregroundColor(.terminalGray)
+                                Text(link.latency > 0 ? "\(link.latency)t" : "0")
+                                    .font(.terminalBody)
+                                    .foregroundColor(link.latency > 0 ? .neonAmber : .neonGreen)
+                            }
+
+                            // Efficiency with inline bar
+                            HStack(spacing: 4) {
+                                Text("EFF:")
+                                    .font(.terminalSmall)
+                                    .foregroundColor(.terminalGray)
+                                Text(link.throughputEfficiency.percentFormatted)
+                                    .font(.terminalBody)
+                                    .foregroundColor(efficiencyColor)
+                                Rectangle()
+                                    .fill(efficiencyColor)
+                                    .frame(width: 40 * link.throughputEfficiency, height: 6)
+                                    .cornerRadius(2)
+                            }
+
+                            Spacer()
+
+                            // Upgrade button or MAX badge
+                            if link.isAtMaxLevel {
+                                Text("MAX")
+                                    .font(.terminalSmall)
+                                    .foregroundColor(.terminalBlack)
+                                    .padding(.horizontal, 10)
+                                    .padding(.vertical, 4)
+                                    .background(Color.neonCyan.opacity(0.8))
+                                    .cornerRadius(2)
+                            } else {
+                                Button(action: onUpgrade) {
+                                    HStack(spacing: 4) {
+                                        Text("+\(bandwidthGain.formatted)")
+                                            .font(.terminalSmall)
+                                        Text("¢\(link.upgradeCost.formatted)")
+                                            .font(.terminalSmall)
+                                    }
+                                    .foregroundColor(credits >= link.upgradeCost ? .terminalBlack : .terminalGray)
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 4)
+                                    .background(credits >= link.upgradeCost ? Color.neonCyan : Color.terminalGray.opacity(0.3))
+                                    .cornerRadius(2)
+                                }
+                                .disabled(credits < link.upgradeCost)
+                            }
+                        }
+
+                        // Buffered data indicator (iPad)
+                        if bufferedData > 0 {
+                            HStack(spacing: 4) {
+                                Image(systemName: "clock.fill")
+                                    .font(.system(size: 8))
+                                    .foregroundColor(.neonAmber)
+                                Text("BUFFERED: \(bufferedData.formatted)")
+                                    .font(.system(size: 8, design: .monospaced))
+                                    .foregroundColor(.neonAmber)
+                            }
                         }
                     }
                 }

@@ -69,7 +69,8 @@ struct TransportLink: LinkProtocol {
     }
 
     var latency: Int {
-        max(1, baseLatency - (level / 3))
+        guard baseLatency > 0 else { return 0 }
+        return max(1, baseLatency - (level / 3))
     }
 
     /// Packet loss only applies to data exceeding bandwidth
