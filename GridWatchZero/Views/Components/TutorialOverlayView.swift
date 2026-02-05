@@ -313,8 +313,7 @@ struct TutorialHintBanner: View {
     manager.state.startTutorial()
 
     return ZStack {
-        Color.terminalBlack
-            .ignoresSafeArea()
+        GlassDashboardBackground()
 
         VStack {
             Text("Game Content Here")

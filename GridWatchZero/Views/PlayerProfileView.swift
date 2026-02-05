@@ -19,8 +19,7 @@ struct PlayerProfileView: View {
 
     var body: some View {
         ZStack {
-            Color.terminalBlack
-                .ignoresSafeArea()
+            GlassDashboardBackground()
 
             ScrollView {
                 VStack(spacing: 20) {

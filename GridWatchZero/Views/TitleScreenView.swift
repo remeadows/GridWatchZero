@@ -18,8 +18,7 @@ struct TitleScreenView: View {
     var body: some View {
         ZStack {
             // Background
-            Color.terminalBlack
-                .ignoresSafeArea()
+            GlassDashboardBackground()
 
             // Scanline effect
             scanlineOverlay

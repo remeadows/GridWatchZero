@@ -586,11 +586,28 @@ struct NetworkTopologyView: View {
             }
             .frame(height: 120)
             .padding(8)
-            .background(Color.terminalDarkGray.opacity(0.7))
+            .background(Color.terminalDarkGray.opacity(0.45))
+            .background(.ultraThinMaterial.opacity(0.3))
             .cornerRadius(4)
+            // Inner shadow for glass depth
             .overlay(
                 RoundedRectangle(cornerRadius: 4)
-                    .stroke(activeAttack != nil ? Color.neonRed.opacity(0.7) : Color.neonGreen.opacity(0.4), lineWidth: activeAttack != nil ? 2 : 1)
+                    .stroke(Color.black.opacity(0.3), lineWidth: 1)
+                    .blur(radius: 1)
+                    .offset(x: 0, y: 1)
+                    .mask(RoundedRectangle(cornerRadius: 4).fill())
+            )
+            // Rim glow border
+            .overlay(
+                RoundedRectangle(cornerRadius: 4)
+                    .stroke(
+                        activeAttack != nil ? Color.neonRed.opacity(0.5) : Color.neonGreen.opacity(0.3),
+                        lineWidth: activeAttack != nil ? 1.5 : 1
+                    )
+                    .shadow(
+                        color: activeAttack != nil ? Color.neonRed.opacity(0.25) : Color.neonGreen.opacity(0.15),
+                        radius: 3, x: 0, y: 0
+                    )
             )
             .onAppear {
                 if isRunning {
@@ -797,14 +814,22 @@ struct EnhancedTopologyNode: View {
     var body: some View {
         VStack(spacing: 2) {
             ZStack {
-                // Outer ring (pulses if bottleneck)
+                // Outer ring with rim glow
                 Circle()
                     .stroke(color.opacity(isBottleneck ? 0.9 : 0.5), lineWidth: isBottleneck ? 2 : 1.5)
+                    .shadow(color: color.opacity(0.3), radius: 3, x: 0, y: 0)
                     .frame(width: 36, height: 36)
 
-                // Inner fill
+                // Glass node fill with internal glow
                 Circle()
-                    .fill(Color.terminalDarkGray)
+                    .fill(
+                        RadialGradient(
+                            colors: [color.opacity(0.15), Color.terminalDarkGray.opacity(0.7)],
+                            center: .center,
+                            startRadius: 0,
+                            endRadius: 18
+                        )
+                    )
                     .frame(width: 32, height: 32)
 
                 // Icon
@@ -850,14 +875,22 @@ struct DefenseStackNode: View {
     var body: some View {
         VStack(spacing: 1) {
             ZStack {
-                // Shield icon with fill based on coverage
+                // Glass shield node with internal glow
                 Circle()
-                    .fill(Color.terminalDarkGray)
+                    .fill(
+                        RadialGradient(
+                            colors: [Color.neonCyan.opacity(0.12), Color.terminalDarkGray.opacity(0.7)],
+                            center: .center,
+                            startRadius: 0,
+                            endRadius: 18
+                        )
+                    )
                     .frame(width: 32, height: 32)
 
                 Circle()
                     .trim(from: 0, to: CGFloat(stack.deployedCount) / 6.0)
                     .stroke(Color.neonCyan, lineWidth: 3)
+                    .shadow(color: Color.neonCyan.opacity(0.3), radius: 3, x: 0, y: 0)
                     .frame(width: 32, height: 32)
                     .rotationEffect(.degrees(-90))
 
@@ -904,11 +937,12 @@ struct ThreatCloudNode: View {
     var body: some View {
         VStack(spacing: 1) {
             ZStack {
-                // Cloud with threat color
+                // Cloud with threat color and glass rim glow
                 Image(systemName: isUnderAttack ? "cloud.bolt.fill" : "cloud.fill")
                     .font(.system(size: 20))
                     .foregroundColor(threatColor)
-                    .shadow(color: isUnderAttack ? .neonRed : .clear, radius: 4)
+                    .shadow(color: threatColor.opacity(0.35), radius: 3, x: 0, y: 0)
+                    .shadow(color: isUnderAttack ? .neonRed.opacity(0.5) : .clear, radius: 6)
             }
 
             Text(threatLevel.name)

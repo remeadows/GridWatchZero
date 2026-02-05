@@ -921,8 +921,7 @@ struct LevelCompleteView: View {
 
     var body: some View {
         ZStack {
-            Color.terminalBlack
-                .ignoresSafeArea()
+            GlassDashboardBackground()
 
             VStack(spacing: 24) {
                 Spacer()
@@ -1139,8 +1138,7 @@ struct LevelFailedView: View {
 
     var body: some View {
         ZStack {
-            Color.terminalBlack
-                .ignoresSafeArea()
+            GlassDashboardBackground()
 
             VStack(spacing: 24) {
                 Spacer()

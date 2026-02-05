@@ -19,7 +19,7 @@ struct DossierCollectionView: View {
 
     var body: some View {
         ZStack {
-            Color.terminalBlack.ignoresSafeArea()
+            GlassDashboardBackground()
 
             VStack(spacing: 0) {
                 // Header
@@ -260,7 +260,7 @@ struct DossierDetailView: View {
 
     var body: some View {
         ZStack {
-            Color.terminalBlack.ignoresSafeArea()
+            GlassDashboardBackground()
 
             ScrollView {
                 VStack(spacing: 0) {

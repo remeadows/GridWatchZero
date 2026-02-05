@@ -47,8 +47,7 @@ struct StoryDialogueView: View {
     var body: some View {
         ZStack {
             // Background
-            Color.terminalBlack
-                .ignoresSafeArea()
+            GlassDashboardBackground()
 
             // Visual effects layer
             visualEffectsOverlay

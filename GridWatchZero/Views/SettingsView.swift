@@ -15,7 +15,7 @@ struct SettingsView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                Color.terminalBlack.ignoresSafeArea()
+                GlassDashboardBackground()
 
                 ScrollView {
                     VStack(spacing: 24) {

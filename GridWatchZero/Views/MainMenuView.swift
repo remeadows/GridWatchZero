@@ -15,8 +15,7 @@ struct MainMenuView: View {
     var body: some View {
         ZStack {
             // Background
-            Color.terminalBlack
-                .ignoresSafeArea()
+            GlassDashboardBackground()
 
             // Grid overlay
             gridBackground

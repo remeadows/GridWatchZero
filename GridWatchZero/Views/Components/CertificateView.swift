@@ -358,8 +358,7 @@ struct CertificateDetailView: View {
 
     var body: some View {
         ZStack {
-            Color.terminalBlack
-                .ignoresSafeArea()
+            GlassDashboardBackground()
 
             VStack(spacing: 20) {
                 // Close button
@@ -732,8 +731,7 @@ struct CertificatesFullView: View {
 
     var body: some View {
         ZStack {
-            Color.terminalBlack
-                .ignoresSafeArea()
+            GlassDashboardBackground()
 
             VStack(spacing: 0) {
                 // Header

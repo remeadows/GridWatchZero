@@ -67,9 +67,8 @@ struct DashboardView: View {
 
     var body: some View {
         ZStack {
-            // Background
-            Color.terminalBlack
-                .ignoresSafeArea()
+            // Glass HUD background with micro-noise texture
+            GlassDashboardBackground()
 
             // Scanline overlay effect
             ScanlineOverlay()
@@ -1902,6 +1901,7 @@ struct PrestigeCardView: View {
 
 // MARK: - Prestige Confirm View
 
+
 struct PrestigeConfirmView: View {
     let prestigeState: PrestigeState
     let totalCredits: Double
@@ -1914,8 +1914,7 @@ struct PrestigeConfirmView: View {
 
     var body: some View {
         ZStack {
-            Color.terminalBlack
-                .ignoresSafeArea()
+            GlassDashboardBackground()
 
             VStack(spacing: 24) {
                 // Warning icon
@@ -2074,8 +2073,7 @@ struct OfflineProgressView: View {
 
     var body: some View {
         ZStack {
-            Color.terminalBlack
-                .ignoresSafeArea()
+            GlassDashboardBackground()
 
             VStack(spacing: 24) {
                 // Header

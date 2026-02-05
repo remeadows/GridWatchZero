@@ -13,8 +13,7 @@ struct UnitShopView: View {
     var body: some View {
         ZStack {
             // Background
-            Color.terminalBlack
-                .ignoresSafeArea()
+            GlassDashboardBackground()
 
             VStack(spacing: 0) {
                 // Header

@@ -89,7 +89,7 @@ extension Font {
     static let terminalMicro = Font.system(.caption2, design: .monospaced)
 }
 
-// MARK: - View Modifiers
+// MARK: - View Modifiers (Glass HUD Style)
 
 struct TerminalCardModifier: ViewModifier {
     var borderColor: Color = .neonGreen
@@ -98,13 +98,31 @@ struct TerminalCardModifier: ViewModifier {
         content
             .padding(.horizontal, 12)
             .padding(.vertical, 10)
-            .background(Color.terminalDarkGray)
+            .background(
+                // Frosted glass: translucent dark base with ultra-thin material
+                ZStack {
+                    Color.terminalDarkGray.opacity(0.55)
+                    Color.terminalBlack.opacity(0.15)
+                }
+            )
+            .background(.ultraThinMaterial.opacity(0.4))
             .cornerRadius(4)
+            // Inner shadow for glass depth
             .overlay(
                 RoundedRectangle(cornerRadius: 4)
-                    .stroke(borderColor.opacity(0.7), lineWidth: 1.5)  // Brighter, thicker border
+                    .stroke(Color.black.opacity(0.4), lineWidth: 1)
+                    .blur(radius: 1)
+                    .offset(x: 0, y: 1)
+                    .mask(RoundedRectangle(cornerRadius: 4).fill())
             )
-            .shadow(color: borderColor.opacity(0.15), radius: 4, x: 0, y: 2)  // Subtle glow
+            // Neon rim glow
+            .overlay(
+                RoundedRectangle(cornerRadius: 4)
+                    .stroke(borderColor.opacity(0.5), lineWidth: 1)
+                    .shadow(color: borderColor.opacity(0.25), radius: 3, x: 0, y: 0)
+            )
+            // Outer depth shadow
+            .shadow(color: borderColor.opacity(0.1), radius: 6, x: 0, y: 3)
     }
 }
 
@@ -122,17 +140,83 @@ struct TerminalButtonModifier: ViewModifier {
     var isEnabled: Bool = true
 
     func body(content: Content) -> some View {
+        let bgColor = isEnabled ? Color.neonGreen : Color.terminalGray
         content
             .font(.terminalSmall)
             .foregroundColor(isEnabled ? .terminalBlack : .terminalGray)
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
-            .background(isEnabled ? Color.neonGreen : Color.terminalGray)
-            .cornerRadius(2)
-            .overlay(
-                RoundedRectangle(cornerRadius: 2)
-                    .stroke(isEnabled ? Color.neonGreen : Color.terminalGray, lineWidth: 1)
+            .background(
+                ZStack {
+                    bgColor.opacity(isEnabled ? 0.85 : 0.3)
+                    // Specular highlight — top-light glass capsule
+                    LinearGradient(
+                        colors: [Color.white.opacity(isEnabled ? 0.2 : 0.05), Color.clear],
+                        startPoint: .top,
+                        endPoint: .center
+                    )
+                }
             )
+            .cornerRadius(4)
+            .overlay(
+                RoundedRectangle(cornerRadius: 4)
+                    .stroke(bgColor.opacity(isEnabled ? 0.6 : 0.2), lineWidth: 1)
+            )
+            // Subtle inner glow
+            .shadow(color: bgColor.opacity(isEnabled ? 0.3 : 0), radius: 4, x: 0, y: 0)
+    }
+}
+
+// MARK: - Glass Background Texture
+
+/// Micro-noise texture overlay for dark matte depth (OLED-friendly)
+struct NoiseTextureView: View {
+    var body: some View {
+        Canvas { context, size in
+            // Deterministic noise pattern for consistent rendering
+            var rng = StableRNG(seed: 42)
+            let step: CGFloat = 3
+            for x in stride(from: 0, to: size.width, by: step) {
+                for y in stride(from: 0, to: size.height, by: step) {
+                    let brightness = rng.nextDouble() * 0.04  // Very subtle: 0-4% white
+                    let rect = CGRect(x: x, y: y, width: step, height: step)
+                    context.fill(
+                        Path(rect),
+                        with: .color(Color.white.opacity(brightness))
+                    )
+                }
+            }
+        }
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+    }
+}
+
+/// Simple deterministic RNG for noise texture (avoids random() per-frame)
+private struct StableRNG {
+    private var state: UInt64
+
+    init(seed: UInt64) {
+        state = seed
+    }
+
+    mutating func nextDouble() -> Double {
+        // xorshift64
+        state ^= state << 13
+        state ^= state >> 7
+        state ^= state << 17
+        return Double(state % 10000) / 10000.0
+    }
+}
+
+/// Glass-style background for main dashboard
+struct GlassDashboardBackground: View {
+    var body: some View {
+        ZStack {
+            Color.terminalBlack
+            NoiseTextureView()
+        }
+        .ignoresSafeArea()
     }
 }
 
@@ -149,6 +233,11 @@ extension View {
 
     func terminalButton(isEnabled: Bool = true) -> some View {
         modifier(TerminalButtonModifier(isEnabled: isEnabled))
+    }
+
+    /// Apply glass dashboard background with micro-noise texture
+    func glassDashboardBackground() -> some View {
+        self.background(GlassDashboardBackground())
     }
 }
 

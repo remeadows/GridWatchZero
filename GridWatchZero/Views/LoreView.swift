@@ -12,8 +12,7 @@ struct LoreView: View {
 
     var body: some View {
         ZStack {
-            Color.terminalBlack
-                .ignoresSafeArea()
+            GlassDashboardBackground()
 
             VStack(spacing: 0) {
                 // Header
@@ -290,8 +289,7 @@ struct MilestonesView: View {
 
     var body: some View {
         ZStack {
-            Color.terminalBlack
-                .ignoresSafeArea()
+            GlassDashboardBackground()
 
             VStack(spacing: 0) {
                 // Header

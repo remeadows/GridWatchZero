@@ -21,8 +21,7 @@ struct HomeView: View {
 
     var body: some View {
         ZStack {
-            Color.terminalBlack
-                .ignoresSafeArea()
+            GlassDashboardBackground()
 
             VStack(spacing: 0) {
                 // Header
@@ -502,8 +501,7 @@ struct LevelDetailSheet: View {
 
     var body: some View {
         ZStack {
-            Color.terminalBlack
-                .ignoresSafeArea()
+            GlassDashboardBackground()
 
             VStack(spacing: 20) {
                 // Header
@@ -837,8 +835,7 @@ struct TeamRosterSheet: View {
 
     var body: some View {
         ZStack {
-            Color.terminalBlack
-                .ignoresSafeArea()
+            GlassDashboardBackground()
 
             VStack(spacing: 20) {
                 // Header
@@ -980,8 +977,7 @@ struct TeamMemberDetailView: View {
 
     var body: some View {
         ZStack {
-            Color.terminalBlack
-                .ignoresSafeArea()
+            GlassDashboardBackground()
 
             VStack(spacing: 0) {
                 // Header with close button
@@ -1084,8 +1080,7 @@ struct PlayerStatsSheet: View {
 
     var body: some View {
         ZStack {
-            Color.terminalBlack
-                .ignoresSafeArea()
+            GlassDashboardBackground()
 
             VStack(spacing: 20) {
                 // Header

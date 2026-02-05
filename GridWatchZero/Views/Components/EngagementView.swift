@@ -575,7 +575,7 @@ struct EngagementStatsSummaryView: View {
 
 #Preview("Daily Reward") {
     ZStack {
-        Color.terminalBlack.ignoresSafeArea()
+        GlassDashboardBackground()
         DailyRewardPopupView(
             engagementManager: EngagementManager.shared,
             onClaim: { _ in }
@@ -585,7 +585,7 @@ struct EngagementStatsSummaryView: View {
 
 #Preview("Achievement Unlock") {
     ZStack {
-        Color.terminalBlack.ignoresSafeArea()
+        GlassDashboardBackground()
         AchievementUnlockPopupView(
             achievement: AchievementDatabase.allAchievements[10],
             onDismiss: { }
@@ -595,7 +595,7 @@ struct EngagementStatsSummaryView: View {
 
 #Preview("Data Chip Unlock") {
     ZStack {
-        Color.terminalBlack.ignoresSafeArea()
+        GlassDashboardBackground()
         DataChipUnlockPopupView(
             chip: DataChipDatabase.allChips[3],
             onDismiss: { }
