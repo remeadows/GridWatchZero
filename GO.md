@@ -35,10 +35,7 @@ No partial work, no “quick fixes,” no drive-by edits.
 ```bash
 # Open the Xcode project
 open "/Users/russmeadows/Dev/Games/GridWatchZero/GridWatchZero.xcodeproj"
-
-## Quick Start
-
-```bash
+```
 
 ## Documentation Index
 
@@ -58,110 +55,33 @@ open "/Users/russmeadows/Dev/Games/GridWatchZero/GridWatchZero.xcodeproj"
 
 ---
 
-## Current Work: v2.0 Balance Migration (Branch: `CLAUDE_UPDATE`)
+## Current Work
 
-> See [project/MIGRATION_PLAN.md](./project/MIGRATION_PLAN.md) for full sprint details.
-
-| Sprint | Name | Status |
-|--------|------|--------|
-| **A** | Balance Foundation | ✅ Complete |
-| **B** | Defense System Overhaul | ✅ Complete |
-| **C** | Certification Maturity | ✅ Complete |
-| **D** | Intel System Enhancements | ✅ Complete |
-| **E** | Link Latency & Protection | ✅ Complete |
-| **F** | Insane Dossiers & Polish | ✅ Complete |
+v2.0 Balance Migration is complete (all sprints A-F merged to `main`). See [project/MIGRATION_PLAN.md](./project/MIGRATION_PLAN.md) for details.
 
 ### Remaining Tasks
 1. **TestFlight Testing** - Verify v2.0 balance on device
 2. **App Store Submission** - Submit for Apple review when testing complete
 
+For current status and next tasks, see [project/PROJECT_STATUS.md](./project/PROJECT_STATUS.md).
+
 ---
 
 ## Development Workflow
 
-### Adding New Files
-1. Create file in correct folder via code
-2. In Xcode: Right-click folder → "Add Files to 'GridWatchZero'..."
-3. Select file, ensure "Copy items if needed" is **unchecked**
-4. Build to verify (Cmd+B)
+See [CLAUDE.md](./CLAUDE.md) for full details on:
+- Adding new files to Xcode
+- Architecture overview and color palette
+- Save system, key commands, and project structure
 
-### Testing Threat System
-Add debug credits to quickly reach higher threat levels:
+### Quick Debug Commands
 ```swift
-// In GameEngine, call:
-engine.addDebugCredits(100000)
+engine.addDebugCredits(100000)  // Test higher threat levels
+engine.performPrestige()         // Test prestige system
+engine.resetGame()               // Reset save data
 ```
 
-### Testing Prestige
-To test the prestige (Network Wipe) system:
-```swift
-// Accumulate enough credits, then:
-engine.performPrestige()
-```
-
-### Save Data Location
-UserDefaults key: `GridWatchZero.GameState.v6`
-
-To reset: Delete app from simulator or call `engine.resetGame()`
-
----
-
-## Architecture Quick Reference
-
-```
-┌─────────────────────────────────────────────────┐
-│                  DashboardView                   │
-│  ┌──────────┐ ┌──────────┐ ┌──────────────────┐ │
-│  │  Header  │ │  Threat  │ │   Alert Banner   │ │
-│  └──────────┘ └──────────┘ └──────────────────┘ │
-│  ┌──────────────────────────────────────────┐   │
-│  │              Network Map                  │   │
-│  │   [Source] → [Link] → [Sink]             │   │
-│  └──────────────────────────────────────────┘   │
-│  ┌──────────────────────────────────────────┐   │
-│  │              Stats Panel                  │   │
-│  └──────────────────────────────────────────┘   │
-└─────────────────────────────────────────────────┘
-                      │
-                      ▼
-┌─────────────────────────────────────────────────┐
-│                  GameEngine                      │
-│  - processTick() runs every 1 second            │
-│  - Manages: resources, nodes, threats           │
-│  - @Published for SwiftUI reactivity            │
-└─────────────────────────────────────────────────┘
-                      │
-                      ▼
-┌─────────────────────────────────────────────────┐
-│                    Models                        │
-│  - SourceNode, TransportLink, SinkNode          │
-│  - FirewallNode, DefenseStack (6 categories)    │
-│  - ThreatState, Attack, ThreatLevel             │
-│  - EventSystem, LoreSystem, MilestoneSystem     │
-│  - PlayerResources, PrestigeState, MalusIntel   │
-└─────────────────────────────────────────────────┘
-```
-
----
-
-## Color Palette
-
-| Name | Hex | Usage |
-|------|-----|-------|
-| Terminal Black | #0D0D14 | Background |
-| Terminal Dark Gray | #1A1A1F | Card backgrounds |
-| Neon Green | #33FF66 | Data, success, source |
-| Neon Cyan | #4DE6FF | Links, info |
-| Neon Amber | #FFBF33 | Credits, warnings |
-| Neon Red | #FF4D4D | Threats, damage |
-| Terminal Gray | #333338 | Borders, disabled |
-
----
-
-## Key Contacts
-
-**Project**: Personal/Solo
-**Repository**: Local at `/Users/russmeadows/Dev/Games/GridWatchZero`
+Save data key: `GridWatchZero.GameState.v6`
 
 ---
 
