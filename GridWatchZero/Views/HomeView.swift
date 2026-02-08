@@ -7,6 +7,7 @@ import SwiftUI
 // MARK: - Home View
 
 struct HomeView: View {
+    @EnvironmentObject var engine: GameEngine
     @EnvironmentObject var campaignState: CampaignState
     @EnvironmentObject var cloudManager: CloudSaveManager
     @StateObject private var dossierManager = DossierManager.shared
@@ -53,7 +54,8 @@ struct HomeView: View {
                     isInsaneCompleted: campaignState.isInsaneCompleted(levelId),
                     stats: campaignState.statsForLevel(levelId),
                     insaneStats: campaignState.statsForLevel(levelId, isInsane: true),
-                    hasCheckpoint: campaignState.hasValidCheckpoint(for: levelId, isInsane: false),
+                    hasNormalCheckpoint: campaignState.hasValidCheckpoint(for: levelId, isInsane: false),
+                    hasInsaneCheckpoint: campaignState.hasValidCheckpoint(for: levelId, isInsane: true),
                     onStartNormal: {
                         // Clear any existing checkpoint when starting fresh
                         campaignState.clearCheckpoint()
@@ -66,10 +68,15 @@ struct HomeView: View {
                         selectedLevelId = nil
                         onStartLevel(level, true)
                     },
-                    onResume: {
-                        // Resume from checkpoint - don't clear it
+                    onResumeNormal: {
+                        // Resume from normal mode checkpoint - don't clear it
                         selectedLevelId = nil
                         onStartLevel(level, false)
+                    },
+                    onResumeInsane: {
+                        // Resume from insane mode checkpoint - don't clear it
+                        selectedLevelId = nil
+                        onStartLevel(level, true)
                     }
                 )
             }
@@ -82,6 +89,7 @@ struct HomeView: View {
         }
         .sheet(isPresented: $showSettingsSheet) {
             SettingsView()
+                .environmentObject(engine)
                 .environmentObject(cloudManager)
                 .environmentObject(campaignState)
         }
@@ -492,10 +500,12 @@ struct LevelDetailSheet: View {
     let isInsaneCompleted: Bool
     let stats: LevelCompletionStats?
     let insaneStats: LevelCompletionStats?
-    let hasCheckpoint: Bool
+    let hasNormalCheckpoint: Bool
+    let hasInsaneCheckpoint: Bool
     let onStartNormal: () -> Void
     let onStartInsane: () -> Void
-    let onResume: () -> Void
+    let onResumeNormal: () -> Void
+    let onResumeInsane: () -> Void
 
     @Environment(\.dismiss) private var dismiss
 
@@ -589,9 +599,10 @@ struct LevelDetailSheet: View {
                 // Start buttons
                 VStack(spacing: 12) {
                     if isUnlocked {
-                        // Show Continue button if there's a saved checkpoint
-                        if hasCheckpoint {
-                            Button(action: onResume) {
+                        // NORMAL MODE BUTTON
+                        if hasNormalCheckpoint {
+                            // Continue button if there's a saved normal checkpoint
+                            Button(action: onResumeNormal) {
                                 HStack {
                                     Image(systemName: "play.circle.fill")
                                     Text("CONTINUE MISSION")
@@ -618,6 +629,7 @@ struct LevelDetailSheet: View {
                                 .cornerRadius(4)
                             }
                         } else {
+                            // Start/Replay button for normal mode
                             Button(action: onStartNormal) {
                                 HStack {
                                     Image(systemName: "play.fill")
@@ -632,22 +644,58 @@ struct LevelDetailSheet: View {
                             }
                         }
 
+                        // INSANE MODE BUTTONS (only if normal mode completed)
                         if isCompleted {
-                            Button(action: onStartInsane) {
-                                HStack {
-                                    Image(systemName: "flame.fill")
-                                    Text(isInsaneCompleted ? "REPLAY INSANE" : "INSANE MODE")
+                            if hasInsaneCheckpoint {
+                                // Continue button for insane mode
+                                Button(action: onResumeInsane) {
+                                    HStack {
+                                        Image(systemName: "flame.circle.fill")
+                                        Text("CONTINUE INSANE")
+                                    }
+                                    .font(.terminalTitle)
+                                    .foregroundColor(.neonRed)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 14)
+                                    .background(Color.dimRed)
+                                    .cornerRadius(4)
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 4)
+                                            .stroke(Color.neonRed.opacity(0.5), lineWidth: 1)
+                                    )
                                 }
-                                .font(.terminalTitle)
-                                .foregroundColor(.neonRed)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 14)
-                                .background(Color.dimRed)
-                                .cornerRadius(4)
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 4)
-                                        .stroke(Color.neonRed.opacity(0.5), lineWidth: 1)
-                                )
+
+                                // Option to restart insane fresh
+                                Button(action: onStartInsane) {
+                                    HStack {
+                                        Image(systemName: "arrow.counterclockwise")
+                                        Text("RESTART INSANE")
+                                    }
+                                    .font(.terminalSmall)
+                                    .foregroundColor(.neonRed.opacity(0.7))
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 10)
+                                    .background(Color.terminalDarkGray)
+                                    .cornerRadius(4)
+                                }
+                            } else {
+                                // Start/Replay button for insane mode
+                                Button(action: onStartInsane) {
+                                    HStack {
+                                        Image(systemName: "flame.fill")
+                                        Text(isInsaneCompleted ? "REPLAY INSANE" : "INSANE MODE")
+                                    }
+                                    .font(.terminalTitle)
+                                    .foregroundColor(.neonRed)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 14)
+                                    .background(Color.dimRed)
+                                    .cornerRadius(4)
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 4)
+                                            .stroke(Color.neonRed.opacity(0.5), lineWidth: 1)
+                                    )
+                                }
                             }
 
                             // Insane mode modifiers info
@@ -975,14 +1023,20 @@ struct TeamMemberDetailView: View {
         return "Intel file not found."
     }
 
+    private var portraitHeight: CGFloat {
+        isIPad ? 420 : 360
+    }
+
     var body: some View {
         ZStack {
             GlassDashboardBackground()
 
             VStack(spacing: 0) {
-                // Header with close button
-                HStack {
-                    Spacer()
+                // Header with close button (overlaid on portrait)
+                ZStack(alignment: .topTrailing) {
+                    // Full-width portrait banner
+                    characterPortrait
+
                     Button {
                         dismiss()
                     } label: {
@@ -993,39 +1047,41 @@ struct TeamMemberDetailView: View {
                     }
                 }
 
-                ScrollView {
-                    VStack(spacing: isIPad ? 32 : 24) {
-                        // Character portrait
-                        characterPortrait
+                // Name and role below the image
+                HStack {
+                    VStack(alignment: .leading, spacing: isIPad ? 8 : 4) {
+                        Text(member.name.uppercased())
+                            .font(isIPad ? .system(size: 32, weight: .bold, design: .monospaced) : .terminalLarge)
+                            .foregroundColor(member.color)
+                            .glow(member.color, radius: 8)
 
-                        // Name and role
-                        VStack(spacing: 8) {
-                            Text(member.name.uppercased())
-                                .font(isIPad ? .system(size: 32, weight: .bold, design: .monospaced) : .terminalLarge)
-                                .foregroundColor(member.color)
-                                .glow(member.color, radius: 8)
-
-                            Text(member.role)
-                                .font(isIPad ? .system(size: 18, weight: .regular, design: .monospaced) : .terminalBody)
-                                .foregroundColor(.terminalGray)
-                        }
-
-                        // Divider
-                        Rectangle()
-                            .fill(member.color.opacity(0.3))
-                            .frame(height: 1)
-                            .padding(.horizontal, isIPad ? 60 : 40)
-
-                        // Bio content
-                        Text(bio)
-                            .font(isIPad ? .system(size: 16, weight: .regular, design: .monospaced) : .terminalReadable)
-                            .foregroundColor(.white)
-                            .lineSpacing(isIPad ? 8 : 6)
-                            .multilineTextAlignment(.leading)
-                            .frame(maxWidth: isIPad ? 600 : .infinity, alignment: .leading)
-                            .padding(.horizontal, isIPad ? 40 : 20)
+                        Text(member.role)
+                            .font(isIPad ? .system(size: 18, weight: .regular, design: .monospaced) : .terminalBody)
+                            .foregroundColor(.terminalGray)
                     }
-                    .padding(.bottom, 40)
+                    Spacer()
+                }
+                .padding(.horizontal, isIPad ? 60 : 24)
+                .padding(.top, isIPad ? 16 : 12)
+
+                // Divider
+                Rectangle()
+                    .fill(member.color.opacity(0.3))
+                    .frame(height: 1)
+                    .padding(.horizontal, isIPad ? 60 : 24)
+                    .padding(.top, isIPad ? 16 : 12)
+
+                // Bio content
+                ScrollView {
+                    Text(bio)
+                        .font(isIPad ? .system(size: 16, weight: .regular, design: .monospaced) : .terminalReadable)
+                        .foregroundColor(.white)
+                        .lineSpacing(isIPad ? 8 : 6)
+                        .multilineTextAlignment(.leading)
+                        .frame(maxWidth: isIPad ? 600 : .infinity, alignment: .leading)
+                        .padding(.horizontal, isIPad ? 60 : 24)
+                        .padding(.top, isIPad ? 24 : 16)
+                        .padding(.bottom, 40)
                 }
             }
         }
@@ -1033,42 +1089,34 @@ struct TeamMemberDetailView: View {
     }
 
     private var characterPortrait: some View {
-        ZStack {
-            // Background glow
-            Circle()
-                .fill(member.color.opacity(0.1))
-                .frame(width: isIPad ? 220 : 160, height: isIPad ? 220 : 160)
-                .blur(radius: 20)
+        ZStack(alignment: .bottom) {
+            // Portrait background
+            Rectangle()
+                .fill(Color.terminalDarkGray)
 
             if let imageName = member.imageName {
                 Image(imageName)
                     .resizable()
                     .aspectRatio(contentMode: .fill)
-                    .frame(width: isIPad ? 180 : 140, height: isIPad ? 180 : 140)
-                    .clipShape(Circle())
-                    .overlay(
-                        Circle()
-                            .stroke(member.color, lineWidth: isIPad ? 4 : 3)
-                    )
-                    .shadow(color: member.color.opacity(0.5), radius: 20)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: portraitHeight, alignment: .top)
+                    .clipped()
             } else {
                 // Large initial fallback
-                ZStack {
-                    Circle()
-                        .fill(Color.terminalDarkGray)
-                        .frame(width: isIPad ? 180 : 140, height: isIPad ? 180 : 140)
-
-                    Circle()
-                        .stroke(member.color, lineWidth: isIPad ? 4 : 3)
-                        .frame(width: isIPad ? 180 : 140, height: isIPad ? 180 : 140)
-
-                    Text(member.initial)
-                        .font(.system(size: isIPad ? 72 : 56, weight: .bold, design: .monospaced))
-                        .foregroundColor(member.color)
-                }
-                .shadow(color: member.color.opacity(0.5), radius: 20)
+                Text(member.initial)
+                    .font(.system(size: isIPad ? 120 : 100, weight: .bold, design: .monospaced))
+                    .foregroundColor(member.color)
             }
+
+            // Bottom edge glow
+            Rectangle()
+                .fill(member.color.opacity(0.8))
+                .frame(height: isIPad ? 4 : 3)
+                .glow(member.color, radius: isIPad ? 15 : 12)
         }
+        .frame(maxWidth: .infinity)
+        .frame(height: portraitHeight)
+        .clipped()
     }
 }
 

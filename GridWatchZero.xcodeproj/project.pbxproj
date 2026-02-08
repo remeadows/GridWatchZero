@@ -6,14 +6,31 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXContainerItemProxy section */
+		86BD497D2F366BF600FB5FEC /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 860691082F1F21FB0091E203 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 8606910F2F1F21FB0091E203;
+			remoteInfo = GridWatchZero;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
 		860691102F1F21FB0091E203 /* GridWatchZero.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GridWatchZero.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		8624E62A2F37A27300DD52A2 /* GridWatchZero.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = GridWatchZero.xctestplan; sourceTree = "<group>"; };
+		86BD49792F366BF600FB5FEC /* GridWatchZeroTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = GridWatchZeroTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		860691122F1F21FB0091E203 /* GridWatchZero */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = GridWatchZero;
+			sourceTree = "<group>";
+		};
+		86BD497A2F366BF600FB5FEC /* GridWatchZeroTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = GridWatchZeroTests;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -26,13 +43,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		86BD49762F366BF600FB5FEC /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
 		860691072F1F21FB0091E203 = {
 			isa = PBXGroup;
 			children = (
+				8624E62A2F37A27300DD52A2 /* GridWatchZero.xctestplan */,
 				860691122F1F21FB0091E203 /* GridWatchZero */,
+				86BD497A2F366BF600FB5FEC /* GridWatchZeroTests */,
 				860691112F1F21FB0091E203 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -41,6 +67,7 @@
 			isa = PBXGroup;
 			children = (
 				860691102F1F21FB0091E203 /* GridWatchZero.app */,
+				86BD49792F366BF600FB5FEC /* GridWatchZeroTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -70,6 +97,29 @@
 			productReference = 860691102F1F21FB0091E203 /* GridWatchZero.app */;
 			productType = "com.apple.product-type.application";
 		};
+		86BD49782F366BF600FB5FEC /* GridWatchZeroTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 86BD49812F366BF600FB5FEC /* Build configuration list for PBXNativeTarget "GridWatchZeroTests" */;
+			buildPhases = (
+				86BD49752F366BF600FB5FEC /* Sources */,
+				86BD49762F366BF600FB5FEC /* Frameworks */,
+				86BD49772F366BF600FB5FEC /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				86BD497E2F366BF600FB5FEC /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				86BD497A2F366BF600FB5FEC /* GridWatchZeroTests */,
+			);
+			name = GridWatchZeroTests;
+			packageProductDependencies = (
+			);
+			productName = GridWatchZeroTests;
+			productReference = 86BD49792F366BF600FB5FEC /* GridWatchZeroTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -77,11 +127,15 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 2620;
+				LastSwiftUpdateCheck = 2630;
 				LastUpgradeCheck = 2620;
 				TargetAttributes = {
 					8606910F2F1F21FB0091E203 = {
 						CreatedOnToolsVersion = 26.2;
+					};
+					86BD49782F366BF600FB5FEC = {
+						CreatedOnToolsVersion = 26.3;
+						TestTargetID = 8606910F2F1F21FB0091E203;
 					};
 				};
 			};
@@ -100,12 +154,20 @@
 			projectRoot = "";
 			targets = (
 				8606910F2F1F21FB0091E203 /* GridWatchZero */,
+				86BD49782F366BF600FB5FEC /* GridWatchZeroTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		8606910E2F1F21FB0091E203 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		86BD49772F366BF600FB5FEC /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -122,7 +184,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		86BD49752F366BF600FB5FEC /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		86BD497E2F366BF600FB5FEC /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 8606910F2F1F21FB0091E203 /* GridWatchZero */;
+			targetProxy = 86BD497D2F366BF600FB5FEC /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		860691192F1F21FC0091E203 /* Debug */ = {
@@ -316,6 +393,48 @@
 			};
 			name = Release;
 		};
+		86BD497F2F366BF600FB5FEC /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = B2U8T6A2Y3;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = WarSignal.GridWatchZeroTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/GridWatchZero.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/GridWatchZero";
+			};
+			name = Debug;
+		};
+		86BD49802F366BF600FB5FEC /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = B2U8T6A2Y3;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = WarSignal.GridWatchZeroTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/GridWatchZero.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/GridWatchZero";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -333,6 +452,15 @@
 			buildConfigurations = (
 				8606911C2F1F21FC0091E203 /* Debug */,
 				8606911D2F1F21FC0091E203 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		86BD49812F366BF600FB5FEC /* Build configuration list for PBXNativeTarget "GridWatchZeroTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				86BD497F2F366BF600FB5FEC /* Debug */,
+				86BD49802F366BF600FB5FEC /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

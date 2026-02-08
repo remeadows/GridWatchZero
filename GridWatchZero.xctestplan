@@ -1,0 +1,30 @@
+{
+  "configurations" : [
+    {
+      "id" : "ABBAB349-FC5D-435B-B130-E8B450907757",
+      "name" : "Test Scheme Action",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "performanceAntipatternCheckerEnabled" : true,
+    "targetForVariableExpansion" : {
+      "containerPath" : "container:GridWatchZero.xcodeproj",
+      "identifier" : "8606910F2F1F21FB0091E203",
+      "name" : "GridWatchZero"
+    }
+  },
+  "testTargets" : [
+    {
+      "parallelizable" : true,
+      "target" : {
+        "containerPath" : "container:GridWatchZero.xcodeproj",
+        "identifier" : "86BD49782F366BF600FB5FEC",
+        "name" : "GridWatchZeroTests"
+      }
+    }
+  ],
+  "version" : 1
+}

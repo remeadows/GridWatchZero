@@ -11,6 +11,7 @@ import CoreHaptics
 
 enum SoundEffect: String, CaseIterable {
     case upgrade = "upgrade"
+    case equip = "equip"  // When player equips new defense applications
     case attackIncoming = "attack_incoming"
     case attackEnd = "attack_end"
     case malusMessage = "malus_message"
@@ -63,10 +64,14 @@ final class AudioManager: @unchecked Sendable {
     private var duckTimer: DispatchSourceTimer?
 
     private init() {
-        setupAudioSession()
+        // Order matters: build graph → preload → configure session → start engine → warm up
+        // Setting up the session before the graph is ready can cause audio pops
         setupNodeGraph()
         preloadSounds()
+        preloadMusicBuffer()
+        setupAudioSession()
         startEngine()
+        warmUpEngine()
         observeEngineNotifications()
         HapticManager.prepareEngine()
     }
@@ -124,11 +129,38 @@ final class AudioManager: @unchecked Sendable {
 
     private func startEngine() {
         guard !engine.isRunning else { return }
+        // Mute output before starting to prevent pop from engine initialization
+        engine.mainMixerNode.outputVolume = 0
         do {
             try engine.start()
+            // Ramp output volume up over a brief period to avoid pop
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { [weak self] in
+                self?.engine.mainMixerNode.outputVolume = 1.0
+            }
         } catch {
             print("Audio engine start failed: \(error)")
+            engine.mainMixerNode.outputVolume = 1.0
         }
+    }
+
+    /// Play a short silent buffer to flush the audio pipeline and prevent first-frame pops.
+    /// The buffer plays to completion naturally — no abrupt stop that could itself cause a pop.
+    private func warmUpEngine() {
+        guard engine.isRunning else { return }
+        let silentFormat = AVAudioFormat(standardFormatWithSampleRate: 44100, channels: 2)!
+        guard let silentBuffer = AVAudioPCMBuffer(pcmFormat: silentFormat, frameCapacity: 4410) else { return }
+        silentBuffer.frameLength = 4410  // 0.1s of silence (zero-filled by default)
+
+        // Play silence on ALL SFX nodes to prime them — avoids first-use pop on any node
+        for node in sfxPlayerNodes {
+            node.scheduleBuffer(silentBuffer, at: nil, options: [], completionHandler: nil)
+            node.play()
+            // Let buffer complete naturally — don't stop() which causes pop
+        }
+
+        // Also prime the music player node
+        musicPlayerNode.scheduleBuffer(silentBuffer, at: nil, options: [], completionHandler: nil)
+        musicPlayerNode.play()
     }
 
     private func observeEngineNotifications() {
@@ -178,6 +210,29 @@ final class AudioManager: @unchecked Sendable {
         print("Preloaded \(sfxBuffers.count) sound effects via AVAudioEngine")
     }
 
+    /// Preload background music buffer on a background thread to avoid blocking main thread
+    private func preloadMusicBuffer() {
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            guard let url = Bundle.main.url(forResource: "background_music", withExtension: "m4a") else {
+                print("Background music file not found in bundle")
+                return
+            }
+            do {
+                let audioFile = try AVAudioFile(forReading: url)
+                let format = audioFile.processingFormat
+                let frameCount = AVAudioFrameCount(audioFile.length)
+                guard let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: frameCount) else {
+                    return
+                }
+                try audioFile.read(into: buffer)
+                self?.musicBuffer = buffer
+                print("Background music buffer preloaded")
+            } catch {
+                print("Failed to preload background music: \(error)")
+            }
+        }
+    }
+
     // MARK: - SFX Playback
 
     func playSound(_ sound: SoundEffect) {
@@ -192,13 +247,11 @@ final class AudioManager: @unchecked Sendable {
 
         // Acquire a player node from the pool (round-robin)
         let playerNode = sfxPlayerNodes[nextPlayerIndex]
-        if playerNode.isPlaying {
-            playerNode.stop()
-        }
         nextPlayerIndex = (nextPlayerIndex + 1) % maxSFXPlayers
 
-        // Schedule and play the buffer
-        playerNode.scheduleBuffer(buffer, at: nil, options: [], completionHandler: nil)
+        // Use .interrupts option to seamlessly replace any in-progress buffer
+        // This avoids calling stop() which causes an audible pop
+        playerNode.scheduleBuffer(buffer, at: nil, options: .interrupts, completionHandler: nil)
         playerNode.play()
 
         // Trigger ducking for attack sounds
@@ -232,31 +285,24 @@ final class AudioManager: @unchecked Sendable {
 
         startEngine()
 
-        // Load music buffer if needed
-        if musicBuffer == nil {
-            guard let url = Bundle.main.url(forResource: "background_music", withExtension: "m4a") else {
-                print("Background music file not found in bundle")
-                return
+        // Music buffer is preloaded asynchronously during init
+        guard musicBuffer != nil else {
+            print("Background music buffer not yet loaded, retrying in 0.2s")
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) { [weak self] in
+                self?.startMusic()
             }
-            do {
-                let audioFile = try AVAudioFile(forReading: url)
-                let format = audioFile.processingFormat
-                let frameCount = AVAudioFrameCount(audioFile.length)
-                guard let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: frameCount) else {
-                    return
-                }
-                try audioFile.read(into: buffer)
-                musicBuffer = buffer
-            } catch {
-                print("Failed to load background music: \(error)")
-                return
-            }
+            return
         }
 
+        // Set flag FIRST to prevent race condition with duplicate calls
+        isMusicPlaying = true
+        
+        // Start with volume at 0 and fade in to prevent pop
+        musicMixerNode.volume = 0
         scheduleLoopingMusic()
         musicPlayerNode.play()
-        isMusicPlaying = true
-        print("Background music started playing via AVAudioEngine")
+        rampMusicVolume(to: musicVolume, duration: 0.3, completion: nil)
+        print("Background music started playing via AVAudioEngine (fading in)")
     }
 
     private func scheduleLoopingMusic() {
@@ -265,27 +311,46 @@ final class AudioManager: @unchecked Sendable {
     }
 
     func stopMusic() {
-        musicPlayerNode.stop()
+        guard isMusicPlaying else { return }
         isMusicPlaying = false
-        print("Background music stopped")
+        // Fade out over 0.3s to prevent audio pop from abrupt stop
+        rampMusicVolume(to: 0.0, duration: 0.3) { [weak self] in
+            self?.musicPlayerNode.stop()
+            // Restore mixer volume for next play
+            self?.musicMixerNode.volume = self?.musicVolume ?? 0.3
+            print("Background music stopped (faded out)")
+        }
     }
 
-    /// Pause music (for when app goes to background)
+    /// Pause music (for when app goes to background) with brief fade to prevent pop
     func pauseMusic() {
-        musicPlayerNode.pause()
+        rampMusicVolume(to: 0.0, duration: 0.15) { [weak self] in
+            self?.musicPlayerNode.pause()
+            // Restore mixer volume so resume picks up at correct level
+            self?.musicMixerNode.volume = self?.musicVolume ?? 0.3
+        }
     }
 
-    /// Resume music (for when app returns to foreground)
+    /// Resume music (for when app returns to foreground) with fade-in to prevent pop
     func resumeMusic() {
         guard isMusicPlaying else { return }
         guard AVAudioSession.sharedInstance().outputVolume > 0 else { return }
         startEngine()
+        musicMixerNode.volume = 0
         musicPlayerNode.play()
+        rampMusicVolume(to: musicVolume, duration: 0.2, completion: nil)
     }
 
     func setMusicVolume(_ newVolume: Float) {
         musicVolume = max(0, min(1, newVolume))
         musicMixerNode.volume = musicVolume
+    }
+    
+    /// Fade in music over specified duration
+    func fadeInMusic(duration: TimeInterval, targetVolume: Float = 0.3) {
+        let target = max(0, min(1, targetVolume))
+        musicVolume = target
+        rampMusicVolume(to: target, duration: duration, completion: nil)
     }
 
     var isMusicActive: Bool {
@@ -376,9 +441,20 @@ final class AudioManager: @unchecked Sendable {
 final class AmbientAudioManager: @unchecked Sendable {
     static let shared = AmbientAudioManager()
 
+    // Track whether we're in gameplay (music should stay OFF) or menu (music can play)
+    private var isInGameplay: Bool = false
+    
+    // Gameplay ambient audio player
+    private var gameplayAmbientPlayer: AVAudioPlayer?
+
     private init() {}
 
     func startAmbient() {
+        // Only start music if NOT in gameplay
+        guard !isInGameplay else {
+            print("[AmbientAudioManager] ⚠️ Music start blocked - currently in gameplay")
+            return
+        }
         AudioManager.shared.startMusic()
     }
 
@@ -410,6 +486,67 @@ final class AmbientAudioManager: @unchecked Sendable {
     /// Resume music (for when app returns to foreground)
     func resume() {
         AudioManager.shared.resumeMusic()
+    }
+
+    // MARK: - Gameplay Context Control
+
+    /// Enter gameplay mode - stops music and plays gameplay ambient sounds
+    func enterGameplayMode() {
+        print("[AmbientAudioManager] ✅ Entering gameplay mode - music will stay OFF")
+        isInGameplay = true
+        stopAmbient()
+        startGameplayAmbient()
+    }
+    
+    /// Start gameplay ambient sounds (data center atmosphere)
+    private func startGameplayAmbient() {
+        guard let ambientURL = Bundle.main.url(forResource: "levels_ambient", withExtension: "wav") else {
+            print("[AmbientAudioManager] ⚠️ Gameplay ambient audio file not found")
+            return
+        }
+        
+        do {
+            let player = try AVAudioPlayer(contentsOf: ambientURL)
+            player.volume = 0.4  // Quieter for background atmosphere
+            player.numberOfLoops = -1  // Loop indefinitely
+            player.prepareToPlay()
+            player.play()
+            
+            self.gameplayAmbientPlayer = player
+            print("[AmbientAudioManager] 🎧 Gameplay ambient audio started (looping)")
+        } catch {
+            print("[AmbientAudioManager] ❌ Failed to play gameplay ambient: \(error)")
+        }
+    }
+    
+    /// Stop gameplay ambient sounds
+    private func stopGameplayAmbient() {
+        gameplayAmbientPlayer?.stop()
+        gameplayAmbientPlayer = nil
+        print("[AmbientAudioManager] 🔇 Gameplay ambient audio stopped")
+    }
+
+    /// Exit gameplay mode - smoothly transitions from ambient to music
+    func exitGameplayMode() {
+        print("[AmbientAudioManager] ✅ Exiting gameplay mode - transitioning to music")
+        isInGameplay = false
+        
+        // Fade out gameplay ambient over 0.5s
+        gameplayAmbientPlayer?.setVolume(0.0, fadeDuration: 0.5)
+        
+        // Start music at low volume, then fade in
+        AudioManager.shared.setMusicVolume(0.0)
+        startAmbient()  // Now allowed since isInGameplay = false
+        
+        // Fade in music over 1s
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            AudioManager.shared.fadeInMusic(duration: 1.0)
+        }
+        
+        // Stop gameplay ambient after fade completes
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+            self.stopGameplayAmbient()
+        }
     }
 }
 

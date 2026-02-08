@@ -56,7 +56,7 @@ GridWatchZero/
 ## Key Commands
 ```bash
 # Open project
-open "/Users/russmeadows/Dev/Games/GridWatchZero/GridWatchZero.xcodeproj"
+open "/Users/russmeadows/Dev/Games/WarSignalLabs/GridWatchZero/GridWatchZero.xcodeproj"
 
 # Build: Cmd+B in Xcode
 # Run: Cmd+R in Xcode

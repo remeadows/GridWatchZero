@@ -2,7 +2,7 @@
 
 ## Current Version: 1.0.0 (Build 2)
 
-## Last Updated: 2026-02-05
+## Last Updated: 2026-02-08
 
 ---
 
@@ -183,6 +183,33 @@ See [ISSUES.md](./ISSUES.md) for detailed tracking.
 **Critical**: None (all closed)
 **Major**: None (all closed)
 **Minor**: None (all closed)
+
+---
+
+## Session Log: 2026-02-08 — Full-Width Banner Portraits & Image Fixes
+
+### Summary
+Converted all character portrait layouts from small square/circle thumbnails to full-width edge-to-edge rectangular banners across StoryDialogueView, DossierDetailView, and TeamMemberDetailView. Fixed brand intro video full-screen display, corrected FL3X image reference, and removed Tee watermark. 7 files changed, 329 insertions, 205 deletions.
+
+### Changes
+- **ENH-029**: Full-width banner portraits for all character views (story, dossier, team roster)
+- **ISSUE-034**: Fixed FL3X wrong image (`"FL3X"` → `"FL3X_v1"`) and cropped Tee watermark
+- **ISSUE-035**: Brand intro video UIView-based full-screen fix using `UIScreen.main.bounds`
+- **Bug Fix**: Removed GeometryReader from StoryDialogueView to fix broken dashboard buttons
+
+### Files Changed
+- `Views/StoryDialogueView.swift` — Full-width banner portrait with name/role below
+- `Views/DossierView.swift` — Banner portrait for detail view, center alignment for grid cards
+- `Views/HomeView.swift` — TeamMemberDetailView rewritten from circle to banner layout
+- `Views/BrandIntroView.swift` — UIViewRepresentable with UIScreen.main.bounds for full-screen video
+- `Models/StorySystem.swift` — FL3X imageName corrected to "FL3X_v1"
+- `Assets.xcassets/Tee_v1.imageset/Tee_v1.png` — Cropped watermark (468×712 → 468×656)
+- `archive/AppPhoto/Tee_v1.png` — Archive copy also cropped
+
+### Next Steps
+- TestFlight testing of portrait banner layout on device
+- Verify all character images display correctly across iPhone and iPad
+- Continue App Store submission preparation
 
 ---
 

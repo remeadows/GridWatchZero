@@ -189,6 +189,7 @@ struct DashboardView: View {
         }
         .sheet(isPresented: $showingSettings) {
             SettingsView()
+                .environmentObject(engine)
                 .environmentObject(cloudManager)
                 .environmentObject(campaignState)
         }

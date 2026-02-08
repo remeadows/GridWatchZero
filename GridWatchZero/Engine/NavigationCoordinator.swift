@@ -8,6 +8,7 @@ import Combine
 // MARK: - App Screen Enum
 
 enum AppScreen: Hashable {
+    case brandIntro // War Signal Labs video intro (first screen)
     case title
     case mainMenu
     case home
@@ -20,6 +21,7 @@ enum AppScreen: Hashable {
     // Custom hash for FailureReason
     func hash(into hasher: inout Hasher) {
         switch self {
+        case .brandIntro: hasher.combine(-1)
         case .title: hasher.combine(0)
         case .mainMenu: hasher.combine(1)
         case .home: hasher.combine(2)
@@ -33,7 +35,7 @@ enum AppScreen: Hashable {
 
     static func == (lhs: AppScreen, rhs: AppScreen) -> Bool {
         switch (lhs, rhs) {
-        case (.title, .title), (.mainMenu, .mainMenu), (.home, .home), (.playerProfile, .playerProfile), (.helixAwakening, .helixAwakening): return true
+        case (.brandIntro, .brandIntro), (.title, .title), (.mainMenu, .mainMenu), (.home, .home), (.playerProfile, .playerProfile), (.helixAwakening, .helixAwakening): return true
         case (.gameplay(let a, let ia), .gameplay(let b, let ib)): return a == b && ia == ib
         case (.levelComplete(let a, let ia), .levelComplete(let b, let ib)): return a == b && ia == ib
         case (.levelFailed(let a1, let r1, let i1), .levelFailed(let a2, let r2, let i2)): return a1 == a2 && r1 == r2 && i1 == i2
@@ -46,7 +48,7 @@ enum AppScreen: Hashable {
 
 @MainActor
 class NavigationCoordinator: ObservableObject {
-    @Published var currentScreen: AppScreen = .title
+    @Published var currentScreen: AppScreen = .brandIntro // Start with brand intro
     @Published var navigationPath = NavigationPath()
 
     // Store completion stats for the level complete screen
@@ -199,6 +201,8 @@ class NavigationCoordinator: ObservableObject {
     }
 
     func returnToHome() {
+        // Exit gameplay mode - allows music to resume in menus
+        AmbientAudioManager.shared.exitGameplayMode()
         currentScreen = .home
     }
 
@@ -317,10 +321,20 @@ struct RootNavigationView: View {
     var body: some View {
         ZStack {
             switch coordinator.currentScreen {
+            case .brandIntro:
+                BrandIntroView {
+                    withAnimation(.easeInOut(duration: 0.5)) {
+                        coordinator.currentScreen = .title
+                    }
+                }
+                .ignoresSafeArea(.all)  // Full-screen video
+                .transition(.opacity)
+            
             case .title:
                 TitleScreenView {
                     withAnimation(.easeInOut(duration: 0.3)) {
-                        coordinator.showMainMenu()
+                        // Skip main menu and go directly to campaign hub
+                        coordinator.showHome()
                     }
                 }
                 .transition(.opacity)
@@ -571,14 +585,14 @@ struct GameplayContainerView: View {
         }
         .alert("Exit Mission?", isPresented: $showExitConfirm) {
             Button("Cancel", role: .cancel) { }
-            Button("Save & Exit") {
-                // Save checkpoint before exiting
-                gameEngine.saveCampaignCheckpoint()
+            Button("Exit") {
+                // Auto-checkpoint will save progress (every 30 ticks)
+                // Just pause and exit - no manual save needed
                 gameEngine.pause()
                 onExit()
             }
         } message: {
-            Text("Your progress will be saved. You can resume this mission later.")
+            Text("Progress is auto-saved every 30 seconds. You can resume this mission anytime.")
         }
         .onAppear {
             setupLevel()
@@ -586,6 +600,10 @@ struct GameplayContainerView: View {
     }
 
     private func setupLevel() {
+        // Enter gameplay mode - stops music and prevents it from restarting
+        AmbientAudioManager.shared.enterGameplayMode()
+        print("[GameplayContainer] Entered gameplay mode - music stopped and locked")
+
         if let levelId = levelId {
             // Campaign mode - configure and start level
             if let level = LevelDatabase.shared.level(forId: levelId) {

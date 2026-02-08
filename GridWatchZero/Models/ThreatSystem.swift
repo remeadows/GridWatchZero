@@ -536,8 +536,9 @@ struct Attack: Identifiable, Codable {
         // Income-based scaling: attacks scale to remain threatening
         // Base scaling: 1.0 at 10 credits/tick, scales up with income
         let incomeScale = max(1.0, playerIncomePerTick / 10.0)
-        // Cap the scaling to prevent absurd damage at high incomes
-        let cappedScale = min(incomeScale, 100.0)  // Higher cap for endgame attacks
+        // Cap the scaling to prevent death spiral at high incomes (ISSUE-033)
+        // Reduced from 100× to 20× to make late-game levels (9-20) winnable
+        let cappedScale = min(incomeScale, 20.0)  // Prevents exponential damage growth
         // Blend: 70% base damage + 30% income-scaled damage
         let effectiveScale = 0.7 + (0.3 * cappedScale)
 

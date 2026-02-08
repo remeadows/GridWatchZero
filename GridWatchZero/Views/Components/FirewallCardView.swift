@@ -152,7 +152,7 @@ struct FirewallCardView: View {
                         .cornerRadius(2)
                         .accessibilityLabel("Firewall at maximum level")
                 } else {
-                    Button(action: onUpgrade) {
+                    ContinuousUpgradeButton(action: onUpgrade, canPerformAction: { credits >= fw.upgradeCost }) {
                         HStack(spacing: 2) {
                             Image(systemName: "arrow.up.circle.fill")
                                 .font(.system(size: 9))
@@ -165,7 +165,6 @@ struct FirewallCardView: View {
                         .background(credits >= fw.upgradeCost ? Color.neonGreen : Color.terminalGray.opacity(0.3))
                         .cornerRadius(2)
                     }
-                    .disabled(credits < fw.upgradeCost)
                     .accessibilityLabel("Upgrade firewall")
                     .accessibilityValue("Cost \(fw.upgradeCost.formatted) credits")
                     .accessibilityHint(credits >= fw.upgradeCost ? "Increases firewall level to \(fw.level + 1)" : "Not enough credits")

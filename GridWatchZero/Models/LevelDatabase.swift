@@ -314,13 +314,13 @@ class LevelDatabase {
             Deploy T8 Transcendence systems.
             """,
             startingCredits: 0,
-            startingThreatLevel: .symbiont,
+            startingThreatLevel: .ascended,  // Reduced from .symbiont (ISSUE-033)
             availableTiers: [1, 2, 3, 4, 5, 6, 7, 8],
             victoryConditions: VictoryConditions(
                 requiredDefenseTier: 8,
                 requiredDefensePoints: 2600,
                 requiredRiskLevel: .priority,
-                requiredCredits: 124_000_000,
+                requiredCredits: 75_000_000,  // Reduced from 124M (ISSUE-033)
                 requiredAttacksSurvived: nil,
                 requiredReportsSent: 250,
                 timeLimit: nil
@@ -349,13 +349,13 @@ class LevelDatabase {
             T9 Void and T10 Dimensional systems activate.
             """,
             startingCredits: 0,
-            startingThreatLevel: .transcendent,
+            startingThreatLevel: .symbiont,  // Reduced from .transcendent (ISSUE-033)
             availableTiers: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
             victoryConditions: VictoryConditions(
                 requiredDefenseTier: 10,
                 requiredDefensePoints: 3600,
                 requiredRiskLevel: .hunted,
-                requiredCredits: 279_000_000,
+                requiredCredits: 175_000_000,  // Reduced from 279M (ISSUE-033)
                 requiredAttacksSurvived: nil,
                 requiredReportsSent: 350,
                 timeLimit: nil
@@ -366,7 +366,7 @@ class LevelDatabase {
             victoryStoryId: "level10_victory",
             insaneModifiers: .standard,
             minimumAttackChance: 10.0,  // 10% attack chance per spec
-            attackGracePeriod: 180  // L10: .transcendent — 3 min grace (cap)
+            attackGracePeriod: 180  // L10: 3 min grace (cap)
         ),
 
         // ============================================
@@ -388,13 +388,13 @@ class LevelDatabase {
             Deploy T11-T12 Multiverse and Entropy systems.
             """,
             startingCredits: 0,
-            startingThreatLevel: .unknown,
+            startingThreatLevel: .transcendent,  // Reduced from .unknown (ISSUE-033)
             availableTiers: Array(1...12),
             victoryConditions: VictoryConditions(
                 requiredDefenseTier: 12,
                 requiredDefensePoints: 5000,
                 requiredRiskLevel: .marked,
-                requiredCredits: 628_000_000,
+                requiredCredits: 400_000_000,  // Reduced from 628M (ISSUE-033)
                 requiredAttacksSurvived: nil,
                 requiredReportsSent: 480,
                 timeLimit: nil
@@ -404,7 +404,7 @@ class LevelDatabase {
             introStoryId: "level11_intro",
             victoryStoryId: "level11_victory",
             insaneModifiers: .standard,
-            minimumAttackChance: 15.0,  // 15% attack chance per spec
+            minimumAttackChance: 12.0,  // Reduced from 15% (ISSUE-033)
             attackGracePeriod: 180  // L11: 3 min grace (cap)
         ),
 
@@ -423,13 +423,13 @@ class LevelDatabase {
             T13-T14 Causality and Timeline defenses required.
             """,
             startingCredits: 0,
-            startingThreatLevel: .dimensional,
+            startingThreatLevel: .symbiont,  // Reduced from .dimensional (ISSUE-033)
             availableTiers: Array(1...14),
             victoryConditions: VictoryConditions(
                 requiredDefenseTier: 14,
                 requiredDefensePoints: 6500,
                 requiredRiskLevel: .targeted,
-                requiredCredits: 1_410_000_000,
+                requiredCredits: 900_000_000,  // Reduced from 1.41B (ISSUE-033)
                 requiredAttacksSurvived: nil,
                 requiredReportsSent: 650,
                 timeLimit: nil
@@ -439,7 +439,7 @@ class LevelDatabase {
             introStoryId: "level12_intro",
             victoryStoryId: "level12_victory",
             insaneModifiers: .standard,
-            minimumAttackChance: 15.0,  // 15% attack chance per spec
+            minimumAttackChance: 13.0,  // Reduced from 15% (ISSUE-033)
             attackGracePeriod: 180  // L12: 3 min grace (cap)
         ),
 
@@ -458,13 +458,13 @@ class LevelDatabase {
             T15 Akashic systems connect to universal memory.
             """,
             startingCredits: 0,
-            startingThreatLevel: .cosmic,
+            startingThreatLevel: .dimensional,  // Reduced from .cosmic (ISSUE-033)
             availableTiers: Array(1...15),
             victoryConditions: VictoryConditions(
                 requiredDefenseTier: 15,
                 requiredDefensePoints: 8500,
                 requiredRiskLevel: .hammered,
-                requiredCredits: 2_820_000_000,
+                requiredCredits: 1_800_000_000,  // Reduced from 2.82B (ISSUE-033)
                 requiredAttacksSurvived: nil,
                 requiredReportsSent: 875,
                 timeLimit: nil
@@ -474,7 +474,7 @@ class LevelDatabase {
             introStoryId: "level13_intro",
             victoryStoryId: "level13_victory",
             insaneModifiers: .standard,
-            minimumAttackChance: 18.0,  // 18% attack chance per spec
+            minimumAttackChance: 15.0,  // Reduced from 18% (ISSUE-033)
             attackGracePeriod: 180  // L13: 3 min grace (cap)
         ),
 
@@ -492,13 +492,13 @@ class LevelDatabase {
             T16-T17 Cosmic and Dark Matter systems online.
             """,
             startingCredits: 0,
-            startingThreatLevel: .paradox,
+            startingThreatLevel: .cosmic,  // Reduced from .paradox (ISSUE-033)
             availableTiers: Array(1...17),
             victoryConditions: VictoryConditions(
                 requiredDefenseTier: 17,
                 requiredDefensePoints: 11000,
                 requiredRiskLevel: .critical,
-                requiredCredits: 5_640_000_000,
+                requiredCredits: 3_600_000_000,  // Reduced from 5.64B (ISSUE-033)
                 requiredAttacksSurvived: nil,
                 requiredReportsSent: 1150,
                 timeLimit: nil
@@ -508,7 +508,7 @@ class LevelDatabase {
             introStoryId: "level14_intro",
             victoryStoryId: "level14_victory",
             insaneModifiers: .standard,
-            minimumAttackChance: 22.0,  // 22% attack chance per spec
+            minimumAttackChance: 18.0,  // Reduced from 22% (ISSUE-033)
             attackGracePeriod: 180  // L14: 3 min grace (cap)
         ),
 
@@ -531,13 +531,13 @@ class LevelDatabase {
             T18-T19 Singularity and Omniscient systems activate.
             """,
             startingCredits: 0,
-            startingThreatLevel: .primordial,
+            startingThreatLevel: .paradox,  // Reduced from .primordial (ISSUE-033)
             availableTiers: Array(1...19),
             victoryConditions: VictoryConditions(
                 requiredDefenseTier: 19,
                 requiredDefensePoints: 14000,
                 requiredRiskLevel: .ascended,
-                requiredCredits: 11_300_000_000,
+                requiredCredits: 7_200_000_000,  // Reduced from 11.3B (ISSUE-033)
                 requiredAttacksSurvived: nil,
                 requiredReportsSent: 1500,
                 timeLimit: nil
@@ -547,7 +547,7 @@ class LevelDatabase {
             introStoryId: "level15_intro",
             victoryStoryId: "level15_victory",
             insaneModifiers: .standard,
-            minimumAttackChance: 25.0,  // 25% attack chance per spec
+            minimumAttackChance: 20.0,  // Reduced from 25% (ISSUE-033)
             attackGracePeriod: 180  // L15: 3 min grace (cap)
         ),
 
@@ -566,13 +566,13 @@ class LevelDatabase {
             T20 Reality systems reshape existence.
             """,
             startingCredits: 0,
-            startingThreatLevel: .infinite,
+            startingThreatLevel: .primordial,  // Reduced from .infinite (ISSUE-033)
             availableTiers: Array(1...20),
             victoryConditions: VictoryConditions(
                 requiredDefenseTier: 20,
                 requiredDefensePoints: 18000,
                 requiredRiskLevel: .symbiont,
-                requiredCredits: 22_600_000_000,
+                requiredCredits: 14_400_000_000,  // Reduced from 22.6B (ISSUE-033)
                 requiredAttacksSurvived: nil,
                 requiredReportsSent: 1950,
                 timeLimit: nil
@@ -582,7 +582,7 @@ class LevelDatabase {
             introStoryId: "level16_intro",
             victoryStoryId: "level16_victory",
             insaneModifiers: .standard,
-            minimumAttackChance: 30.0,  // 30% attack chance per spec
+            minimumAttackChance: 22.0,  // Reduced from 30% (ISSUE-033)
             attackGracePeriod: 180  // L16: 3 min grace (cap)
         ),
 
@@ -601,13 +601,13 @@ class LevelDatabase {
             T21 Prime systems access the core of existence.
             """,
             startingCredits: 0,
-            startingThreatLevel: .omega,
+            startingThreatLevel: .infinite,  // Reduced from .omega (ISSUE-033)
             availableTiers: Array(1...21),
             victoryConditions: VictoryConditions(
                 requiredDefenseTier: 21,
                 requiredDefensePoints: 23000,
                 requiredRiskLevel: .transcendent,
-                requiredCredits: 39_500_000_000,
+                requiredCredits: 25_000_000_000,  // Reduced from 39.5B (ISSUE-033)
                 requiredAttacksSurvived: nil,
                 requiredReportsSent: 2500,
                 timeLimit: nil
@@ -617,7 +617,7 @@ class LevelDatabase {
             introStoryId: "level17_intro",
             victoryStoryId: "level17_victory",
             insaneModifiers: .standard,
-            minimumAttackChance: 35.0,  // 35% attack chance per spec
+            minimumAttackChance: 25.0,  // Reduced from 35% (ISSUE-033)
             attackGracePeriod: 180  // L17: 3 min grace (cap)
         ),
 
@@ -637,13 +637,13 @@ class LevelDatabase {
             T22-T23 Absolute and Genesis systems transcend limits.
             """,
             startingCredits: 0,
-            startingThreatLevel: .omega,
+            startingThreatLevel: .infinite,  // Reduced from .omega (ISSUE-033)
             availableTiers: Array(1...23),
             victoryConditions: VictoryConditions(
                 requiredDefenseTier: 23,
                 requiredDefensePoints: 30000,
                 requiredRiskLevel: .unknown,
-                requiredCredits: 69_200_000_000,
+                requiredCredits: 44_000_000_000,  // Reduced from 69.2B (ISSUE-033)
                 requiredAttacksSurvived: nil,
                 requiredReportsSent: 3200,
                 timeLimit: nil
@@ -653,7 +653,7 @@ class LevelDatabase {
             introStoryId: "level18_intro",
             victoryStoryId: "level18_victory",
             insaneModifiers: .standard,
-            minimumAttackChance: 40.0,  // 40% attack chance per spec
+            minimumAttackChance: 28.0,  // Reduced from 40% (ISSUE-033)
             attackGracePeriod: 180  // L18: 3 min grace (cap)
         ),
 
@@ -676,13 +676,13 @@ class LevelDatabase {
             T24 Omega systems prepare for the end.
             """,
             startingCredits: 0,
-            startingThreatLevel: .omega,
+            startingThreatLevel: .omega,  // Keep .omega for penultimate level (ISSUE-033)
             availableTiers: Array(1...24),
             victoryConditions: VictoryConditions(
                 requiredDefenseTier: 24,
                 requiredDefensePoints: 40000,
                 requiredRiskLevel: .dimensional,
-                requiredCredits: 121_000_000_000,
+                requiredCredits: 77_000_000_000,  // Reduced from 121B (ISSUE-033)
                 requiredAttacksSurvived: nil,
                 requiredReportsSent: 4100,
                 timeLimit: nil
@@ -692,7 +692,7 @@ class LevelDatabase {
             introStoryId: "level19_intro",
             victoryStoryId: "level19_victory",
             insaneModifiers: .standard,
-            minimumAttackChance: 45.0,  // 45% attack chance per spec
+            minimumAttackChance: 32.0,  // Reduced from 45% (ISSUE-033)
             attackGracePeriod: 180  // L19: 3 min grace (cap)
         ),
 
@@ -713,13 +713,13 @@ class LevelDatabase {
             Whatever you choose, the world will never be the same.
             """,
             startingCredits: 0,
-            startingThreatLevel: .omega,
+            startingThreatLevel: .omega,  // Keep .omega for final level (ISSUE-033)
             availableTiers: Array(1...25),
             victoryConditions: VictoryConditions(
                 requiredDefenseTier: 25,
                 requiredDefensePoints: 55000,
                 requiredRiskLevel: .cosmic,
-                requiredCredits: 212_000_000_000,
+                requiredCredits: 135_000_000_000,  // Reduced from 212B (ISSUE-033)
                 requiredAttacksSurvived: nil,
                 requiredReportsSent: 5500,
                 timeLimit: nil
@@ -735,7 +735,7 @@ class LevelDatabase {
                 defensePointMultiplier: 2.0,
                 attackDamageMultiplier: 2.0
             ),
-            minimumAttackChance: 50.0,  // 50% attack chance per spec
+            minimumAttackChance: 35.0,  // Reduced from 50% (ISSUE-033)
             attackGracePeriod: 180  // L20: 3 min grace (cap)
         )
     ]

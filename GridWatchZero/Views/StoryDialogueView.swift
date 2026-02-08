@@ -28,12 +28,9 @@ struct StoryDialogueView: View {
         horizontalSizeClass == .regular
     }
 
-    private var portraitSize: CGFloat {
-        isIPad ? 160 : 80
-    }
-
-    private var portraitInnerSize: CGFloat {
-        isIPad ? 152 : 76
+    private var portraitHeight: CGFloat {
+        // Banner height for full-width portrait — use ~45% of screen
+        isIPad ? 420 : 360
     }
 
     private var horizontalPadding: CGFloat {
@@ -41,7 +38,7 @@ struct StoryDialogueView: View {
     }
 
     private var dialogueMinHeight: CGFloat {
-        isIPad ? 200 : 150
+        isIPad ? 160 : 100
     }
 
     var body: some View {
@@ -53,14 +50,12 @@ struct StoryDialogueView: View {
             visualEffectsOverlay
 
             VStack(spacing: 0) {
-                // Top bar with character name
+                // Full-width character portrait + name
                 characterHeader
-                    .padding(.top, 16)
 
-                Spacer()
-
-                // Main dialogue area
+                // Main dialogue area — sits below character info with breathing room
                 dialogueContent
+                    .padding(.top, isIPad ? 40 : 32)
 
                 Spacer()
 
@@ -81,60 +76,67 @@ struct StoryDialogueView: View {
     // MARK: - Character Header
 
     private var characterHeader: some View {
-        HStack(spacing: isIPad ? 24 : 16) {
-            // Character portrait
+        VStack(spacing: 0) {
+            // Full-width character portrait
             characterPortrait
 
-            VStack(alignment: .leading, spacing: isIPad ? 8 : 4) {
-                Text(storyMoment.character.displayName)
-                    .font(isIPad ? .system(size: 32, weight: .bold, design: .monospaced) : .terminalLarge)
-                    .foregroundColor(characterColor)
-                    .glow(characterColor, radius: isIPad ? 12 : 10)
+            // Name and role below the image
+            HStack {
+                VStack(alignment: .leading, spacing: isIPad ? 8 : 4) {
+                    Text(storyMoment.character.displayName)
+                        .font(isIPad ? .system(size: 32, weight: .bold, design: .monospaced) : .terminalLarge)
+                        .foregroundColor(characterColor)
+                        .glow(characterColor, radius: isIPad ? 12 : 10)
 
-                Text(storyMoment.character.role)
-                    .font(isIPad ? .system(size: 16, weight: .regular, design: .monospaced) : .terminalSmall)
-                    .foregroundColor(.terminalGray)
+                    Text(storyMoment.character.role)
+                        .font(isIPad ? .system(size: 16, weight: .regular, design: .monospaced) : .terminalSmall)
+                        .foregroundColor(.terminalGray)
 
-                if !storyMoment.title.isEmpty {
-                    Text(storyMoment.title)
-                        .font(isIPad ? .system(size: 18, weight: .medium, design: .monospaced) : .terminalBody)
-                        .foregroundColor(.white)
-                        .padding(.top, isIPad ? 8 : 4)
+                    if !storyMoment.title.isEmpty {
+                        Text(storyMoment.title)
+                            .font(isIPad ? .system(size: 18, weight: .medium, design: .monospaced) : .terminalBody)
+                            .foregroundColor(.white)
+                            .padding(.top, isIPad ? 8 : 4)
+                    }
                 }
-            }
 
-            Spacer()
+                Spacer()
+            }
+            .padding(.horizontal, horizontalPadding)
+            .padding(.top, isIPad ? 16 : 12)
         }
-        .padding(.horizontal, horizontalPadding)
     }
 
     private var characterPortrait: some View {
-        ZStack {
-            // Portrait background
-            RoundedRectangle(cornerRadius: isIPad ? 12 : 8)
+        ZStack(alignment: .bottom) {
+            // Portrait background - full width
+            Rectangle()
                 .fill(Color.terminalDarkGray)
-                .frame(width: portraitSize, height: portraitSize)
 
             // Character image or fallback
             if let imageName = storyMoment.character.imageName {
                 Image(imageName)
                     .resizable()
                     .aspectRatio(contentMode: .fill)
-                    .frame(width: portraitInnerSize, height: portraitInnerSize)
-                    .clipShape(RoundedRectangle(cornerRadius: isIPad ? 10 : 6))
+                    .frame(maxWidth: .infinity)
+                    .frame(height: portraitHeight, alignment: .top)
+                    .clipped()
             } else {
                 // System character fallback
                 Image(systemName: "terminal.fill")
-                    .font(.system(size: isIPad ? 60 : 30))
+                    .font(.system(size: isIPad ? 120 : 100))
                     .foregroundColor(characterColor)
             }
 
-            // Border glow
-            RoundedRectangle(cornerRadius: isIPad ? 12 : 8)
-                .stroke(characterColor.opacity(0.8), lineWidth: isIPad ? 3 : 2)
-                .frame(width: portraitSize, height: portraitSize)
-                .glow(characterColor, radius: isIPad ? 12 : 8)
+            // Border glow - bottom edge only
+            Rectangle()
+                .fill(characterColor.opacity(0.8))
+                .frame(height: isIPad ? 4 : 3)
+                .glow(characterColor, radius: isIPad ? 15 : 12)
         }
+        .frame(maxWidth: .infinity)
+        .frame(height: portraitHeight)
+        .clipped()
         .offset(x: glitchOffset)
     }
 

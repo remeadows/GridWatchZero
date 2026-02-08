@@ -4,6 +4,90 @@
 
 import SwiftUI
 
+// MARK: - Continuous Upgrade Button
+
+/// A button that supports continuous upgrades when held down
+struct ContinuousUpgradeButton<Label: View>: View {
+    let action: () -> Void
+    let canPerformAction: () -> Bool  // Dynamic check instead of static bool
+    @ViewBuilder let label: () -> Label
+
+    @State private var isHolding = false
+    @State private var upgradeTimer: Timer?
+    @State private var holdStartTime: Date?
+
+    var body: some View {
+        label()
+            .contentShape(Rectangle())  // Make entire area tappable
+            .gesture(
+                DragGesture(minimumDistance: 0)
+                    .onChanged { _ in
+                        // Only start timer once when finger first touches
+                        guard !isHolding else { return }
+                        
+                        print("[ContinuousUpgradeButton] 👆 Finger DOWN - starting hold detection")
+                        isHolding = true
+                        holdStartTime = Date()
+                        
+                        // Start timer after 0.5 second delay for continuous upgrades
+                        upgradeTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: false) { _ in
+                            // Check if still holding and can afford
+                            if isHolding && canPerformAction() {
+                                print("[ContinuousUpgradeButton] ⏱️  0.5s elapsed - starting CONTINUOUS mode")
+                                startContinuousUpgrade()
+                            }
+                        }
+                    }
+                    .onEnded { _ in
+                        print("[ContinuousUpgradeButton] 👆 Finger UP")
+                        
+                        let holdDuration = Date().timeIntervalSince(holdStartTime ?? Date())
+                        print("[ContinuousUpgradeButton] Hold duration: \(String(format: "%.2f", holdDuration))s")
+                        
+                        // Stop any continuous upgrade
+                        stopContinuousUpgrade()
+                        
+                        // If it was a quick tap (less than 0.5s), do ONE upgrade
+                        if holdDuration < 0.5 && canPerformAction() {
+                            print("[ContinuousUpgradeButton] ✅ Quick tap - ONE upgrade")
+                            action()
+                            HapticManager.selection()
+                        } else {
+                            print("[ContinuousUpgradeButton] ⏹️  Long hold released - stopping")
+                        }
+                        
+                        isHolding = false
+                        holdStartTime = nil
+                    }
+            )
+            .opacity(canPerformAction() ? 1.0 : 0.5)
+    }
+
+    private func startContinuousUpgrade() {
+        print("[ContinuousUpgradeButton] 🔄 Starting continuous upgrade timer (every 0.15s)")
+        // Start timer for continuous upgrades (every 0.15 seconds = ~7 per second)
+        upgradeTimer = Timer.scheduledTimer(withTimeInterval: 0.15, repeats: true) { timer in
+            // Check if we can still afford the upgrade
+            if canPerformAction() && isHolding {
+                print("[ContinuousUpgradeButton] ⚡ Upgrade tick")
+                action()
+            } else {
+                print("[ContinuousUpgradeButton] ⏹️  Stopping continuous (can't afford: \(!canPerformAction()) or not holding: \(!isHolding))")
+                stopContinuousUpgrade()
+            }
+        }
+    }
+
+    private func stopContinuousUpgrade() {
+        print("[ContinuousUpgradeButton] 🛑 Stop continuous upgrade - invalidating timer")
+        upgradeTimer?.invalidate()
+        upgradeTimer = nil
+        isHolding = false  // Ensure holding state is reset
+    }
+}
+
+// MARK: - Node Card View
+
 struct NodeCardView: View {
     let title: String
     let subtitle: String
@@ -61,7 +145,7 @@ struct NodeCardView: View {
             }
 
             // Upgrade button
-            Button(action: onUpgrade) {
+            ContinuousUpgradeButton(action: onUpgrade, canPerformAction: { canAfford }) {
                 HStack {
                     Image(systemName: "arrow.up.circle.fill")
                     Text("UPGRADE")
@@ -70,7 +154,6 @@ struct NodeCardView: View {
                 }
                 .terminalButton(isEnabled: canAfford)
             }
-            .disabled(!canAfford)
         }
         .terminalCard(borderColor: accentColor)
     }
@@ -161,7 +244,7 @@ struct SourceCardView: View {
                                 .background(Color.neonGreen.opacity(0.8))
                                 .cornerRadius(2)
                         } else {
-                            Button(action: onUpgrade) {
+                            ContinuousUpgradeButton(action: onUpgrade, canPerformAction: { credits >= source.upgradeCost }) {
                                 HStack(spacing: 8) {
                                     Text("+\(outputGain.formatted)")
                                         .font(.terminalSmall)
@@ -176,7 +259,6 @@ struct SourceCardView: View {
                                 .background(credits >= source.upgradeCost ? Color.neonGreen : Color.terminalGray.opacity(0.3))
                                 .cornerRadius(2)
                             }
-                            .disabled(credits < source.upgradeCost)
                         }
                     }
                 } else {
@@ -203,7 +285,7 @@ struct SourceCardView: View {
                                 .background(Color.neonGreen.opacity(0.8))
                                 .cornerRadius(2)
                         } else {
-                            Button(action: onUpgrade) {
+                            ContinuousUpgradeButton(action: onUpgrade, canPerformAction: { credits >= source.upgradeCost }) {
                                 HStack(spacing: 4) {
                                     Text("+\(outputGain.formatted)")
                                         .font(.terminalSmall)
@@ -216,7 +298,6 @@ struct SourceCardView: View {
                                 .background(credits >= source.upgradeCost ? Color.neonGreen : Color.terminalGray.opacity(0.3))
                                 .cornerRadius(2)
                             }
-                            .disabled(credits < source.upgradeCost)
                         }
                     }
                 }
@@ -371,7 +452,7 @@ struct LinkCardView: View {
                                 .background(Color.neonCyan.opacity(0.8))
                                 .cornerRadius(2)
                         } else {
-                            Button(action: onUpgrade) {
+                            ContinuousUpgradeButton(action: onUpgrade, canPerformAction: { credits >= link.upgradeCost }) {
                                 HStack(spacing: 8) {
                                     Text("+\(bandwidthGain.formatted)")
                                         .font(.terminalSmall)
@@ -386,7 +467,6 @@ struct LinkCardView: View {
                                 .background(credits >= link.upgradeCost ? Color.neonCyan : Color.terminalGray.opacity(0.3))
                                 .cornerRadius(2)
                             }
-                            .disabled(credits < link.upgradeCost)
                         }
                     }
                 } else {
@@ -439,7 +519,7 @@ struct LinkCardView: View {
                                     .background(Color.neonCyan.opacity(0.8))
                                     .cornerRadius(2)
                             } else {
-                                Button(action: onUpgrade) {
+                                ContinuousUpgradeButton(action: onUpgrade, canPerformAction: { credits >= link.upgradeCost }) {
                                     HStack(spacing: 4) {
                                         Text("+\(bandwidthGain.formatted)")
                                             .font(.terminalSmall)
@@ -452,7 +532,6 @@ struct LinkCardView: View {
                                     .background(credits >= link.upgradeCost ? Color.neonCyan : Color.terminalGray.opacity(0.3))
                                     .cornerRadius(2)
                                 }
-                                .disabled(credits < link.upgradeCost)
                             }
                         }
 
@@ -609,7 +688,7 @@ struct SinkCardView: View {
                                 .background(Color.neonAmber.opacity(0.8))
                                 .cornerRadius(2)
                         } else {
-                            Button(action: onUpgrade) {
+                            ContinuousUpgradeButton(action: onUpgrade, canPerformAction: { credits >= sink.upgradeCost }) {
                                 HStack(spacing: 8) {
                                     Text("+\(processingGain.formatted)")
                                         .font(.terminalSmall)
@@ -624,7 +703,6 @@ struct SinkCardView: View {
                                 .background(credits >= sink.upgradeCost ? Color.neonAmber : Color.terminalGray.opacity(0.3))
                                 .cornerRadius(2)
                             }
-                            .disabled(credits < sink.upgradeCost)
                         }
                     }
                 } else {
@@ -673,7 +751,7 @@ struct SinkCardView: View {
                                 .background(Color.neonAmber.opacity(0.8))
                                 .cornerRadius(2)
                         } else {
-                            Button(action: onUpgrade) {
+                            ContinuousUpgradeButton(action: onUpgrade, canPerformAction: { credits >= sink.upgradeCost }) {
                                 HStack(spacing: 4) {
                                     Text("+\(processingGain.formatted)")
                                         .font(.terminalSmall)
@@ -686,7 +764,6 @@ struct SinkCardView: View {
                                 .background(credits >= sink.upgradeCost ? Color.neonAmber : Color.terminalGray.opacity(0.3))
                                 .cornerRadius(2)
                             }
-                            .disabled(credits < sink.upgradeCost)
                         }
                     }
                 }

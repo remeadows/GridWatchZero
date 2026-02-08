@@ -166,22 +166,22 @@ struct DossierCardView: View {
 
     var body: some View {
         VStack(spacing: 8) {
-            // Portrait
+            // Portrait - LARGER for better visibility
             ZStack {
                 RoundedRectangle(cornerRadius: 8)
                     .fill(Color.terminalDarkGray)
-                    .frame(height: 120)
+                    .frame(height: 180)
 
                 if isUnlocked {
                     if let imageName = dossier.imageName {
                         Image(imageName)
                             .resizable()
                             .aspectRatio(contentMode: .fill)
-                            .frame(height: 120)
+                            .frame(height: 180)
                             .clipShape(RoundedRectangle(cornerRadius: 8))
                     } else {
                         Image(systemName: "person.fill")
-                            .font(.system(size: 40))
+                            .font(.system(size: 60))
                             .foregroundColor(themeColor)
                     }
 
@@ -302,60 +302,70 @@ struct DossierDetailView: View {
     }
 
     private var headerSection: some View {
-        VStack(spacing: 16) {
-            // Portrait
-            ZStack {
+        VStack(spacing: 0) {
+            // Portrait - full-width banner
+            ZStack(alignment: .bottom) {
+                Rectangle()
+                    .fill(Color.terminalDarkGray)
+
                 if let imageName = dossier.imageName {
                     Image(imageName)
                         .resizable()
                         .aspectRatio(contentMode: .fill)
-                        .frame(width: isIPad ? 200 : 150, height: isIPad ? 200 : 150)
-                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                        .frame(maxWidth: .infinity)
+                        .frame(height: isIPad ? 420 : 360, alignment: .top)
+                        .clipped()
                 } else {
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(Color.terminalDarkGray)
-                        .frame(width: isIPad ? 200 : 150, height: isIPad ? 200 : 150)
-
                     Image(systemName: "person.fill")
-                        .font(.system(size: isIPad ? 60 : 50))
+                        .font(.system(size: isIPad ? 120 : 100))
                         .foregroundColor(themeColor)
                 }
+
+                // Bottom edge glow
+                Rectangle()
+                    .fill(themeColor.opacity(0.8))
+                    .frame(height: isIPad ? 4 : 3)
+                    .shadow(color: themeColor.opacity(0.6), radius: isIPad ? 15 : 12)
             }
-            .overlay(
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(themeColor, lineWidth: 2)
-            )
-            .shadow(color: themeColor.opacity(0.5), radius: 10)
-            .padding(.top, 60)
+            .frame(maxWidth: .infinity)
+            .frame(height: isIPad ? 420 : 360)
+            .clipped()
 
-            // Name and classification
+            // Name and classification below the image
             VStack(spacing: 4) {
-                Text(dossier.codename)
-                    .font(isIPad ? .system(size: 36, weight: .bold, design: .monospaced) : .terminalLarge)
-                    .foregroundColor(themeColor)
+                HStack {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(dossier.codename)
+                            .font(isIPad ? .system(size: 36, weight: .bold, design: .monospaced) : .terminalLarge)
+                            .foregroundColor(themeColor)
 
-                Text(dossier.classification)
-                    .font(.terminalSmall)
+                        Text(dossier.classification)
+                            .font(.terminalSmall)
+                            .foregroundColor(.terminalGray)
+                    }
+
+                    Spacer()
+
+                    // Faction badge
+                    Text(dossier.faction.rawValue)
+                        .font(.terminalMicro)
+                        .foregroundColor(.terminalBlack)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 4)
+                        .background(Color.tierColor(named: dossier.faction.color))
+                        .cornerRadius(4)
+                }
+                .padding(.horizontal, isIPad ? 60 : 24)
+                .padding(.top, isIPad ? 16 : 12)
+
+                // Visual description
+                Text(dossier.visualDescription)
+                    .font(.terminalBody)
                     .foregroundColor(.terminalGray)
-
-                // Faction badge
-                Text(dossier.faction.rawValue)
-                    .font(.terminalMicro)
-                    .foregroundColor(.terminalBlack)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 4)
-                    .background(Color.tierColor(named: dossier.faction.color))
-                    .cornerRadius(4)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, isIPad ? 60 : 24)
                     .padding(.top, 8)
             }
-
-            // Visual description
-            Text(dossier.visualDescription)
-                .font(.terminalBody)
-                .foregroundColor(.terminalGray)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, isIPad ? 60 : 24)
-                .padding(.top, 8)
         }
     }
 

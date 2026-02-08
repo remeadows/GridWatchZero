@@ -34,7 +34,7 @@ No partial work, no “quick fixes,” no drive-by edits.
 
 ```bash
 # Open the Xcode project
-open "/Users/russmeadows/Dev/Games/GridWatchZero/GridWatchZero.xcodeproj"
+open "/Users/russmeadows/Dev/Games/WarSignalLabs/GridWatchZero/GridWatchZero.xcodeproj"
 ```
 
 ## Documentation Index

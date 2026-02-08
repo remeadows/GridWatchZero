@@ -8,6 +8,7 @@ struct SettingsView: View {
     @StateObject private var audioSettings = AudioSettingsManager.shared
     @EnvironmentObject var cloudManager: CloudSaveManager
     @EnvironmentObject var campaignState: CampaignState
+    @EnvironmentObject var engine: GameEngine
     @Environment(\.dismiss) private var dismiss
     
     @State private var showingCloudDiagnostics = false
@@ -166,6 +167,105 @@ struct SettingsView: View {
                                 .frame(maxWidth: .infinity, alignment: .leading)
                                 .padding(.leading, 4)
                         }
+                        
+                        #if DEBUG
+                        // Balance Testing Section (DEBUG ONLY)
+                        SettingsSection(title: "🔧 BALANCE TESTING", icon: "slider.horizontal.3") {
+                            VStack(alignment: .leading, spacing: 12) {
+                                // Current Multiplier Display
+                                HStack {
+                                    Text("Credit Multiplier:")
+                                        .font(.terminalBody)
+                                        .foregroundColor(.white)
+                                    Spacer()
+                                    Text(String(format: "%.1f×", engine.debugCreditMultiplier))
+                                        .font(.terminalBody)
+                                        .foregroundColor(.neonCyan)
+                                        .monospacedDigit()
+                                }
+                                
+                                Divider().background(Color.terminalGray.opacity(0.3))
+                                
+                                // Multiplier Buttons
+                                VStack(spacing: 8) {
+                                    Button(action: {
+                                        engine.debugCreditMultiplier = 1.0
+                                        HapticManager.selection()
+                                    }) {
+                                        HStack {
+                                            Image(systemName: "equal.circle.fill")
+                                                .foregroundColor(.terminalGray)
+                                            Text("1.0× (Baseline)")
+                                                .font(.terminalBody)
+                                                .foregroundColor(.terminalGray)
+                                            Spacer()
+                                            if engine.debugCreditMultiplier == 1.0 {
+                                                Image(systemName: "checkmark")
+                                                    .foregroundColor(.neonGreen)
+                                                    .font(.caption)
+                                            }
+                                        }
+                                        .padding(.vertical, 8)
+                                    }
+                                    
+                                    Button(action: {
+                                        engine.debugCreditMultiplier = 1.5
+                                        HapticManager.selection()
+                                    }) {
+                                        HStack {
+                                            Image(systemName: "play.circle.fill")
+                                                .foregroundColor(.neonAmber)
+                                            Text("1.5× (Ad Boost)")
+                                                .font(.terminalBody)
+                                                .foregroundColor(.neonAmber)
+                                            Spacer()
+                                            if engine.debugCreditMultiplier == 1.5 {
+                                                Image(systemName: "checkmark")
+                                                    .foregroundColor(.neonGreen)
+                                                    .font(.caption)
+                                            }
+                                        }
+                                        .padding(.vertical, 8)
+                                    }
+                                    
+                                    Button(action: {
+                                        engine.debugCreditMultiplier = 2.0
+                                        HapticManager.selection()
+                                    }) {
+                                        HStack {
+                                            Image(systemName: "star.circle.fill")
+                                                .foregroundColor(.neonCyan)
+                                            Text("2.0× (Pro)")
+                                                .font(.terminalBody)
+                                                .foregroundColor(.neonCyan)
+                                            Spacer()
+                                            if engine.debugCreditMultiplier == 2.0 {
+                                                Image(systemName: "checkmark")
+                                                    .foregroundColor(.neonGreen)
+                                                    .font(.caption)
+                                            }
+                                        }
+                                        .padding(.vertical, 8)
+                                    }
+                                }
+                                
+                                Divider().background(Color.terminalGray.opacity(0.3))
+                                
+                                // Warning Text
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text("⚠️ DEBUG MODE ONLY")
+                                        .font(.terminalMicro)
+                                        .foregroundColor(.neonAmber)
+                                    Text("Testing monetization balance. See design/BALANCE_PLAYTEST_GUIDE.md")
+                                        .font(.terminalMicro)
+                                        .foregroundColor(.terminalGray)
+                                    Text("Remove before production release.")
+                                        .font(.terminalMicro)
+                                        .foregroundColor(.neonRed)
+                                }
+                            }
+                        }
+                        #endif
 
                         Spacer(minLength: 40)
                     }
@@ -351,4 +451,7 @@ struct VolumeSlider: View {
 
 #Preview {
     SettingsView()
+        .environmentObject(CloudSaveManager.shared)
+        .environmentObject(CampaignState())
+        .environmentObject(GameEngine())
 }

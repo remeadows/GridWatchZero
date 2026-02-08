@@ -255,6 +255,16 @@ final class GameEngine: ObservableObject {
     private var sourceMultiplier: Double = 1.0
     private var bandwidthMultiplier: Double = 1.0
     private var creditMultiplier: Double = 1.0
+    
+    // MARK: - Debug Multiplier (for balance testing)
+    
+    /// DEBUG ONLY: Temporary multiplier for playtesting monetization balance
+    /// Set to 2.0 to test "Grid Watch Pro" permanent multiplier
+    /// Set to 1.5 to test rewarded ad temporary boost
+    /// IMPORTANT: Remove before production release
+    #if DEBUG
+    @Published var debugCreditMultiplier: Double = 1.0
+    #endif
 
     // MARK: - Temporary Debuffs (from attacks)
 
@@ -481,7 +491,12 @@ final class GameEngine: ObservableObject {
         // Step 6: Sink processes its buffer and generates credits (apply event + prestige + engagement + cert multipliers)
         let baseCredits = sink.process()
         let engagementBonus = EngagementManager.shared.activeMultiplier
-        let credits = baseCredits * creditMultiplier * prestigeState.creditMultiplier * engagementBonus * certMultiplier
+        #if DEBUG
+        let debugMultiplier = debugCreditMultiplier
+        #else
+        let debugMultiplier = 1.0
+        #endif
+        let credits = baseCredits * creditMultiplier * prestigeState.creditMultiplier * engagementBonus * certMultiplier * debugMultiplier
         stats.creditsEarned = credits
         resources.addCredits(credits)
         resources.totalDataProcessed += transferred
@@ -587,8 +602,9 @@ final class GameEngine: ObservableObject {
             // This creates diminishing returns rather than simple addition
             let afterNetDefense = 1.0 - netDefenseReduction
             let totalReduction = netDefenseReduction + (afterNetDefense * min(0.65, stackReduction))
-            // Cap total reduction at 85% to prevent complete immunity
-            let cappedReduction = min(0.85, totalReduction)
+            // Cap total reduction at 90% for T8+ to help with late game (ISSUE-033)
+            // Increased from 85% to 90% to make Levels 9-20 more survivable
+            let cappedReduction = min(0.90, totalReduction)
             damage.creditDrain *= (1.0 - cappedReduction)
             damage.bandwidthReduction *= (1.0 - cappedReduction)
 
@@ -1173,6 +1189,9 @@ final class GameEngine: ObservableObject {
     // MARK: - Persistence
 
     private func saveGame() {
+        print("[GameEngine] ⚠️ saveGame() CALLED at \(Date())")
+        print("[GameEngine] Current state: \(resources.credits.formatted) credits, tick \(currentTick)")
+        
         let state = GameState(
             resources: resources,
             source: source,
@@ -1192,16 +1211,57 @@ final class GameEngine: ObservableObject {
             criticalAlarmAcknowledged: criticalAlarmAcknowledged
         )
 
-        if let data = try? JSONEncoder().encode(state) {
+        do {
+            let data = try JSONEncoder().encode(state)
+            print("[GameEngine] ✅ State encoded successfully, size: \(data.count) bytes")
+            
             UserDefaults.standard.set(data, forKey: saveKey)
+            print("[GameEngine] ✅ Data written to UserDefaults with key: \(saveKey)")
+            
+            // Force immediate write to disk (deprecated but ensures persistence when backgrounding)
+            UserDefaults.standard.synchronize()
+            print("[GameEngine] ✅ synchronize() called")
+            
+            // VERIFY the save worked immediately
+            if let verifyData = UserDefaults.standard.data(forKey: saveKey) {
+                print("[GameEngine] ✅ VERIFIED: Data exists in UserDefaults (\(verifyData.count) bytes)")
+                
+                // Try to decode it to ensure it's valid
+                if let verifyState = try? JSONDecoder().decode(GameState.self, from: verifyData) {
+                    print("[GameEngine] ✅ VERIFIED: Data is decodable, credits=\(verifyState.resources.credits.formatted)")
+                } else {
+                    print("[GameEngine] ❌ WARNING: Data exists but cannot be decoded!")
+                }
+            } else {
+                print("[GameEngine] ❌ CRITICAL: Data NOT found in UserDefaults after save!")
+            }
+            
+            print("[GameEngine] ✅ Save completed at \(Date()): \(resources.credits.formatted) credits, tick \(currentTick)")
+        } catch {
+            print("[GameEngine] ❌ CRITICAL: Save failed during encoding - \(error)")
+            print("[GameEngine] ❌ Error details: \(error.localizedDescription)")
         }
     }
 
     private func loadGame() {
+        print("[GameEngine] ⚠️ loadGame() CALLED at \(Date())")
+        print("[GameEngine] Checking for save data with key: \(saveKey)")
+        
+        // Check if raw data exists first
+        if let rawData = UserDefaults.standard.data(forKey: saveKey) {
+            print("[GameEngine] ✅ Raw save data found: \(rawData.count) bytes")
+        } else {
+            print("[GameEngine] ❌ No raw data found in UserDefaults")
+        }
+        
         // Use migration manager to load (handles old versions automatically)
         guard let state = SaveMigrationManager.loadAndMigrate() else {
+            print("[GameEngine] ❌ No save data found - starting new game")
             return
         }
+
+        print("[GameEngine] ✅ Loading save: \(state.resources.credits.formatted) credits, tick \(state.currentTick)")
+        print("[GameEngine] Save timestamp: \(state.lastSaveTimestamp?.formatted() ?? "none")")
 
         resources = state.resources
         source = state.source
@@ -1209,7 +1269,7 @@ final class GameEngine: ObservableObject {
         sink = state.sink
         firewall = state.firewall
         defenseStack = state.defenseStack
-        malusIntel = state.malusIntel
+        malusIntel = malusIntel
         currentTick = state.currentTick
         totalPlayTime = state.totalPlayTime
         threatState = state.threatState
@@ -1223,6 +1283,8 @@ final class GameEngine: ObservableObject {
         if let lastSave = state.lastSaveTimestamp {
             calculateOfflineProgress(since: lastSave)
         }
+        
+        print("[GameEngine] ✅ Load completed: \(resources.credits.formatted) credits")
     }
 
     /// Calculate and apply credits earned while player was away
@@ -1428,7 +1490,7 @@ final class GameEngine: ObservableObject {
 
         defenseStack.unlock(tier)
         emitEvent(.unitUnlocked(tier.displayName))
-        AudioManager.shared.playSound(.upgrade)
+        AudioManager.shared.playSound(.equip)  // Play equip sound when unlocking new defense
         saveGame()
         return true
     }
@@ -1439,7 +1501,7 @@ final class GameEngine: ObservableObject {
 
         defenseStack.deploy(tier)
         emitEvent(.milestone("Deployed: \(tier.displayName)"))
-        AudioManager.shared.playSound(.upgrade)
+        AudioManager.shared.playSound(.equip)  // Play equip sound when deploying defense
         TutorialManager.shared.recordAction(.deployedDefenseApp)
         recordDefenseDeployed()
         saveGame()
@@ -1698,7 +1760,10 @@ final class GameEngine: ObservableObject {
 
     /// Save a checkpoint of the current campaign level progress
     func saveCampaignCheckpoint() {
-        guard let config = levelConfiguration else { return }
+        guard let config = levelConfiguration else {
+            print("[GameEngine] ❌ Cannot save checkpoint - no level configuration")
+            return
+        }
 
         let checkpoint = LevelCheckpoint(
             levelId: config.level.id,
@@ -1725,10 +1790,17 @@ final class GameEngine: ObservableObject {
             unlockedUnits: unlockState.unlockedUnitIds
         )
 
+        print("[GameEngine] ✅ CHECKPOINT SAVED:")
+        print("  - Level ID: \(checkpoint.levelId), Insane: \(checkpoint.isInsane)")
+        print("  - Credits: \(checkpoint.credits), Ticks: \(checkpoint.ticksElapsed)")
+        print("  - Saved at: \(checkpoint.savedAt)")
+
         // Save checkpoint to campaign progress
         var progress = CampaignSaveManager.shared.load()
         progress.activeCheckpoint = checkpoint
         CampaignSaveManager.shared.save(progress)
+
+        print("[GameEngine] ✅ Checkpoint persisted to disk via CampaignSaveManager")
     }
 
     /// Clear the active campaign checkpoint (called on level complete/fail/abandon)

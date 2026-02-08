@@ -216,25 +216,48 @@ class CampaignSaveManager {
     // MARK: - Save/Load
 
     func save(_ progress: CampaignProgress) {
+        print("[CampaignSaveManager] ⚠️ save() CALLED at \(Date())")
+        print("[CampaignSaveManager] Completed levels: \(progress.completedLevels.count)")
+        
         do {
             let data = try JSONEncoder().encode(progress)
+            print("[CampaignSaveManager] ✅ Progress encoded, size: \(data.count) bytes")
+            
             UserDefaults.standard.set(data, forKey: progressKey)
+            print("[CampaignSaveManager] ✅ Data written to UserDefaults with key: \(progressKey)")
+            
             // Force immediate write to disk (deprecated but ensures persistence)
             UserDefaults.standard.synchronize()
+            print("[CampaignSaveManager] ✅ synchronize() called")
+            
+            // VERIFY the save worked
+            if let verifyData = UserDefaults.standard.data(forKey: progressKey) {
+                print("[CampaignSaveManager] ✅ VERIFIED: Data exists (\(verifyData.count) bytes)")
+            } else {
+                print("[CampaignSaveManager] ❌ CRITICAL: Data NOT in UserDefaults after save!")
+            }
         } catch {
-            print("Failed to save campaign progress: \(error)")
+            print("[CampaignSaveManager] ❌ CRITICAL: Save failed - \(error)")
         }
     }
 
     func load() -> CampaignProgress {
+        print("[CampaignSaveManager] ⚠️ load() CALLED at \(Date())")
+        print("[CampaignSaveManager] Checking for key: \(progressKey)")
+        
         guard let data = UserDefaults.standard.data(forKey: progressKey) else {
+            print("[CampaignSaveManager] ❌ No save data found - returning new CampaignProgress")
             return CampaignProgress()
         }
 
+        print("[CampaignSaveManager] ✅ Raw data found: \(data.count) bytes")
+        
         do {
-            return try JSONDecoder().decode(CampaignProgress.self, from: data)
+            let progress = try JSONDecoder().decode(CampaignProgress.self, from: data)
+            print("[CampaignSaveManager] ✅ Progress loaded: \(progress.completedLevels.count) levels completed")
+            return progress
         } catch {
-            print("Failed to load campaign progress: \(error)")
+            print("[CampaignSaveManager] ❌ Failed to decode campaign progress: \(error)")
             return CampaignProgress()
         }
     }
@@ -265,6 +288,14 @@ class CampaignState: ObservableObject {
     init(database: LevelDatabase? = nil) {
         self.database = database ?? LevelDatabase.shared
         self.progress = CampaignSaveManager.shared.load()
+
+        print("[CampaignState] 🚀 INIT - Progress loaded from disk")
+        if let checkpoint = progress.activeCheckpoint {
+            print("[CampaignState] ✅ Checkpoint present: Level \(checkpoint.levelId), Insane: \(checkpoint.isInsane)")
+            print("[CampaignState]    Saved at: \(checkpoint.savedAt)")
+        } else {
+            print("[CampaignState] ❌ No checkpoint in loaded progress")
+        }
 
         // Set first play date if new
         if progress.firstPlayDate == nil {
@@ -385,10 +416,25 @@ class CampaignState: ObservableObject {
 
     /// Check if there's a valid checkpoint for a level
     func hasValidCheckpoint(for levelId: Int, isInsane: Bool) -> Bool {
-        guard let checkpoint = progress.activeCheckpoint else { return false }
-        return checkpoint.levelId == levelId &&
-               checkpoint.isInsane == isInsane &&
-               checkpoint.isValid
+        print("[CampaignState] 🔍 Checking for checkpoint: Level \(levelId), Insane: \(isInsane)")
+
+        guard let checkpoint = progress.activeCheckpoint else {
+            print("[CampaignState] ❌ No checkpoint found in progress.activeCheckpoint")
+            return false
+        }
+
+        print("[CampaignState] ✅ Checkpoint found:")
+        print("  - Checkpoint Level ID: \(checkpoint.levelId), Checkpoint Insane: \(checkpoint.isInsane)")
+        print("  - Saved at: \(checkpoint.savedAt)")
+        print("  - Is valid: \(checkpoint.isValid)")
+
+        let matches = checkpoint.levelId == levelId &&
+                     checkpoint.isInsane == isInsane &&
+                     checkpoint.isValid
+
+        print("[CampaignState] Result: \(matches ? "✅ MATCH - Show CONTINUE" : "❌ NO MATCH - Show START")")
+
+        return matches
     }
 
     /// Get the active checkpoint if valid

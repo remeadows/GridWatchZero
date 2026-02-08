@@ -269,7 +269,7 @@ struct DefenseAppCard: View {
                                 .background(Color.neonGreen.opacity(0.8))
                                 .cornerRadius(2)
                         } else {
-                            Button(action: onUpgrade) {
+                            ContinuousUpgradeButton(action: onUpgrade, canPerformAction: { credits >= app.upgradeCost }) {
                                 HStack(spacing: 2) {
                                     Image(systemName: "arrow.up")
                                         .font(.system(size: 7))
@@ -282,7 +282,6 @@ struct DefenseAppCard: View {
                                 .background(credits >= app.upgradeCost ? Color.neonGreen : Color.terminalGray.opacity(0.3))
                                 .cornerRadius(2)
                             }
-                            .disabled(credits < app.upgradeCost)
                         }
                     }
 

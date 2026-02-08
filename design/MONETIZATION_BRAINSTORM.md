@@ -273,13 +273,195 @@ class AdManager: ObservableObject {
 
 ---
 
+## ✅ CHOSEN MODEL: Free with Tasteful Rewarded Ads + Pro Unlock
+
+**Decision Date**: 2026-02-06
+
+### Final Strategy
+
+**Base Game**: Completely free, fully playable without spending money
+**Rewarded Ads**: Optional bonuses via user-initiated video ads
+**Pro Unlock**: One-time IAP ($3.99-$4.99) for permanent benefits
+
+### Why This Model
+
+1. **Maximum Reach**: Free removes barrier to entry, gets game in front of tech audience
+2. **Preserves Aesthetic**: No banner ads or interstitials that break NOC dashboard immersion
+3. **Respects Players**: Ads are 100% optional, never interrupt gameplay
+4. **Revenue Potential**: Dual income streams (ads + Pro conversion)
+5. **Insane Mode Justification**: Permanent multipliers help with Insane mode, don't trivialize Normal mode
+
+---
+
+## 🎮 Balance Considerations: Multipliers & Game Progression
+
+### Core Concern
+**Risk**: Permanent 2x-3x multipliers could make players "burn through levels" too fast, reducing game longevity and making Normal mode too easy.
+
+**Mitigation**: Insane mode provides endgame challenge where multipliers become valuable rather than trivializing.
+
+### Multiplier Impact Analysis
+
+#### Normal Mode Progression (Without Multipliers)
+Based on GAMEPLAY.md and BALANCE.md:
+- Level 1: ~15-20 minutes (50K credits required)
+- Level 4: ~30-40 minutes (1M credits required)
+- Level 7: ~60-90 minutes (25M credits required)
+- Level 10: ~2-3 hours (200M credits required)
+- Level 20: ~8-12 hours (1T credits required)
+
+**Total Normal Mode Time**: ~25-35 hours to complete all 20 levels
+
+#### With 2x Multiplier (Pro Unlock)
+- Level 1: ~8-10 minutes (50% reduction)
+- Level 4: ~15-20 minutes
+- Level 7: ~30-45 minutes
+- Level 10: ~1-1.5 hours
+- Level 20: ~4-6 hours
+
+**Total Normal Mode Time with 2x**: ~12-18 hours
+
+#### With Temporary 2x Boost (Rewarded Ad)
+- 5-10 minute boost per ad watch
+- 30-60 minute cooldown between ads
+- Effectively ~20-30% time reduction if watched consistently
+- More "active" than passive Pro multiplier
+
+### Recommended Approach: Tiered Multiplier System
+
+**Option A: Conservative (Recommended)**
+- **Rewarded Ad**: 1.5x multiplier for 10 minutes (cooldown: 1 hour)
+- **Pro Unlock ($3.99)**: Permanent 2x multiplier
+- **Rationale**: 2x feels significant without trivializing, Insane mode still challenging
+
+**Option B: Aggressive**
+- **Rewarded Ad**: 2x multiplier for 10 minutes (cooldown: 30 min)
+- **Pro Unlock ($4.99)**: Permanent 3x multiplier
+- **Rationale**: Higher revenue, targets players who value time over challenge
+
+**Option C: Balanced (Alternative)**
+- **Rewarded Ad**: 2x multiplier for 5 minutes (cooldown: 45 min)
+- **Pro Basic ($2.99)**: Permanent 2x multiplier
+- **Pro Plus ($4.99)**: Permanent 2.5x multiplier + all cosmetics + early level access
+- **Rationale**: Multiple price tiers capture different willingness to pay
+
+### Balance Testing Protocol
+
+Before finalizing multiplier values, test:
+
+1. **Normal Mode Playtests** (with 2x multiplier):
+   - Can Level 1-7 be completed in <30 minutes total?
+   - Do players feel "progression satisfaction" or "it's too easy"?
+   - Does the multiplier make defense building feel optional?
+
+2. **Insane Mode Validation**:
+   - Is Insane mode still challenging with 2x/3x multipliers?
+   - Do multipliers feel like "quality of life" or "pay to win"?
+   - Are players motivated to replay Normal mode for better grades?
+
+3. **Engagement Metrics**:
+   - Average session length (too fast = burned out)
+   - Level completion times vs. expected times
+   - Retention rate after Level 7 (mid-game check)
+   - Insane mode adoption rate (should be >20% of completers)
+
+### Guardrails to Prevent "Burning Through Levels"
+
+**Design Solutions:**
+
+1. **Intel Report Requirements Unchanged**
+   - Multipliers affect CREDITS only, not intel collection rate
+   - Players still need to survive attacks, collect footprints, send reports
+   - This adds "time gate" that multipliers can't bypass
+
+2. **Defense Point Requirements**
+   - Multipliers don't affect defense point accumulation speed
+   - Players still need to grind defense apps, which have separate upgrade costs
+   - Keeps strategic depth even with credit multipliers
+
+3. **Campaign Level Gates**
+   - Keep strict tier unlock requirements (must beat Level 6 to access Level 7)
+   - Prevent players from "skipping ahead" with credits
+   - Forces engagement with each level's story/challenges
+
+4. **Achievement/Grade System**
+   - S/A/B/C grades based on time-to-completion
+   - Multipliers make it HARDER to get S-rank (faster credits = faster threat escalation)
+   - Provides replay incentive for "perfect runs"
+
+5. **Insane Mode as Endgame**
+   - Insane mode is where multipliers truly shine
+   - Doubles as "New Game+" content
+   - Positions Pro unlock as "supporting future content" not "easy mode"
+
+### Ad Frequency Limits (Anti-Abuse)
+
+To prevent "ad spam" ruining balance:
+- Maximum 3 ad boosts per hour (even with fast cooldowns)
+- Ad boost doesn't stack with Pro multiplier (pick highest)
+- Ad boost disabled during Insane mode (preserve difficulty)
+- Cooldown persists across app restarts (server timestamp validation if possible)
+
+---
+
+## Implementation Notes
+
+### Pro Unlock Benefits (Finalized)
+
+**"Grid Watch Pro" IAP - $3.99**
+- ✅ Permanent 2x credit multiplier
+- ✅ Remove all ad prompts (no rewarded ad UI shown)
+- ✅ Exclusive "Pro Operator" dashboard theme
+- ✅ Support developer badge (visible in profile)
+- ✅ Early access to new campaign levels (if released as updates)
+
+### Rewarded Ad Benefits (Finalized)
+
+**Watch Video Ad (15-30 seconds)**
+- ✅ 1.5x credit multiplier for 10 minutes
+- ✅ Cooldown: 1 hour between ads
+- ✅ Maximum 3 ads per hour (abuse prevention)
+- ✅ UI shows cooldown timer, doesn't spam prompts
+- ✅ Ad UI hidden in Insane mode (preserve challenge)
+
+### UI Placement (Non-Intrusive)
+
+**Rewarded Ad Button Location:**
+```
+Option 1: Stats Header (Compact)
+┌─────────────────────────────────────┐
+│  ₵125,430  │  📊 +2.5K/tick  │ [🎬] │
+└─────────────────────────────────────┘
+                                  ↑
+                          Tap for boost info
+```
+
+**Option 2: Dashboard Card (Clear)**
+```
+┌─────────────────────────────────────┐
+│  BOOST AVAILABLE                    │
+│  Watch ad for 1.5× credits (10 min) │
+│  [Watch Video]   Next: 45:23        │
+└─────────────────────────────────────┘
+```
+
+**Pro Unlock Placement:**
+- Settings → "Upgrade to Pro" section (not spammy)
+- One-time banner at Level 7 completion (50% campaign point)
+- Player Profile → "Support Developer" link
+
+---
+
 ## Open Questions
 
-- [ ] What price point feels right for "Grid Watch Pro"? ($2.99? $3.99? $4.99?)
-- [ ] Should cosmetics be separate purchases or bundled with Pro?
-- [ ] How aggressive should ad prompts be? (Never interrupt gameplay)
-- [ ] Should there be a "tip jar" for players who want to support more?
-- [ ] Consider regional pricing for different markets?
+- [x] **Multiplier value**: 2x for Pro, 1.5x for ads (DECIDED)
+- [x] **Price point**: $3.99 for Pro (DECIDED - target tech audience)
+- [ ] Should cosmetics be separate purchases or bundled with Pro? (Bundled - simpler)
+- [x] **Ad frequency**: 10 min boost, 1 hour cooldown, 3/hour max (DECIDED)
+- [ ] Should there be a "tip jar" for players who want to support more? (Maybe Pro Plus tier)
+- [ ] Consider regional pricing for different markets? (Yes - Apple handles automatically)
+- [ ] **CRITICAL**: Playtest with 2x multiplier - does it trivialize Normal mode? (TODO)
+- [ ] **CRITICAL**: Validate Insane mode is still challenging with multipliers (TODO)
 
 ---
 

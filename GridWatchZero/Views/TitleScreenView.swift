@@ -58,6 +58,14 @@ struct TitleScreenView: View {
         }
         .onAppear {
             startAnimations()
+            // Music already started during brand intro fade-out
+            // Just ensure it's playing (in case we came from elsewhere)
+            if !AmbientAudioManager.shared.isAmbientPlaying {
+                AmbientAudioManager.shared.startAmbient()
+                print("[TitleScreen] 🎵 Background music started")
+            } else {
+                print("[TitleScreen] 🎵 Background music already playing (from intro)")
+            }
         }
     }
 

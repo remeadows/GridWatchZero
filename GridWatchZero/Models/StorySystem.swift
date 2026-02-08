@@ -43,13 +43,13 @@ enum StoryCharacter: String, Codable, CaseIterable {
 
     var role: String {
         switch self {
-        case .rusty: return "Team Lead / Handler"
+        case .rusty: return "Handler / Engineer"
         case .tish: return "Hacker / Intel"
         case .flex: return "Field Operative"
         case .malus: return "The Adversary"
         case .helix: return "The Light"
         case .system: return "Mission Control"
-        case .ronin: return "Veteran Hunter"
+        case .ronin: return "Team Lead / Veteran Hunter"
         case .tee: return "Hardware Specialist"
         case .vexis: return "The Infiltrator"
         case .kron: return "The Warden"
@@ -63,7 +63,7 @@ enum StoryCharacter: String, Codable, CaseIterable {
         switch self {
         case .rusty: return "Rusty"
         case .tish: return "Tish"
-        case .flex: return "FL3X"
+        case .flex: return "FL3X_v1"
         case .malus: return "Malus"
         case .helix: return "Helix_Portrait"
         case .system: return nil
