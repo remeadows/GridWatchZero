@@ -269,6 +269,7 @@ final class GameEngine: ObservableObject {
     // MARK: - Temporary Debuffs (from attacks)
 
     private var bandwidthDebuff: Double = 0  // 0.0 - 1.0 reduction
+    private var processingDebuff: Double = 0  // 0.0 - 1.0 sink processing reduction
 
     // MARK: - Cumulative Stats
 
@@ -496,7 +497,7 @@ final class GameEngine: ObservableObject {
         #else
         let debugMultiplier = 1.0
         #endif
-        let credits = baseCredits * creditMultiplier * prestigeState.creditMultiplier * engagementBonus * certMultiplier * debugMultiplier
+        let credits = baseCredits * creditMultiplier * prestigeState.creditMultiplier * engagementBonus * certMultiplier * debugMultiplier * (1.0 - processingDebuff)
         stats.creditsEarned = credits
         resources.addCredits(credits)
         resources.totalDataProcessed += transferred
@@ -592,6 +593,7 @@ final class GameEngine: ObservableObject {
             damage.creditDrain *= damageMultiplier
             damage.bandwidthReduction = min(1.0, damage.bandwidthReduction * damageMultiplier)
             damage.nodeDisableChance = min(1.0, damage.nodeDisableChance * damageMultiplier)
+            damage.processingReduction = min(1.0, damage.processingReduction * damageMultiplier)
 
             // Defense reduces DAMAGE (not attack frequency)
             // 1. NetDefenseLevel provides base damage reduction (8% per level, up to 72%)
@@ -614,6 +616,9 @@ final class GameEngine: ObservableObject {
                 let remainingDamage = fw.absorbDamage(creditDamage)
                 stats.damageAbsorbed = creditDamage - remainingDamage
                 damage.creditDrain = remainingDamage
+
+                // Write absorbed damage back to attack for stats and intel tracking
+                attack.blocked += stats.damageAbsorbed
 
                 // Check if firewall was destroyed
                 if fw.isDestroyed && firewall?.isDestroyed != true {
@@ -642,6 +647,9 @@ final class GameEngine: ObservableObject {
             // Sprint B: Network packet loss protection reduces bandwidth debuff
             let packetLossProtection = defenseStack.totalPacketLossProtection
             bandwidthDebuff = damage.bandwidthReduction * (1.0 - packetLossProtection)
+
+            // Apply processing reduction (reduces sink credit output during attacks)
+            processingDebuff = damage.processingReduction * (1.0 - cappedReduction)
 
             // Check for node disable
             if damage.nodeDisableChance > 0 {
@@ -691,10 +699,12 @@ final class GameEngine: ObservableObject {
                 collectMalusFootprint(attack)
                 activeAttack = nil
                 bandwidthDebuff = 0
+                processingDebuff = 0
             }
         } else {
             // No active attack - check for new attack
             bandwidthDebuff = 0
+            processingDebuff = 0
 
             // ISSUE-020: Attack grace period — suppress new attacks early in level
             // Gives player time to earn credits and deploy initial defenses
@@ -1020,10 +1030,16 @@ final class GameEngine: ObservableObject {
 
     // MARK: - Unit Unlock/Purchase
 
-    /// Check if a unit can be unlocked (credits + tier gate)
+    /// Check if a unit can be unlocked (credits + tier gate + campaign tier cap)
     func canUnlock(_ unitInfo: UnitFactory.UnitInfo) -> Bool {
         guard !unlockState.isUnlocked(unitInfo.id) else { return false }
         guard resources.credits >= unitInfo.unlockCost else { return false }
+
+        // Campaign mode: enforce availableTiers cap for all unit types
+        if isInCampaignMode, let config = levelConfiguration {
+            let maxAllowedTier = config.level.availableTiers.max() ?? 1
+            guard unitInfo.tier.rawValue <= maxAllowedTier else { return false }
+        }
 
         // Tier gate: must have previous tier at max level
         guard isTierGateSatisfied(for: unitInfo) else { return false }
@@ -1269,7 +1285,7 @@ final class GameEngine: ObservableObject {
         sink = state.sink
         firewall = state.firewall
         defenseStack = state.defenseStack
-        malusIntel = malusIntel
+        malusIntel = state.malusIntel
         currentTick = state.currentTick
         totalPlayTime = state.totalPlayTime
         threatState = state.threatState
@@ -1404,11 +1420,15 @@ final class GameEngine: ObservableObject {
         activeRandomEvent = nil
         lastEvent = nil
         bandwidthDebuff = 0
+        processingDebuff = 0
         sourceMultiplier = 1.0
         bandwidthMultiplier = 1.0
         creditMultiplier = 1.0
         showCriticalAlarm = false
         criticalAlarmAcknowledged = false
+        activeEarlyWarning = nil
+        batchUploadState = nil
+        latencyBuffer = []
         UserDefaults.standard.removeObject(forKey: saveKey)
     }
 
@@ -1469,9 +1489,13 @@ final class GameEngine: ObservableObject {
         activeRandomEvent = nil
         lastEvent = nil
         bandwidthDebuff = 0
+        processingDebuff = 0
         sourceMultiplier = 1.0
         bandwidthMultiplier = 1.0
         creditMultiplier = 1.0
+        activeEarlyWarning = nil
+        batchUploadState = nil
+        latencyBuffer = []
 
         // Emit event
         emitEvent(.milestone("NETWORK WIPE COMPLETE - Helix Core +\(coresEarned)"))
@@ -1735,12 +1759,16 @@ final class GameEngine: ObservableObject {
         bandwidthMultiplier = 1.0
         creditMultiplier = config.incomeMultiplier  // Apply insane mode income penalty
         bandwidthDebuff = 0
+        processingDebuff = 0
 
         // Clear any active states
         activeAttack = nil
         activeRandomEvent = nil
         showCriticalAlarm = false
         criticalAlarmAcknowledged = false
+        activeEarlyWarning = nil
+        batchUploadState = nil
+        latencyBuffer = []
 
         // Start the level
         start()
@@ -1911,6 +1939,7 @@ final class GameEngine: ObservableObject {
         bandwidthMultiplier = 1.0
         creditMultiplier = config.incomeMultiplier
         bandwidthDebuff = 0
+        processingDebuff = 0
 
         // Clear active states
         activeAttack = nil
@@ -1944,14 +1973,19 @@ final class GameEngine: ObservableObject {
             return
         }
 
-        // Check victory conditions
+        // Check victory conditions (apply Insane mode multipliers to thresholds)
+        let creditsOverride = conditions.requiredCredits.map { $0 * config.creditRequirementMultiplier }
+        let reportsOverride = conditions.requiredReportsSent.map { Int(Double($0) * config.reportRequirementMultiplier) }
+
         if conditions.isSatisfied(
             defenseStack: defenseStack,
             riskLevel: threatState.effectiveRiskLevel,
             totalCredits: levelCreditsEarned,
             attacksSurvived: levelAttacksSurvived,
             reportsSent: malusIntel.reportsSent,
-            currentTick: currentTick - levelStartTick
+            currentTick: currentTick - levelStartTick,
+            creditOverride: creditsOverride,
+            reportOverride: reportsOverride
         ) {
             handleLevelComplete()
         }

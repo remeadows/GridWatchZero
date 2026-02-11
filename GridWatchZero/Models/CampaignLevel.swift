@@ -67,7 +67,9 @@ struct VictoryConditions: Codable {
         totalCredits: Double,
         attacksSurvived: Int,
         reportsSent: Int,
-        currentTick: Int
+        currentTick: Int,
+        creditOverride: Double? = nil,
+        reportOverride: Int? = nil
     ) -> Bool {
         // Check defense tier
         let highestTier = defenseStack.applications.values.map { $0.tier.tierNumber }.max() ?? 0
@@ -79,8 +81,9 @@ struct VictoryConditions: Codable {
         // Check risk level (lower is better)
         guard riskLevel.rawValue <= requiredRiskLevel.rawValue else { return false }
 
-        // Check optional credits
-        if let required = requiredCredits, totalCredits < required {
+        // Check optional credits (use override for Insane mode multiplied thresholds)
+        let effectiveCreditReq = creditOverride ?? requiredCredits
+        if let required = effectiveCreditReq, totalCredits < required {
             return false
         }
 
@@ -89,8 +92,9 @@ struct VictoryConditions: Codable {
             return false
         }
 
-        // Check intel reports sent (main objective - helping team stop Malus)
-        if let required = requiredReportsSent, reportsSent < required {
+        // Check intel reports sent (use override for Insane mode multiplied thresholds)
+        let effectiveReportReq = reportOverride ?? requiredReportsSent
+        if let required = effectiveReportReq, reportsSent < required {
             return false
         }
 

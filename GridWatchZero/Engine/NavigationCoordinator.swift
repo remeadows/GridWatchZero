@@ -586,8 +586,8 @@ struct GameplayContainerView: View {
         .alert("Exit Mission?", isPresented: $showExitConfirm) {
             Button("Cancel", role: .cancel) { }
             Button("Exit") {
-                // Auto-checkpoint will save progress (every 30 ticks)
-                // Just pause and exit - no manual save needed
+                // Force checkpoint save before exiting to prevent progress loss
+                gameEngine.saveCampaignCheckpoint()
                 gameEngine.pause()
                 onExit()
             }

@@ -125,12 +125,36 @@ extension TransportLink {
     /// Tier of this link based on base bandwidth
     var tier: NodeTier {
         switch baseBandwidth {
+        // Real-world tiers (T1-6)
         case 0..<10: return .tier1
         case 10..<30: return .tier2
         case 30..<80: return .tier3
         case 80..<200: return .tier4
         case 200..<500: return .tier5
-        default: return .tier6
+        case 500..<1_000: return .tier6
+        // Transcendence tiers (T7-10)
+        case 1_000..<2_000: return .tier7
+        case 2_000..<4_000: return .tier8
+        case 4_000..<8_000: return .tier9
+        case 8_000..<16_000: return .tier10
+        // Dimensional tiers (T11-15)
+        case 16_000..<32_000: return .tier11
+        case 32_000..<65_000: return .tier12
+        case 65_000..<130_000: return .tier13
+        case 130_000..<260_000: return .tier14
+        case 260_000..<520_000: return .tier15
+        // Cosmic tiers (T16-20)
+        case 520_000..<1_050_000: return .tier16
+        case 1_050_000..<2_100_000: return .tier17
+        case 2_100_000..<4_200_000: return .tier18
+        case 4_200_000..<8_400_000: return .tier19
+        case 8_400_000..<17_000_000: return .tier20
+        // Infinite tiers (T21-25)
+        case 17_000_000..<34_000_000: return .tier21
+        case 34_000_000..<68_000_000: return .tier22
+        case 68_000_000..<136_000_000: return .tier23
+        case 136_000_000..<272_000_000: return .tier24
+        default: return .tier25
         }
     }
 

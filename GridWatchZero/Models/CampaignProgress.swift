@@ -170,7 +170,7 @@ struct CampaignProgress: Codable {
     // MARK: - Next Level
 
     func nextUnlockedLevel(database: LevelDatabase) -> Int? {
-        for id in 1...7 {
+        for id in 1...20 {
             if !completedLevels.contains(id) && isLevelUnlocked(id, database: database) {
                 return id
             }
@@ -326,7 +326,7 @@ class CampaignState: ObservableObject {
         levelState = .victory(stats: stats)
 
         // Unlock next tier if available
-        if let nextTier = level.availableTiers.max(), nextTier + 1 <= 6 {
+        if let nextTier = level.availableTiers.max(), nextTier + 1 <= 25 {
             progress.unlockedTiers.insert(nextTier + 1)
         }
 
