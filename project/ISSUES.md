@@ -6,6 +6,26 @@
 
 ## 🔴 Critical (Blocks Gameplay)
 
+### ISSUE-036: Crash When Opening Settings from Campaign Hub
+**Status**: ✅ Fixed
+**Severity**: Critical - Crash
+**Reported**: 2026-02-11
+**Resolved**: 2026-02-11
+**Description**: App crashes when user taps Settings (gear icon) from the Campaign Hub. The crash is a SwiftUI fatal error: "No ObservedObject of type GameEngine found."
+
+**Root Cause**:
+`RootNavigationView` creates `gameEngine` as a `@StateObject` (line 315) but never injects it into the SwiftUI environment via `.environmentObject(gameEngine)`. HomeView and SettingsView both declare `@EnvironmentObject var engine: GameEngine`, so any access to `engine` properties crashes at runtime.
+
+**Fix**:
+Added `.environmentObject(gameEngine)` to the environment object chain in `RootNavigationView` (NavigationCoordinator.swift line 512).
+
+**Files Changed**:
+- `Engine/NavigationCoordinator.swift` - Added missing `.environmentObject(gameEngine)`
+
+**Build Status**: ✅ Build succeeded
+
+---
+
 ### ISSUE-033: Level 9 Impossible Difficulty - Attacks Drain Millions Per Hit
 **Status**: ✅ RESOLVED
 **Severity**: Critical - Game Breaking

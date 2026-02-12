@@ -509,6 +509,7 @@ struct RootNavigationView: View {
             }
         }
         .environmentObject(coordinator)
+        .environmentObject(gameEngine)
         .environmentObject(campaignState)
         .environmentObject(cloudManager)
         .animation(.easeInOut(duration: 0.3), value: coordinator.currentScreen)
