@@ -11,6 +11,7 @@ struct ScanlineOverlay: View {
                     context.fill(Path(rect), with: .color(.black.opacity(0.15)))
                 }
             }
+            .drawingGroup()  // Rasterize to Metal texture — avoids per-frame Canvas re-render
         }
     }
 }

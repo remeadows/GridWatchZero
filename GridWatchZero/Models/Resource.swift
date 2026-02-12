@@ -19,13 +19,16 @@ enum ResourceType: String, Codable, CaseIterable {
 
 /// A packet of data flowing through the network
 struct DataPacket: Identifiable, Codable {
-    let id: UUID
+    private static var nextId: Int = 0
+
+    let id: Int
     let type: ResourceType
     var amount: Double
     let createdAtTick: Int
 
     init(type: ResourceType, amount: Double, createdAtTick: Int) {
-        self.id = UUID()
+        self.id = DataPacket.nextId
+        DataPacket.nextId &+= 1
         self.type = type
         self.amount = amount
         self.createdAtTick = createdAtTick

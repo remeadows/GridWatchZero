@@ -252,6 +252,11 @@ final class GameEngine {
     // Sprint E: Link Latency Buffer (transient, not persisted)
     var latencyBuffer: [(amount: Double, ticksRemaining: Int)] = []
 
+    /// Total data buffered in the latency buffer (for view display)
+    var totalBufferedData: Double {
+        latencyBuffer.reduce(0.0) { $0 + $1.amount }
+    }
+
     // MARK: - Cached Defense Totals (recomputed each tick, not persisted)
 
     private(set) var cachedDefenseTotals = DefenseTotals()

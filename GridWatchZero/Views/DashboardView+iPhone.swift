@@ -105,7 +105,7 @@ extension DashboardView {
                             link: engine.link,
                             credits: engine.resources.credits,
                             onUpgrade: { _ = engine.upgradeLink() },
-                            bufferedData: engine.latencyBuffer.reduce(0.0) { $0 + $1.amount }
+                            bufferedData: engine.totalBufferedData
                         )
 
                         // DDoS attack overlay
