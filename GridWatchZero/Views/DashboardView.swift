@@ -5,7 +5,7 @@
 import SwiftUI
 
 struct DashboardView: View {
-    @EnvironmentObject var engine: GameEngine
+    @Environment(GameEngine.self) var engine
     @EnvironmentObject var cloudManager: CloudSaveManager
     @EnvironmentObject var campaignState: CampaignState
     @StateObject var tutorialManager = TutorialManager.shared
@@ -189,7 +189,7 @@ struct DashboardView: View {
         }
         .sheet(isPresented: $showingSettings) {
             SettingsView()
-                .environmentObject(engine)
+                .environment(engine)
                 .environmentObject(cloudManager)
                 .environmentObject(campaignState)
         }

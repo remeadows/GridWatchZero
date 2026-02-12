@@ -1052,6 +1052,15 @@ enum DefenseStatus: String, Codable {
 
 // MARK: - Defense Stack
 
+/// Cached defense totals computed once per tick for hot-path performance
+struct DefenseTotals {
+    var defensePoints: Double = 0
+    var riskReduction: Double = 0
+    var intelBonus: Double = 0
+    var automation: Double = 0
+    var intelMultiplier: Double = 1.0
+}
+
 /// Represents all deployed defense applications
 struct DefenseStack: Codable {
     /// Deployed applications by category
@@ -1125,6 +1134,20 @@ struct DefenseStack: Codable {
     }
 
     // MARK: - Aggregate Stats
+
+    /// Compute all totals in a single pass (used per-tick by GameEngine)
+    func computeTotals() -> DefenseTotals {
+        var totals = DefenseTotals()
+        for app in applications.values {
+            totals.defensePoints += app.defensePoints
+            totals.riskReduction += app.riskReduction
+            totals.intelBonus += app.intelBonus
+            totals.automation += app.automationLevel
+            totals.intelMultiplier *= app.intelMultiplier
+        }
+        totals.automation = min(1.0, totals.automation)
+        return totals
+    }
 
     /// Total defense points from all deployed apps
     var totalDefensePoints: Double {
@@ -1469,8 +1492,8 @@ struct MalusIntelligence: Codable {
         var count = 0
         var simulatedFootprint = footprintData
         var simulatedSent = reportsSent
-        while simulatedFootprint >= 200.0 * (1.0 + Double(simulatedSent) * 0.05) {
-            simulatedFootprint -= 200.0 * (1.0 + Double(simulatedSent) * 0.05)
+        while simulatedFootprint >= 200.0 * (1.0 + Double(simulatedSent) * 0.02) {
+            simulatedFootprint -= 200.0 * (1.0 + Double(simulatedSent) * 0.02)
             simulatedSent += 1
             count += 1
         }
@@ -1480,7 +1503,7 @@ struct MalusIntelligence: Codable {
     /// Cost to send next report (scales slightly with reports sent)
     var reportCost: Double {
         let baseCost = 200.0
-        let scaling = 1.0 + (Double(reportsSent) * 0.05)  // +5% per report sent
+        let scaling = 1.0 + (Double(reportsSent) * 0.02)  // +2% per report sent
         return baseCost * scaling
     }
 

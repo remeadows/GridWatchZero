@@ -5,7 +5,7 @@
 import SwiftUI
 
 struct LoreView: View {
-    @ObservedObject var engine: GameEngine
+    var engine: GameEngine
     @Environment(\.dismiss) private var dismiss
     @State private var selectedCategory: LoreCategory = .intel
     @State private var selectedFragment: LoreFragment?
@@ -284,7 +284,7 @@ struct LoreView: View {
 // MARK: - Milestones View
 
 struct MilestonesView: View {
-    @ObservedObject var engine: GameEngine
+    var engine: GameEngine
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {

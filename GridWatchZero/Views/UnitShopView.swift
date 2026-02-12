@@ -5,7 +5,7 @@
 import SwiftUI
 
 struct UnitShopView: View {
-    @ObservedObject var engine: GameEngine
+    var engine: GameEngine
     @Environment(\.dismiss) private var dismiss
     @State private var selectedCategory: UnitFactory.UnitCategory = .source
     @State private var selectedUnit: UnitFactory.UnitInfo?

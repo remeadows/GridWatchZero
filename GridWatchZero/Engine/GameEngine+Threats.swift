@@ -9,15 +9,15 @@ extension GameEngine {
         checkCriticalAlarmReset()
 
         // === AUTOMATION: Auto-repair firewall ===
-        if defenseStack.totalAutomation >= 0.25 {
+        if cachedDefenseTotals.automation >= 0.25 {
             autoRepairFirewall()
         }
 
         // === AUTOMATION: Passive intel generation ===
         // Only generates intel if defense apps are deployed (automation comes from apps anyway)
-        if defenseStack.totalAutomation >= 0.75 && defenseStack.deployedCount >= 1 {
-            let passiveIntel = 1.0 * defenseStack.totalAutomation
-            malusIntel.addFootprintData(passiveIntel, detectionMultiplier: defenseStack.totalIntelBonus)
+        if cachedDefenseTotals.automation >= 0.75 && defenseStack.deployedCount >= 1 {
+            let passiveIntel = 1.0 * cachedDefenseTotals.automation
+            malusIntel.addFootprintData(passiveIntel, detectionMultiplier: cachedDefenseTotals.intelBonus)
         }
 
         // Process active attack
@@ -99,9 +99,9 @@ extension GameEngine {
 
             // === AUTOMATION: Reduced attack duration ===
             var ticksToProcess = 1
-            if defenseStack.totalAutomation >= 0.50 {
+            if cachedDefenseTotals.automation >= 0.50 {
                 // Chance to process extra tick (faster attack resolution)
-                let extraTickChance = (defenseStack.totalAutomation - 0.50) * 2.0  // 0-100% at 0.5-1.0
+                let extraTickChance = (cachedDefenseTotals.automation - 0.50) * 2.0  // 0-100% at 0.5-1.0
                 if Double.random(in: 0...1, using: &rng) < extraTickChance {
                     ticksToProcess = 2
                 }
@@ -239,7 +239,7 @@ extension GameEngine {
         // Auto-repair rate: 1% of max health per tick at 0.25 automation, up to 3% at 1.0
         // Sprint B: Endpoint recovery bonus boosts repair rate
         let recoveryBonus = defenseStack.totalRecoveryBonus
-        let repairRate = 0.01 + (defenseStack.totalAutomation - 0.25) * 0.027 + recoveryBonus
+        let repairRate = 0.01 + (cachedDefenseTotals.automation - 0.25) * 0.027 + recoveryBonus
         let repairAmount = fw.maxHealth * repairRate
         fw.currentHealth = min(fw.maxHealth, fw.currentHealth + repairAmount)
         firewall = fw

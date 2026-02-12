@@ -8,7 +8,7 @@ struct SettingsView: View {
     @StateObject private var audioSettings = AudioSettingsManager.shared
     @EnvironmentObject var cloudManager: CloudSaveManager
     @EnvironmentObject var campaignState: CampaignState
-    @EnvironmentObject var engine: GameEngine
+    @Environment(GameEngine.self) var engine
     @Environment(\.dismiss) private var dismiss
     
     @State private var showingCloudDiagnostics = false
@@ -453,5 +453,5 @@ struct VolumeSlider: View {
     SettingsView()
         .environmentObject(CloudSaveManager.shared)
         .environmentObject(CampaignState())
-        .environmentObject(GameEngine())
+        .environment(GameEngine())
 }

@@ -62,6 +62,7 @@ class NavigationCoordinator: ObservableObject {
     // Cloud sync
     private let cloudManager = CloudSaveManager.shared
     private var cloudSyncCancellable: AnyCancellable?
+    weak var campaignState: CampaignState?
 
     // Track if user has seen title this session
     private var hasShownTitle = false
@@ -86,8 +87,21 @@ class NavigationCoordinator: ObservableObject {
     }
 
     private func handleCloudDataChange(_ notification: Notification) {
-        // Cloud data changed externally - could prompt user to reload
-        // For now, we handle this silently and let the next sync resolve it
+        guard let syncable = notification.userInfo?["cloudData"] as? SyncableProgress,
+              let campaignState = campaignState else {
+            return
+        }
+
+        // Only apply cloud data if cloud has more completed levels
+        let localLevels = campaignState.progress.completedLevels.count
+        let cloudLevels = syncable.progress.completedLevels.count
+        guard cloudLevels > localLevels else { return }
+
+        // Cloud is ahead — apply it
+        campaignState.progress = syncable.progress
+        campaignState.save()
+        storyState = syncable.storyState
+        saveStoryState()
     }
 
     /// Sync progress to cloud
@@ -312,7 +326,7 @@ class NavigationCoordinator: ObservableObject {
 
 struct RootNavigationView: View {
     @StateObject private var coordinator = NavigationCoordinator()
-    @StateObject private var gameEngine = GameEngine()
+    @State private var gameEngine = GameEngine()
     @StateObject private var campaignState = CampaignState()
     @StateObject private var cloudManager = CloudSaveManager.shared
     @State private var hasPerformedInitialSync = false
@@ -509,12 +523,13 @@ struct RootNavigationView: View {
             }
         }
         .environmentObject(coordinator)
-        .environmentObject(gameEngine)
+        .environment(gameEngine)
         .environmentObject(campaignState)
         .environmentObject(cloudManager)
         .animation(.easeInOut(duration: 0.3), value: coordinator.currentScreen)
         .animation(.easeInOut(duration: 0.3), value: coordinator.activeStoryMoment?.id)
         .onAppear {
+            coordinator.campaignState = campaignState
             coordinator.loadStoryState()
             // Perform initial cloud sync only once per app session
             if !hasPerformedInitialSync {

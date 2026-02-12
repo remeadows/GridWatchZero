@@ -4,6 +4,7 @@
 
 import Foundation
 import Combine
+import Observation
 
 // MARK: - Tick Statistics
 
@@ -200,55 +201,60 @@ struct GameState: Codable {
 // MARK: - Game Engine
 
 @MainActor
-final class GameEngine: ObservableObject {
+@Observable
+final class GameEngine {
     // MARK: - Published State
 
-    @Published var resources: PlayerResources
-    @Published var source: SourceNode
-    @Published var link: TransportLink
-    @Published var sink: SinkNode
-    @Published var firewall: FirewallNode?
+    var resources: PlayerResources
+    var source: SourceNode
+    var link: TransportLink
+    var sink: SinkNode
+    var firewall: FirewallNode?
 
-    @Published var currentTick: Int = 0
-    @Published var lastTickStats: TickStats = TickStats()
-    @Published var isRunning: Bool = false
+    var currentTick: Int = 0
+    var lastTickStats: TickStats = TickStats()
+    var isRunning: Bool = false
 
     // MARK: - Threat System
 
-    @Published var threatState: ThreatState = ThreatState()
-    @Published var activeAttack: Attack? = nil
-    @Published var lastEvent: GameEvent? = nil
+    var threatState: ThreatState = ThreatState()
+    var activeAttack: Attack? = nil
+    var lastEvent: GameEvent? = nil
 
     // MARK: - Unlock System
 
-    @Published var unlockState: UnlockState = UnlockState()
+    var unlockState: UnlockState = UnlockState()
 
     // MARK: - Event & Story Systems
 
-    @Published var loreState: LoreState = LoreState()
-    @Published var milestoneState: MilestoneState = MilestoneState()
-    @Published var activeRandomEvent: RandomEvent? = nil
-    @Published var offlineProgress: OfflineProgress? = nil
+    var loreState: LoreState = LoreState()
+    var milestoneState: MilestoneState = MilestoneState()
+    var activeRandomEvent: RandomEvent? = nil
+    var offlineProgress: OfflineProgress? = nil
 
     // MARK: - Prestige System
 
-    @Published var prestigeState: PrestigeState = PrestigeState()
+    var prestigeState: PrestigeState = PrestigeState()
 
     // MARK: - Defense Stack & Malus Intel
 
-    @Published var defenseStack: DefenseStack = DefenseStack()
-    @Published var malusIntel: MalusIntelligence = MalusIntelligence()
-    @Published var showCriticalAlarm: Bool = false
-    @Published var criticalAlarmAcknowledged: Bool = false
+    var defenseStack: DefenseStack = DefenseStack()
+    var malusIntel: MalusIntelligence = MalusIntelligence()
+    var showCriticalAlarm: Bool = false
+    var criticalAlarmAcknowledged: Bool = false
 
     // Sprint D: Early Warning System
-    @Published var activeEarlyWarning: EarlyWarning? = nil
+    var activeEarlyWarning: EarlyWarning? = nil
 
     // Sprint D: Batch Upload State
-    @Published var batchUploadState: BatchUploadState? = nil
+    var batchUploadState: BatchUploadState? = nil
 
     // Sprint E: Link Latency Buffer (transient, not persisted)
-    @Published var latencyBuffer: [(amount: Double, ticksRemaining: Int)] = []
+    var latencyBuffer: [(amount: Double, ticksRemaining: Int)] = []
+
+    // MARK: - Cached Defense Totals (recomputed each tick, not persisted)
+
+    private(set) var cachedDefenseTotals = DefenseTotals()
 
     // MARK: - Event Multipliers (from random events)
 
@@ -263,7 +269,7 @@ final class GameEngine: ObservableObject {
     /// Set to 1.5 to test rewarded ad temporary boost
     /// IMPORTANT: Remove before production release
     #if DEBUG
-    @Published var debugCreditMultiplier: Double = 1.0
+    var debugCreditMultiplier: Double = 1.0
     #endif
 
     // MARK: - Temporary Debuffs (from attacks)
@@ -273,17 +279,17 @@ final class GameEngine: ObservableObject {
 
     // MARK: - Cumulative Stats
 
-    @Published var totalDataGenerated: Double = 0
-    @Published var totalDataTransferred: Double = 0
-    @Published var totalDataDropped: Double = 0
+    var totalDataGenerated: Double = 0
+    var totalDataTransferred: Double = 0
+    var totalDataDropped: Double = 0
 
     // MARK: - Campaign Mode
 
-    @Published var levelConfiguration: LevelConfiguration?
-    @Published var levelStartTick: Int = 0
-    @Published var levelCreditsEarned: Double = 0
-    @Published var levelAttacksSurvived: Int = 0
-    @Published var levelDamageBlocked: Double = 0
+    var levelConfiguration: LevelConfiguration?
+    var levelStartTick: Int = 0
+    var levelCreditsEarned: Double = 0
+    var levelAttacksSurvived: Int = 0
+    var levelDamageBlocked: Double = 0
 
     /// Callback when level is completed
     var onLevelComplete: ((LevelCompletionStats) -> Void)?
@@ -376,6 +382,9 @@ final class GameEngine: ObservableObject {
         totalPlayTime += tickInterval
 
         var stats = TickStats()
+
+        // Cache defense totals once per tick (avoids repeated .reduce traversals)
+        cachedDefenseTotals = defenseStack.computeTotals()
 
         // === DEFENSE PHASE ===
         firewall?.regenerate()

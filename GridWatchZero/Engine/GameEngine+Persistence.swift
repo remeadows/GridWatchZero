@@ -5,8 +5,10 @@ import Foundation
 extension GameEngine {
 
     func saveGame() {
-        print("[GameEngine] ⚠️ saveGame() CALLED at \(Date())")
+        #if DEBUG
+        print("[GameEngine] saveGame() CALLED at \(Date())")
         print("[GameEngine] Current state: \(resources.credits.formatted) credits, tick \(currentTick)")
+        #endif
 
         let state = GameState(
             resources: resources,
@@ -29,55 +31,50 @@ extension GameEngine {
 
         do {
             let data = try JSONEncoder().encode(state)
-            print("[GameEngine] ✅ State encoded successfully, size: \(data.count) bytes")
-
             UserDefaults.standard.set(data, forKey: saveKey)
-            print("[GameEngine] ✅ Data written to UserDefaults with key: \(saveKey)")
 
-            // Force immediate write to disk (deprecated but ensures persistence when backgrounding)
-            UserDefaults.standard.synchronize()
-            print("[GameEngine] ✅ synchronize() called")
+            #if DEBUG
+            print("[GameEngine] State encoded (\(data.count) bytes), written to key: \(saveKey)")
 
-            // VERIFY the save worked immediately
+            // Verification: decode back to ensure data integrity (debug only)
             if let verifyData = UserDefaults.standard.data(forKey: saveKey) {
-                print("[GameEngine] ✅ VERIFIED: Data exists in UserDefaults (\(verifyData.count) bytes)")
-
-                // Try to decode it to ensure it's valid
                 if let verifyState = try? JSONDecoder().decode(GameState.self, from: verifyData) {
-                    print("[GameEngine] ✅ VERIFIED: Data is decodable, credits=\(verifyState.resources.credits.formatted)")
+                    print("[GameEngine] VERIFIED: decodable, credits=\(verifyState.resources.credits.formatted)")
                 } else {
-                    print("[GameEngine] ❌ WARNING: Data exists but cannot be decoded!")
+                    print("[GameEngine] WARNING: Data exists but cannot be decoded!")
                 }
             } else {
-                print("[GameEngine] ❌ CRITICAL: Data NOT found in UserDefaults after save!")
+                print("[GameEngine] CRITICAL: Data NOT found in UserDefaults after save!")
             }
-
-            print("[GameEngine] ✅ Save completed at \(Date()): \(resources.credits.formatted) credits, tick \(currentTick)")
+            #endif
         } catch {
-            print("[GameEngine] ❌ CRITICAL: Save failed during encoding - \(error)")
-            print("[GameEngine] ❌ Error details: \(error.localizedDescription)")
+            #if DEBUG
+            print("[GameEngine] CRITICAL: Save failed - \(error.localizedDescription)")
+            #endif
         }
     }
 
     func loadGame() {
-        print("[GameEngine] ⚠️ loadGame() CALLED at \(Date())")
-        print("[GameEngine] Checking for save data with key: \(saveKey)")
-
-        // Check if raw data exists first
+        #if DEBUG
+        print("[GameEngine] loadGame() CALLED at \(Date())")
         if let rawData = UserDefaults.standard.data(forKey: saveKey) {
-            print("[GameEngine] ✅ Raw save data found: \(rawData.count) bytes")
+            print("[GameEngine] Raw save data found: \(rawData.count) bytes")
         } else {
-            print("[GameEngine] ❌ No raw data found in UserDefaults")
+            print("[GameEngine] No raw data found in UserDefaults")
         }
+        #endif
 
         // Use migration manager to load (handles old versions automatically)
         guard let state = SaveMigrationManager.loadAndMigrate() else {
-            print("[GameEngine] ❌ No save data found - starting new game")
+            #if DEBUG
+            print("[GameEngine] No save data found - starting new game")
+            #endif
             return
         }
 
-        print("[GameEngine] ✅ Loading save: \(state.resources.credits.formatted) credits, tick \(state.currentTick)")
-        print("[GameEngine] Save timestamp: \(state.lastSaveTimestamp?.formatted() ?? "none")")
+        #if DEBUG
+        print("[GameEngine] Loading save: \(state.resources.credits.formatted) credits, tick \(state.currentTick)")
+        #endif
 
         resources = state.resources
         source = state.source
@@ -100,7 +97,9 @@ extension GameEngine {
             calculateOfflineProgress(since: lastSave)
         }
 
-        print("[GameEngine] ✅ Load completed: \(resources.credits.formatted) credits")
+        #if DEBUG
+        print("[GameEngine] Load completed: \(resources.credits.formatted) credits")
+        #endif
     }
 
     /// Calculate and apply credits earned while player was away

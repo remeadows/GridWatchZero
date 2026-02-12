@@ -4,7 +4,7 @@ import SwiftUI
 
 /// Wrapper that adds campaign UI elements around DashboardView
 struct GameplayContainerView: View {
-    @ObservedObject var gameEngine: GameEngine
+    var gameEngine: GameEngine
     @ObservedObject var campaignState: CampaignState
     let levelId: Int?
     let isInsane: Bool
@@ -19,7 +19,7 @@ struct GameplayContainerView: View {
         ZStack {
             // Main gameplay (existing DashboardView)
             DashboardView(onCampaignExit: levelId != nil ? { showExitConfirm = true } : nil)
-                .environmentObject(gameEngine)
+                .environment(gameEngine)
                 .environmentObject(campaignState)
                 .environmentObject(CloudSaveManager.shared)
                 // Add bottom padding for mission objectives bar

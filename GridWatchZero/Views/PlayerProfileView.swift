@@ -47,13 +47,18 @@ struct PlayerProfileView: View {
                 .padding(20)
             }
         }
-        .alert("Sync Conflict", isPresented: .constant(cloudManager.pendingConflict != nil)) {
+        .alert("Sync Conflict", isPresented: Binding(
+            get: { cloudManager.pendingConflict != nil },
+            set: { if !$0 { cloudManager.pendingConflict = nil } }
+        )) {
             Button("Use Local") {
                 cloudManager.resolveConflict(useLocal: true)
             }
             Button("Use Cloud") {
-                cloudManager.resolveConflict(useLocal: false)
-                if let cloudProgress = cloudManager.pendingConflict?.cloudProgress {
+                if let conflict = cloudManager.pendingConflict {
+                    let cloudProgress = conflict.cloudProgress
+                    let cloudStory = conflict.cloudStory
+                    cloudManager.resolveConflict(useLocal: false)
                     campaignState.progress = cloudProgress
                     campaignState.save()
                 }

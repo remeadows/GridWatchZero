@@ -7,7 +7,7 @@ import SwiftUI
 // MARK: - Home View
 
 struct HomeView: View {
-    @EnvironmentObject var engine: GameEngine
+    @Environment(GameEngine.self) var engine
     @EnvironmentObject var campaignState: CampaignState
     @EnvironmentObject var cloudManager: CloudSaveManager
     @StateObject private var dossierManager = DossierManager.shared
@@ -89,7 +89,7 @@ struct HomeView: View {
         }
         .sheet(isPresented: $showSettingsSheet) {
             SettingsView()
-                .environmentObject(engine)
+                .environment(engine)
                 .environmentObject(cloudManager)
                 .environmentObject(campaignState)
         }

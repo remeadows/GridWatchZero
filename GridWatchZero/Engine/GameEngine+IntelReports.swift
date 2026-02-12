@@ -7,7 +7,7 @@ extension GameEngine {
     /// Send report to team - now with meaningful rewards!
     func sendMalusReport() -> Bool {
         // Get intel multiplier from SIEM/IDS systems
-        let intelMultiplier = defenseStack.totalIntelMultiplier
+        let intelMultiplier = cachedDefenseTotals.intelMultiplier
 
         guard let result = malusIntel.sendReport(intelMultiplier: intelMultiplier) else {
             return false
@@ -101,7 +101,7 @@ extension GameEngine {
         let baseData = damageBlocked * 0.5 + durationBonus + severityBonus
 
         // Sprint B: Apply intel bonus from all defense categories
-        let detectionMultiplier = defenseStack.totalIntelBonus
+        let detectionMultiplier = cachedDefenseTotals.intelBonus
         malusIntel.addFootprintData(baseData, detectionMultiplier: detectionMultiplier)
 
         // Identify pattern based on attack type
