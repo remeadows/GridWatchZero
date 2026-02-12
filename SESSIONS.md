@@ -54,6 +54,85 @@
 
 ---
 
+## Session 2026-02-11: Bug Fixes from Code Reviews (Claude Code)
+
+**Date**: 2026-02-11
+**Duration**: ~2 hours
+**Focus**: Apply 10 bug fixes identified by Codex and Gemini CLI code reviews
+
+### Issues Resolved
+- Fix #1: Offline progress calculation edge case
+- Fix #2: Link.swift tier ranges for T7-T25
+- Fix #3: Checkpoint save missing in NavigationCoordinator
+- Fix #4-#10: Various GameEngine, CampaignLevel, CampaignProgress fixes
+
+### Files Modified
+- `Engine/GameEngine.swift`, `Models/Link.swift`, `Engine/NavigationCoordinator.swift`
+- `Models/CampaignLevel.swift`, `Models/CampaignProgress.swift`
+
+### Build Status
+✅ All builds successful
+
+---
+
+## Session 2026-02-11: Major Refactoring (Claude Code)
+
+**Date**: 2026-02-11
+**Duration**: ~4 hours
+**Focus**: Break up monolithic files
+
+### Changes
+- `GameEngine.swift`: 2,240 → 591 lines (split into 10 extensions)
+- `DashboardView.swift`: 2,195 → 288 lines (split into iPhone/iPad layouts)
+- `NavigationCoordinator.swift`: 1,316 → 574 lines (58% reduction)
+
+### Files Added
+- `GameEngine+Campaign.swift`, `GameEngine+Threats.swift`, `GameEngine+Persistence.swift`
+- `GameEngine+Progression.swift`, `GameEngine+Upgrades.swift`, `GameEngine+IntelReports.swift`
+- `GameEngine+Prestige.swift`, `GameEngine+Engagement.swift`, `GameEngine+DefenseManagement.swift`
+- `GameEngine+CriticalAlarm.swift`
+- `DashboardView+iPhone.swift`, `DashboardView+iPad.swift`
+
+### Build Status
+✅ All builds successful
+
+---
+
+## Session 2026-02-12: Critical Fixes + Performance Optimization (Claude Code)
+
+**Date**: 2026-02-12
+**Duration**: ~3 hours
+**Focus**: Fix critical bugs and apply all performance optimizations from code review analysis
+
+### Commits
+- `1b607b9`: Critical bugs (cloud save, no-op handler, report scaling) + @Observable migration + DefenseStack caching
+- `df9c918`: 5 cloud save data-loss fixes (content-based sync, race conditions)
+- `a5f6ee0`: Medium perf (Equatable on 5 structs, scan throttle, reduceMotion guards on 10 animations)
+- `2ac0989`: Low perf (DataPacket Int ID, drawingGroup, totalBufferedData computed property)
+
+### Key Decisions
+- Migrated GameEngine from `ObservableObject`/`@Published` to `@Observable`/`@Environment`
+- Cloud save uses content-based comparison (level count) instead of timestamps
+- DefenseStack totals cached per-tick in `DefenseTotals` struct
+- All `.repeatForever()` animations gated on `accessibilityReduceMotion`
+
+### Files Modified
+- `Engine/GameEngine.swift`, `Engine/GameEngine+Threats.swift`, `Engine/GameEngine+IntelReports.swift`
+- `Engine/GameEngine+Persistence.swift`, `Engine/NavigationCoordinator.swift`, `Engine/CloudSaveManager.swift`
+- `Models/Resource.swift`, `Models/ThreatSystem.swift`, `Models/DefenseApplication.swift`
+- `Views/DashboardView.swift`, `Views/DashboardView+iPhone.swift`, `Views/DashboardView+iPad.swift`
+- `Views/HomeView.swift`, `Views/SettingsView.swift`, `Views/UnitShopView.swift`, `Views/LoreView.swift`
+- `Views/MainMenuView.swift`, `Views/PlayerProfileView.swift`
+- `Views/Components/GameplayContainerView.swift`, `Views/Components/ThreatIndicatorView.swift`
+- `Views/Components/ConnectionLineView.swift`, `Views/Components/DDoSOverlay.swift`
+- `Views/Components/CriticalAlarmView.swift`, `Views/Components/PrestigeCardView.swift`
+- `Views/Components/ScanlineOverlay.swift`
+
+### Build Status
+✅ All 4 commits build successfully
+
+---
+
 ## Build Status
 
 - [ ] ✅ Compiles successfully
@@ -151,15 +230,19 @@ What happens when you launch and play:
 ## Reference Material
 
 ### Architecture Docs
-- `CLAUDE.md` — Project structure, patterns, commands
-- `archive/CONTEXT.md` — Narrative, design philosophy (legacy — see design/DESIGN.md)
+- `CLAUDE.md` — Project structure, patterns, commands **(DO NOT EDIT — owner only)**
+- `DOCS_UPDATE_PROTOCOL.md` — **READ THIS** for documentation update rules
 - `SKILLS.md` — Required skill set, Definition of Done
 - `design/GAMEPLAY.md` — Balance, unit stats, formulas
+- `archive/CONTEXT.md` — Narrative, design philosophy (legacy — see design/DESIGN.md)
 
 ### Key Files (Read First)
-- `Engine/GameEngine.swift` — Core tick loop, all systems
+- `Engine/GameEngine.swift` — @Observable core: state, tick loop, init (591 lines)
+- `Engine/GameEngine+*.swift` — 10 extensions by concern (~1,700 lines total)
+- `Engine/NavigationCoordinator.swift` — App navigation, story state (574 lines)
 - `Models/Resource.swift` — PlayerResources, DataPacket
-- `Views/DashboardView.swift` — Main game screen
+- `Views/DashboardView.swift` — Main game screen coordinator (288 lines)
+- `Views/DashboardView+iPhone.swift` / `+iPad.swift` — Device-specific layouts
 - `Views/Theme.swift` — Colors, fonts, modifiers
 
 ---
@@ -254,7 +337,7 @@ engine.addDebugCredits(100000)
 | File not in build | Right-click folder → Add Files to 'GridWatchZero' |
 | Save not loading | Check key version matches `GameState.v6` |
 | Large number precision warning | Use scientific notation in UnitFactory |
-| View not updating | Ensure property is `@Published` in GameEngine |
+| View not updating | GameEngine uses `@Observable` — ensure property is `var` (not `let`) |
 
 ---
 

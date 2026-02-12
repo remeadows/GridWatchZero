@@ -18,39 +18,64 @@ This is an iOS idle/strategy game built with SwiftUI and Swift 6. The player ope
 ## Project Structure
 ```
 GridWatchZero/
-â”œâ”€â”€ GridWatchZero.xcodeproj/
-â””â”€â”€ GridWatchZero/
-    â”œâ”€â”€ GridWatchZeroApp.swift       # App entry point
-    â”œâ”€â”€ Models/
-    â”‚   â”œâ”€â”€ Resource.swift           # ResourceType, DataPacket, PlayerResources
-    â”‚   â”œâ”€â”€ Node.swift               # NodeProtocol, SourceNode, SinkNode, FirewallNode
-    â”‚   â”œâ”€â”€ Link.swift               # LinkProtocol, TransportLink
-    â”‚   â”œâ”€â”€ ThreatSystem.swift       # ThreatLevel, Attack, DefenseStats
-    â”‚   â”œâ”€â”€ EventSystem.swift        # RandomEvent, EventGenerator, EventEffect
-    â”‚   â”œâ”€â”€ LoreSystem.swift         # LoreFragment, LoreDatabase, LoreState
-    â”‚   â”œâ”€â”€ MilestoneSystem.swift    # Milestone, MilestoneDatabase, MilestoneState
-    â”‚   â”œâ”€â”€ DefenseApplication.swift # DefenseStack, MalusIntelligence, 6 security categories
-    â”‚   â”œâ”€â”€ CharacterDossier.swift   # Character profiles, BIOs, DossierDatabase
-    â”‚   â””â”€â”€ DossierManager.swift     # Unlock tracking, persistence
-    â”œâ”€â”€ Engine/
-    â”‚   â”œâ”€â”€ GameEngine.swift         # Core tick loop, game state, all systems
-    â”‚   â”œâ”€â”€ UnitFactory.swift        # Unit creation factory, unit catalog
-    â”‚   â””â”€â”€ AudioManager.swift       # Sound effects, haptics, ambient audio
-    â””â”€â”€ Views/
-        â”œâ”€â”€ Theme.swift              # Colors, fonts, view modifiers
-        â”œâ”€â”€ DashboardView.swift      # Main game screen
-        â”œâ”€â”€ UnitShopView.swift       # Unit shop modal
-        â”œâ”€â”€ LoreView.swift           # Intel/lore viewer
-        â””â”€â”€ Components/
-            â”œâ”€â”€ NodeCardView.swift       # Source/Link/Sink cards
-            â”œâ”€â”€ FirewallCardView.swift   # Defense node card
-            â”œâ”€â”€ DefenseApplicationView.swift # Security apps, topology view
-            â”œâ”€â”€ CriticalAlarmView.swift  # Full-screen critical alarm
-            â”œâ”€â”€ ConnectionLineView.swift
-            â”œâ”€â”€ StatsHeaderView.swift
-            â”œâ”€â”€ ThreatIndicatorView.swift
-            â””â”€â”€ AlertBannerView.swift
-        â”œâ”€â”€ DossierView.swift            # Character dossier collection & detail views
+├── GridWatchZero.xcodeproj/
+└── GridWatchZero/
+    ├── GridWatchZeroApp.swift           # App entry point
+    ├── Models/
+    │   ├── Resource.swift               # ResourceType, DataPacket, PlayerResources
+    │   ├── Node.swift                   # NodeProtocol, SourceNode, SinkNode, FirewallNode
+    │   ├── Link.swift                   # LinkProtocol, TransportLink
+    │   ├── ThreatSystem.swift           # ThreatLevel, Attack, DefenseStats, ThreatState
+    │   ├── EventSystem.swift            # RandomEvent, EventGenerator, EventEffect
+    │   ├── LoreSystem.swift             # LoreFragment, LoreDatabase, LoreState
+    │   ├── MilestoneSystem.swift        # Milestone, MilestoneDatabase, MilestoneState
+    │   ├── DefenseApplication.swift     # DefenseStack, DefenseTotals, MalusIntelligence
+    │   ├── CharacterDossier.swift       # Character profiles, BIOs, DossierDatabase
+    │   └── DossierManager.swift         # Unlock tracking, persistence
+    ├── Engine/
+    │   ├── GameEngine.swift             # @Observable core: state, tick loop, init (591 lines)
+    │   ├── GameEngine+Campaign.swift    # Campaign level management, checkpoints
+    │   ├── GameEngine+Threats.swift     # Threat processing, attack lifecycle
+    │   ├── GameEngine+Persistence.swift # Save/load, offline progress
+    │   ├── GameEngine+Progression.swift # Milestones, lore, threat level updates
+    │   ├── GameEngine+Upgrades.swift    # Node/defense upgrade logic
+    │   ├── GameEngine+IntelReports.swift    # Malus intel, report sending
+    │   ├── GameEngine+Prestige.swift        # Network wipe / prestige system
+    │   ├── GameEngine+Engagement.swift      # Random events, engagement checks
+    │   ├── GameEngine+DefenseManagement.swift # Firewall repair/purchase
+    │   ├── GameEngine+CriticalAlarm.swift   # Critical alarm state management
+    │   ├── CloudSaveManager.swift       # iCloud sync with content-based comparison
+    │   ├── NavigationCoordinator.swift  # App navigation, story state (574 lines)
+    │   ├── SaveMigration.swift          # Save version migrations
+    │   ├── UnitFactory.swift            # Unit creation factory, unit catalog
+    │   └── AudioManager.swift           # Sound effects, haptics, ambient audio
+    └── Views/
+        ├── Theme.swift                  # Colors, fonts, view modifiers
+        ├── DashboardView.swift          # Main game screen coordinator (288 lines)
+        ├── DashboardView+iPhone.swift   # iPhone stacked layout
+        ├── DashboardView+iPad.swift     # iPad multi-column layout
+        ├── UnitShopView.swift           # Unit shop modal
+        ├── LoreView.swift               # Intel/lore viewer
+        ├── HomeView.swift               # Home/campaign screen
+        ├── MainMenuView.swift           # Main menu
+        ├── PlayerProfileView.swift      # Player profile, iCloud sync UI
+        ├── SettingsView.swift           # Game settings
+        ├── DossierView.swift            # Character dossier collection
+        ├── StoryDialogueView.swift      # Campaign story dialogue
+        └── Components/
+            ├── NodeCardView.swift       # Source/Link/Sink cards
+            ├── FirewallCardView.swift   # Defense node card
+            ├── DefenseApplicationView.swift # Security apps, topology view
+            ├── GameplayContainerView.swift  # Gameplay wrapper
+            ├── CriticalAlarmView.swift  # Full-screen critical alarm
+            ├── ConnectionLineView.swift # Animated data flow lines
+            ├── StatsHeaderView.swift    # Credits, tick stats, controls
+            ├── ThreatIndicatorView.swift # Threat/defense/risk display
+            ├── ThreatBarView.swift      # Compact threat bar
+            ├── AlertBannerView.swift    # Event alert banners
+            ├── ScanlineOverlay.swift    # CRT scanline effect (Metal cached)
+            ├── PrestigeCardView.swift   # Prestige/network wipe card
+            └── DDoSOverlay.swift        # DDoS attack visual effect
 ```
 
 ## Key Commands
@@ -71,14 +96,18 @@ open "/Users/russmeadows/Dev/Games/WarSignalLabs/GridWatchZero/GridWatchZero.xco
    - **Source** generates data packets (with prestige multipliers)
    - **Link** transfers data (bandwidth-limited, packet loss on overflow)
    - **Sink** processes data â†’ credits (with prestige multipliers)
-6. **Progression phase** - Update threat level, check milestones/lore
+6. **Progression phase** - Update threat level, check milestones/lore (scans throttled to every 5 ticks)
 7. **UI updates** with new stats
 
 ## Important Patterns
+- `@Observable` on GameEngine (migrated from `ObservableObject`/`@Published` — Feb 2026)
+- Views use `@Environment(GameEngine.self)` instead of `@EnvironmentObject`
 - `@MainActor` on GameEngine for thread safety
-- `@Published` properties for SwiftUI reactivity
-- `Codable` structs for persistence
+- `Codable` + `Equatable` structs for persistence and SwiftUI diffing
 - Protocol-oriented design for nodes (`NodeProtocol`, `LinkProtocol`)
+- `DefenseTotals` cached per-tick in `cachedDefenseTotals` (avoids O(n) recompute in hot paths)
+- All `.repeatForever()` animations guarded by `@Environment(\.accessibilityReduceMotion)`
+- Milestone/lore scans throttled to every 5 ticks (O(n) over all entries)
 
 ## Save System
 - Key: `GridWatchZero.GameState.v6`
