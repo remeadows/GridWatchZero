@@ -366,12 +366,44 @@ Button(action: {
 ---
 
 ### ISSUE-031: Checkpoint Resume Not Working (REOPENED)
-**Status**: 🔴 REOPENED - User reports cannot resume after closing app
+**Status**: ✅ Fixed (2026-02-11)
 **Severity**: Critical
 **Reported**: 2026-02-07 (original), 2026-02-07 (reopened)
 **Description**: User reports: "When I close the game, I cannot reopen it and continue the game where I left off. THIS IS STILL an issue that hasn't been resolved."
 
 **Previous Fix Attempt**: Removed "Save & Exit" button to clarify auto-save behavior (button text changed to "Exit", manual checkpoint save removed).
+
+**Root Cause (2026-02-11)**:
+`GameEngine.pause()` only called `saveGame()` (endless mode save), never `saveCampaignCheckpoint()`. When the app backgrounded via `scenePhase`, the handler called `pause()`, which saved endless mode state but NOT the campaign checkpoint. The only checkpoint saves were:
+- Auto-save every 30 ticks (30 seconds) — too infrequent
+- Exit button (added in earlier fix) — only if user taps "Exit"
+
+If the user backgrounded the app (home button, app switch, lock screen) or force-closed between auto-saves, the checkpoint was stale or nonexistent.
+
+**Fix**:
+Modified `pause()` in `GameEngine.swift` to save the campaign checkpoint before the endless save:
+```swift
+func pause() {
+    isRunning = false
+    tickTimer?.cancel()
+    tickTimer = nil
+    if isInCampaignMode {
+        saveCampaignCheckpoint()
+    }
+    saveGame()
+}
+```
+
+This ensures the checkpoint is saved on ALL exit paths:
+- App backgrounding (scenePhase → pause())
+- Exit button (saveCampaignCheckpoint() + pause())
+- Pause toggle during gameplay
+- iOS termination (scenePhase .background fires first)
+
+**Files Changed**:
+- `Engine/GameEngine.swift` - Added `saveCampaignCheckpoint()` call in `pause()`
+
+**Build Status**: ✅ Build succeeded
 
 **Investigation (2026-02-07 Evening)**:
 
@@ -408,15 +440,14 @@ Button(action: {
    - Button calls `onResumeNormal()` → Does NOT clear checkpoint
    - Level loads with `gameEngine.resumeFromCheckpoint(checkpoint, config:)`
 
-**All Components Look Correct** ✅
-Code review shows checkpoint system should work. Issue must be behavioral/environmental.
+**Previous Analysis**:
 
-**Possible Root Causes**:
-1. **Checkpoint not saving**: Auto-save may not be triggering before app closes
-2. **Checkpoint being cleared**: Something might be clearing `activeCheckpoint` unexpectedly
-3. **Checkpoint loading fails**: Resume path may have silent error
-4. **UserDefaults not persisting**: CampaignSaveManager save may be failing
-5. **App lifecycle issue**: iOS may be clearing state on force-close
+**Possible Root Causes** (all addressed):
+1. **Checkpoint not saving**: ✅ Fixed — `pause()` now saves checkpoint on every exit path
+2. **Checkpoint being cleared**: ✅ Verified — only cleared on level complete, abandon, or explicit restart
+3. **Checkpoint loading fails**: ✅ Verified — load path has logging, reads from correct key
+4. **UserDefaults not persisting**: ✅ Verified — `synchronize()` call present in CampaignSaveManager
+5. **App lifecycle issue**: ✅ Fixed — `pause()` saves checkpoint before iOS terminates
 
 **Questions for User**:
 1. How are you closing the app?

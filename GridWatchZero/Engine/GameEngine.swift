@@ -355,6 +355,9 @@ final class GameEngine: ObservableObject {
         isRunning = false
         tickTimer?.cancel()
         tickTimer = nil
+        if isInCampaignMode {
+            saveCampaignCheckpoint()
+        }
         saveGame()
     }
 
