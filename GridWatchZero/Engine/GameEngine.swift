@@ -9,7 +9,7 @@ import Observation
 // MARK: - Tick Statistics
 
 /// Stats from a single tick for UI display
-struct TickStats {
+struct TickStats: Equatable {
     var dataGenerated: Double = 0
     var dataTransferred: Double = 0
     var dataDropped: Double = 0
@@ -548,8 +548,11 @@ final class GameEngine {
 
         // === MILESTONE & LORE CHECK ===
         updateMilestoneProgress()
-        checkMilestones()
-        checkLoreUnlocks()
+        // Full milestone/lore scans are O(n) over all entries — throttle to every 5 ticks
+        if currentTick % 5 == 0 {
+            checkMilestones()
+            checkLoreUnlocks()
+        }
 
         // === CAMPAIGN VICTORY CHECK ===
         if isInCampaignMode {

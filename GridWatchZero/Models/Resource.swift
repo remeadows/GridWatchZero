@@ -33,7 +33,7 @@ struct DataPacket: Identifiable, Codable {
 }
 
 /// Tracks all player resources
-struct PlayerResources: Codable {
+struct PlayerResources: Codable, Equatable {
     var credits: Double = 0
     var totalDataProcessed: Double = 0
     var totalPacketsLost: Double = 0

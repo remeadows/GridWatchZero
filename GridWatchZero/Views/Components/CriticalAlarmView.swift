@@ -15,6 +15,7 @@ struct CriticalAlarmView: View {
     @State private var isPulsing = false
     @State private var glitchOffset: CGFloat = 0
     @State private var showDetails = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         ZStack {
@@ -233,6 +234,11 @@ struct CriticalAlarmView: View {
             }
         }
         .onAppear {
+            // Play alarm sound (always, regardless of motion setting)
+            AudioManager.shared.playSound(.attackIncoming)
+
+            guard !reduceMotion else { return }
+
             // Start animations
             withAnimation(.easeInOut(duration: 0.5).repeatForever(autoreverses: true)) {
                 isPulsing = true
@@ -246,9 +252,6 @@ struct CriticalAlarmView: View {
                     glitchOffset = 0
                 }
             }
-
-            // Play alarm sound
-            AudioManager.shared.playSound(.attackIncoming)
         }
     }
 

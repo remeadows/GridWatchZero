@@ -4,6 +4,7 @@ import SwiftUI
 
 struct DDoSOverlay: View {
     @State private var isGlitching = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         Rectangle()
@@ -23,6 +24,7 @@ struct DDoSOverlay: View {
             .cornerRadius(4)
             .allowsHitTesting(false)
             .onAppear {
+                guard !reduceMotion else { return }
                 withAnimation(
                     Animation.easeInOut(duration: 0.1)
                         .repeatForever(autoreverses: true)

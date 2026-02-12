@@ -11,6 +11,7 @@ struct PrestigeCardView: View {
     let onPrestige: () -> Void
 
     @State private var isPulsing = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private var progressToPrestige: Double {
         min(totalCredits / creditsRequired, 1.0)
@@ -107,7 +108,7 @@ struct PrestigeCardView: View {
         .terminalCard(borderColor: canPrestige ? .neonCyan : .terminalGray)
         .shadow(color: canPrestige ? .neonCyan.opacity(isPulsing ? 0.5 : 0.2) : .clear, radius: canPrestige ? 10 : 0)
         .onAppear {
-            if canPrestige {
+            if canPrestige && !reduceMotion {
                 withAnimation(.easeInOut(duration: 1.0).repeatForever(autoreverses: true)) {
                     isPulsing = true
                 }

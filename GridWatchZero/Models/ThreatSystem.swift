@@ -508,7 +508,7 @@ enum AttackType: String, Codable, CaseIterable {
 
 // MARK: - Attack Instance
 
-struct Attack: Identifiable, Codable {
+struct Attack: Identifiable, Codable, Equatable {
     let id: UUID
     let type: AttackType
     let severity: Double      // 0.5 - 3.0 multiplier
@@ -764,7 +764,7 @@ struct AttackDamage {
 
 // MARK: - Defense Stats
 
-struct DefenseStats: Codable {
+struct DefenseStats: Codable, Equatable {
     var firewallHealth: Double = 0
     var firewallMaxHealth: Double = 0
     var idsLevel: Int = 0
@@ -798,7 +798,7 @@ struct DefenseStats: Codable {
 
 // MARK: - Threat State
 
-struct ThreatState: Codable {
+struct ThreatState: Codable, Equatable {
     var currentLevel: ThreatLevel = .ghost
     var totalCreditsEarned: Double = 0
     var attacksSurvived: Int = 0

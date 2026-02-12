@@ -10,6 +10,7 @@ struct ThreatIndicatorView: View {
     var earlyWarning: EarlyWarning? = nil
 
     @State private var isPulsing = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private var threatLevel: ThreatLevel { threatState.currentLevel }
     private var netDefense: NetDefenseLevel { threatState.netDefenseLevel }
@@ -113,6 +114,7 @@ struct ThreatIndicatorView: View {
         .accessibilityElement(children: .combine)
         .accessibilityLabel(accessibilityDescription)
         .onAppear {
+            guard !reduceMotion else { return }
             withAnimation(
                 Animation.easeInOut(duration: 1.0)
                     .repeatForever(autoreverses: true)
@@ -142,6 +144,7 @@ struct AttackIndicator: View {
     let attack: Attack
 
     @State private var isFlashing = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         HStack(spacing: 6) {
@@ -170,6 +173,7 @@ struct AttackIndicator: View {
             .cornerRadius(3)
         }
         .onAppear {
+            guard !reduceMotion else { return }
             withAnimation(
                 Animation.easeInOut(duration: 0.3)
                     .repeatForever(autoreverses: true)
@@ -184,6 +188,7 @@ struct EarlyWarningIndicator: View {
     let warning: EarlyWarning
 
     @State private var isPulsing = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         HStack(spacing: 4) {
@@ -206,6 +211,7 @@ struct EarlyWarningIndicator: View {
                 .foregroundColor(.neonRed)
         }
         .onAppear {
+            guard !reduceMotion else { return }
             withAnimation(
                 Animation.easeInOut(duration: 0.5)
                     .repeatForever(autoreverses: true)

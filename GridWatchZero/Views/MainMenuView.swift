@@ -8,6 +8,7 @@ struct MainMenuView: View {
     @State private var showButtons = false
     @State private var hasSaveData: Bool = false
     @State private var pulseOpacity: Double = 0.3
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var onNewGame: () -> Void
     var onContinue: () -> Void
@@ -46,8 +47,10 @@ struct MainMenuView: View {
             withAnimation(.easeOut(duration: 0.6).delay(0.2)) {
                 showButtons = true
             }
-            withAnimation(.easeInOut(duration: 1.5).repeatForever(autoreverses: true)) {
-                pulseOpacity = 0.8
+            if !reduceMotion {
+                withAnimation(.easeInOut(duration: 1.5).repeatForever(autoreverses: true)) {
+                    pulseOpacity = 0.8
+                }
             }
         }
     }

@@ -10,6 +10,7 @@ struct ConnectionLineView: View {
     let maxThroughput: Double
 
     @State private var animationPhase: CGFloat = 0
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private var flowIntensity: Double {
         guard maxThroughput > 0 else { return 0 }
@@ -89,7 +90,7 @@ struct ConnectionLineView: View {
     }
 
     private func startAnimation() {
-        guard isActive else { return }
+        guard isActive, !reduceMotion else { return }
         animationPhase = 0
         withAnimation(.linear(duration: animationDuration).repeatForever(autoreverses: false)) {
             animationPhase = 1.0
@@ -106,6 +107,7 @@ struct DataPacketParticle: View {
     let size: CGFloat
 
     @State private var animatedPhase: CGFloat = 0
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         ZStack {
@@ -124,6 +126,7 @@ struct DataPacketParticle: View {
         .opacity(animatedPhase > 0.1 && animatedPhase < 0.9 ? 1 : 0)
         .onAppear {
             animatedPhase = phase
+            guard !reduceMotion else { return }
             withAnimation(.linear(duration: speed).repeatForever(autoreverses: false)) {
                 animatedPhase = 1.0
             }
