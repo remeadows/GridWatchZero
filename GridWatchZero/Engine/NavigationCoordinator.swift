@@ -531,6 +531,10 @@ struct RootNavigationView: View {
         .onAppear {
             coordinator.campaignState = campaignState
             coordinator.loadStoryState()
+            // Wire story state provider so CampaignState.save() uploads real story state
+            campaignState.storyStateProvider = { [weak coordinator] in
+                coordinator?.storyState ?? StoryState()
+            }
             // Perform initial cloud sync only once per app session
             if !hasPerformedInitialSync {
                 hasPerformedInitialSync = true
@@ -553,6 +557,11 @@ struct RootNavigationView: View {
                 // Auto-resume the game engine if we're on a gameplay screen
                 if case .gameplay = coordinator.currentScreen {
                     gameEngine.start()
+                }
+
+                // Sync from cloud in case another device updated while backgrounded
+                Task {
+                    await coordinator.performInitialCloudSync(campaignState: campaignState)
                 }
             }
         }

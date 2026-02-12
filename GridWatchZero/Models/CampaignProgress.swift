@@ -216,48 +216,35 @@ class CampaignSaveManager {
     // MARK: - Save/Load
 
     func save(_ progress: CampaignProgress) {
-        print("[CampaignSaveManager] ⚠️ save() CALLED at \(Date())")
-        print("[CampaignSaveManager] Completed levels: \(progress.completedLevels.count)")
-        
         do {
             let data = try JSONEncoder().encode(progress)
-            print("[CampaignSaveManager] ✅ Progress encoded, size: \(data.count) bytes")
-            
             UserDefaults.standard.set(data, forKey: progressKey)
-            print("[CampaignSaveManager] ✅ Data written to UserDefaults with key: \(progressKey)")
-            
-            // Force immediate write to disk (deprecated but ensures persistence)
-            UserDefaults.standard.synchronize()
-            print("[CampaignSaveManager] ✅ synchronize() called")
-            
-            // VERIFY the save worked
-            if let verifyData = UserDefaults.standard.data(forKey: progressKey) {
-                print("[CampaignSaveManager] ✅ VERIFIED: Data exists (\(verifyData.count) bytes)")
-            } else {
-                print("[CampaignSaveManager] ❌ CRITICAL: Data NOT in UserDefaults after save!")
-            }
+
+            #if DEBUG
+            print("[CampaignSaveManager] ✅ Saved \(progress.completedLevels.count) levels (\(data.count) bytes)")
+            #endif
         } catch {
-            print("[CampaignSaveManager] ❌ CRITICAL: Save failed - \(error)")
+            #if DEBUG
+            print("[CampaignSaveManager] ❌ Save failed - \(error)")
+            #endif
         }
     }
 
     func load() -> CampaignProgress {
-        print("[CampaignSaveManager] ⚠️ load() CALLED at \(Date())")
-        print("[CampaignSaveManager] Checking for key: \(progressKey)")
-        
         guard let data = UserDefaults.standard.data(forKey: progressKey) else {
-            print("[CampaignSaveManager] ❌ No save data found - returning new CampaignProgress")
             return CampaignProgress()
         }
 
-        print("[CampaignSaveManager] ✅ Raw data found: \(data.count) bytes")
-        
         do {
             let progress = try JSONDecoder().decode(CampaignProgress.self, from: data)
-            print("[CampaignSaveManager] ✅ Progress loaded: \(progress.completedLevels.count) levels completed")
+            #if DEBUG
+            print("[CampaignSaveManager] Loaded \(progress.completedLevels.count) levels")
+            #endif
             return progress
         } catch {
-            print("[CampaignSaveManager] ❌ Failed to decode campaign progress: \(error)")
+            #if DEBUG
+            print("[CampaignSaveManager] ❌ Decode failed: \(error)")
+            #endif
             return CampaignProgress()
         }
     }
@@ -285,17 +272,17 @@ class CampaignState: ObservableObject {
 
     private let database: LevelDatabase
 
+    /// Closure that returns the current StoryState from NavigationCoordinator.
+    /// Set by RootNavigationView.onAppear to avoid uploading empty story state on cloud sync.
+    var storyStateProvider: (() -> StoryState)?
+
     init(database: LevelDatabase? = nil) {
         self.database = database ?? LevelDatabase.shared
         self.progress = CampaignSaveManager.shared.load()
 
-        print("[CampaignState] 🚀 INIT - Progress loaded from disk")
-        if let checkpoint = progress.activeCheckpoint {
-            print("[CampaignState] ✅ Checkpoint present: Level \(checkpoint.levelId), Insane: \(checkpoint.isInsane)")
-            print("[CampaignState]    Saved at: \(checkpoint.savedAt)")
-        } else {
-            print("[CampaignState] ❌ No checkpoint in loaded progress")
-        }
+        #if DEBUG
+        print("[CampaignState] Init: \(progress.completedLevels.count) levels, checkpoint: \(progress.activeCheckpoint != nil)")
+        #endif
 
         // Set first play date if new
         if progress.firstPlayDate == nil {
@@ -455,10 +442,9 @@ class CampaignState: ObservableObject {
         progress.lastPlayDate = Date()
         CampaignSaveManager.shared.save(progress)
 
-        // Also sync to cloud
-        // TODO: Pass actual story state - currently creates empty StoryState which doesn't sync story progress
-        // Story state is managed by NavigationCoordinator, so this would need architectural refactoring
-        CloudSaveManager.shared.uploadProgress(progress, storyState: StoryState())
+        // Sync to cloud with actual story state (falls back to empty if provider not yet wired)
+        let story = storyStateProvider?() ?? StoryState()
+        CloudSaveManager.shared.uploadProgress(progress, storyState: story)
     }
 
     func resetProgress() {

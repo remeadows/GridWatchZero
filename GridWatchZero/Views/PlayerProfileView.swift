@@ -8,6 +8,7 @@ import SwiftUI
 
 struct PlayerProfileView: View {
     @ObservedObject var campaignState: CampaignState
+    @EnvironmentObject var coordinator: NavigationCoordinator
     @StateObject private var cloudManager = CloudSaveManager.shared
     @StateObject private var certificateManager = CertificateManager.shared
     @State private var showSyncConfirm = false
@@ -61,6 +62,8 @@ struct PlayerProfileView: View {
                     cloudManager.resolveConflict(useLocal: false)
                     campaignState.progress = cloudProgress
                     campaignState.save()
+                    coordinator.storyState = cloudStory
+                    coordinator.saveStoryState()
                 }
             }
         } message: {
@@ -510,13 +513,22 @@ struct PlayerProfileView: View {
         Task {
             let result = await cloudManager.syncProgress(
                 local: campaignState.progress,
-                localStory: StoryState() // Get from NavigationCoordinator
+                localStory: coordinator.storyState
             )
 
             switch result {
-            case .downloaded(let progress, _):
+            case .downloaded(let progress, let story):
+                // Content-based guard: only apply if cloud has equal or more progress
+                let localTotal = campaignState.progress.completedLevels.count +
+                                 campaignState.progress.insaneCompletedLevels.count
+                let cloudTotal = progress.completedLevels.count +
+                                 progress.insaneCompletedLevels.count
+                guard cloudTotal >= localTotal else { break }
+
                 campaignState.progress = progress
                 campaignState.save()
+                coordinator.storyState = story
+                coordinator.saveStoryState()
             default:
                 break
             }

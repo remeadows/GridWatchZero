@@ -260,13 +260,28 @@ class CloudSaveManager: ObservableObject {
             return .conflict
         }
 
-        // Latest timestamp wins
+        // Content-based comparison: total completed levels (normal + insane)
+        let localTotal = local.completedLevels.count + local.insaneCompletedLevels.count
+        let cloudTotal = cloudData.progress.completedLevels.count + cloudData.progress.insaneCompletedLevels.count
+
+        if localTotal > cloudTotal {
+            // Local has more progress — always upload regardless of timestamps
+            uploadProgress(local, storyState: localStory)
+            return .uploaded
+        } else if cloudTotal > localTotal {
+            // Cloud has more progress — always download regardless of timestamps
+            let now = Date()
+            UserDefaults.standard.set(now, forKey: localTimestampKey)
+            lastSyncDate = now
+            status = .synced(lastSync: now)
+            return .downloaded(progress: cloudData.progress, storyState: cloudData.storyState)
+        }
+
+        // Same level count — fall back to timestamp comparison
         if localDate > cloudDate {
-            // Local is newer - upload
             uploadProgress(local, storyState: localStory)
             return .uploaded
         } else {
-            // Cloud is newer - download
             let now = Date()
             UserDefaults.standard.set(now, forKey: localTimestampKey)
             lastSyncDate = now
