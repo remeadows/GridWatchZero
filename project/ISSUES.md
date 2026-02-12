@@ -305,63 +305,31 @@ class VideoPlayerViewController: UIViewController {
 ---
 
 ### ISSUE-030: Auto-Upgrade Occurring on Single Tap (REOPENED)
-**Status**: 🔴 REOPENED - User reports issue persists
+**Status**: ✅ Fixed (2026-02-11)
 **Severity**: High
 **Reported**: 2026-02-07 (original), 2026-02-07 (reopened)
 **Description**: User reports that tapping upgrade button once causes automatic continuous upgrading. Quote: "When I purchase the next update (like L1 to L2), the device auto upgrades."
 
-**Investigation (2026-02-07 Evening)**:
+**Root Cause (2026-02-11)**:
+The `ContinuousUpgradeButton` used Foundation `Timer.scheduledTimer` for hold-to-upgrade, which has multiple issues in a SwiftUI context:
 
-**Current Implementation** (`NodeCardView.swift` lines 18-45):
-```swift
-Button(action: {
-    // Single tap should also work
-    if canPerformAction() {
-        action()  // Upgrades once
-        HapticManager.selection()
-    }
-})
-.simultaneousGesture(
-    LongPressGesture(minimumDuration: 0.3)
-        .onEnded { _ in
-            if canPerformAction() {
-                isPressed = true
-                startContinuousUpgrade()  // Timer starts
-            }
-        }
-)
-.simultaneousGesture(
-    DragGesture(minimumDistance: 0)
-        .onEnded { _ in
-            stopContinuousUpgrade()  // Timer stops
-        }
-)
-```
+1. **`@State` batching**: SwiftUI batches `@State` mutations, so setting `isHolding = false` in `stopContinuousUpgrade()` may not take effect before the next `DragGesture.onChanged` fires, allowing the timer to restart.
+2. **Timer/RunLoop interaction**: `Timer.scheduledTimer` runs on the main RunLoop and fires callbacks during SwiftUI's update cycle. Since the game re-renders every 1s tick (credits change), the timer reference held in `@State` can become stale across re-renders.
+3. **DragGesture.onChanged multi-fire**: `DragGesture(minimumDistance: 0).onChanged` fires continuously as the finger moves even slightly, and the `guard !isHolding` check can fail due to issue #1.
 
-**Potential Root Causes**:
-1. **Gesture conflict**: Both `LongPressGesture` and `DragGesture` may be firing unintentionally
-2. **Button action + gesture racing**: The button `action` closure might be running multiple times
-3. **Timer not stopping**: The `upgradeTimer` may not be invalidating properly
-4. **Multiple button instances**: Could there be multiple buttons responding to the same tap?
+**Fix**:
+Rewrote `ContinuousUpgradeButton` using Swift concurrency (`Task` + `async/await`) instead of Foundation `Timer`:
+- Single `DragGesture` handles both tap and hold
+- `Task.sleep` for the 0.5s hold threshold (cancellable)
+- `while !Task.isCancelled` loop for continuous upgrades (auto-stops on finger lift)
+- `holdTask?.cancel()` on `onEnded` provides immediate, reliable cancellation
+- `didContinuousUpgrade` flag prevents the single-tap action from firing after a hold
+- `onDisappear` cancels any running task to prevent leaks
 
-**Questions for User**:
-1. Does tapping ONCE cause multiple upgrades (L1 → L2 → L3 → L4...)? OR
-2. Does tapping ONCE start continuous upgrade mode that keeps going until you tap again?
-3. Does this happen on SOURCE, LINK, SINK, and FIREWALL? Or only specific nodes?
-4. Can you reproduce this consistently? Or is it intermittent?
+**Files Changed**:
+- `Views/Components/NodeCardView.swift` - Rewrote `ContinuousUpgradeButton`
 
-**Tested Scenarios** (code review):
-- ✅ Button action should only fire once per tap
-- ✅ `LongPressGesture` requires 0.3s minimum duration
-- ✅ `DragGesture.onEnded` should fire on finger release
-- ✅ GameEngine upgrade functions only upgrade once per call
-- ❓ Gesture interaction timing and conflicts need device testing
-
-**Next Steps**:
-1. Get clarification from user on exact behavior
-2. Consider simplifying button to remove gesture complexity
-3. May need to add debug logging to track gesture events
-4. Consider alternative: Regular button for single tap, separate "Hold to Upgrade" mode
+**Build Status**: ✅ Build succeeded
 
 ---
 

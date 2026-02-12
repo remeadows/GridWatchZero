@@ -6,83 +6,59 @@ import SwiftUI
 
 // MARK: - Continuous Upgrade Button
 
-/// A button that supports continuous upgrades when held down
+/// A button that supports single tap upgrade and hold-to-continuously-upgrade.
+/// Uses Swift concurrency (Task) instead of Foundation Timer for reliable
+/// SwiftUI integration and proper cancellation on finger lift.
 struct ContinuousUpgradeButton<Label: View>: View {
     let action: () -> Void
-    let canPerformAction: () -> Bool  // Dynamic check instead of static bool
+    let canPerformAction: () -> Bool
     @ViewBuilder let label: () -> Label
 
-    @State private var isHolding = false
-    @State private var upgradeTimer: Timer?
-    @State private var holdStartTime: Date?
+    @State private var holdTask: Task<Void, Never>?
+    @State private var didContinuousUpgrade = false
 
     var body: some View {
         label()
-            .contentShape(Rectangle())  // Make entire area tappable
+            .contentShape(Rectangle())
             .gesture(
                 DragGesture(minimumDistance: 0)
                     .onChanged { _ in
-                        // Only start timer once when finger first touches
-                        guard !isHolding else { return }
-                        
-                        print("[ContinuousUpgradeButton] 👆 Finger DOWN - starting hold detection")
-                        isHolding = true
-                        holdStartTime = Date()
-                        
-                        // Start timer after 0.5 second delay for continuous upgrades
-                        upgradeTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: false) { _ in
-                            // Check if still holding and can afford
-                            if isHolding && canPerformAction() {
-                                print("[ContinuousUpgradeButton] ⏱️  0.5s elapsed - starting CONTINUOUS mode")
-                                startContinuousUpgrade()
+                        // Only start once per gesture sequence
+                        guard holdTask == nil else { return }
+                        didContinuousUpgrade = false
+
+                        holdTask = Task { @MainActor in
+                            // Wait 0.5s before entering continuous mode
+                            try? await Task.sleep(nanoseconds: 500_000_000)
+                            guard !Task.isCancelled else { return }
+
+                            // Enter continuous upgrade mode
+                            didContinuousUpgrade = true
+                            while !Task.isCancelled && canPerformAction() {
+                                action()
+                                HapticManager.selection()
+                                try? await Task.sleep(nanoseconds: 150_000_000)
                             }
                         }
                     }
                     .onEnded { _ in
-                        print("[ContinuousUpgradeButton] 👆 Finger UP")
-                        
-                        let holdDuration = Date().timeIntervalSince(holdStartTime ?? Date())
-                        print("[ContinuousUpgradeButton] Hold duration: \(String(format: "%.2f", holdDuration))s")
-                        
-                        // Stop any continuous upgrade
-                        stopContinuousUpgrade()
-                        
-                        // If it was a quick tap (less than 0.5s), do ONE upgrade
-                        if holdDuration < 0.5 && canPerformAction() {
-                            print("[ContinuousUpgradeButton] ✅ Quick tap - ONE upgrade")
+                        // Cancel continuous upgrade immediately
+                        holdTask?.cancel()
+                        holdTask = nil
+
+                        // If we never entered continuous mode, treat as single tap
+                        if !didContinuousUpgrade && canPerformAction() {
                             action()
                             HapticManager.selection()
-                        } else {
-                            print("[ContinuousUpgradeButton] ⏹️  Long hold released - stopping")
                         }
-                        
-                        isHolding = false
-                        holdStartTime = nil
+                        didContinuousUpgrade = false
                     }
             )
-            .opacity(canPerformAction() ? 1.0 : 0.5)
-    }
-
-    private func startContinuousUpgrade() {
-        print("[ContinuousUpgradeButton] 🔄 Starting continuous upgrade timer (every 0.15s)")
-        // Start timer for continuous upgrades (every 0.15 seconds = ~7 per second)
-        upgradeTimer = Timer.scheduledTimer(withTimeInterval: 0.15, repeats: true) { timer in
-            // Check if we can still afford the upgrade
-            if canPerformAction() && isHolding {
-                print("[ContinuousUpgradeButton] ⚡ Upgrade tick")
-                action()
-            } else {
-                print("[ContinuousUpgradeButton] ⏹️  Stopping continuous (can't afford: \(!canPerformAction()) or not holding: \(!isHolding))")
-                stopContinuousUpgrade()
+            .onDisappear {
+                holdTask?.cancel()
+                holdTask = nil
             }
-        }
-    }
-
-    private func stopContinuousUpgrade() {
-        print("[ContinuousUpgradeButton] 🛑 Stop continuous upgrade - invalidating timer")
-        upgradeTimer?.invalidate()
-        upgradeTimer = nil
-        isHolding = false  // Ensure holding state is reset
+            .opacity(canPerformAction() ? 1.0 : 0.5)
     }
 }
 
