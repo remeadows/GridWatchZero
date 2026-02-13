@@ -21,6 +21,8 @@ struct DashboardView: View {
     @State var showingPrestige = false
     @State var showingCriticalAlarm = false
     @State var showingSettings = false
+    @State private var eventBannerTask: Task<Void, Never>?
+    @State private var shakeTask: Task<Void, Never>?
     @Environment(\.horizontalSizeClass) var horizontalSizeClass
     @Environment(\.accessibilityReduceMotion) var reduceMotion
 
@@ -158,7 +160,8 @@ struct DashboardView: View {
             // Start tutorial for Level 1 (if not completed)
             if engine.levelConfiguration?.level.id == 1 && !tutorialManager.state.hasCompletedTutorial {
                 // Delay to let intro story finish
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                Task { @MainActor in
+                    try? await Task.sleep(nanoseconds: 500_000_000)
                     tutorialManager.startTutorialForLevel1()
                 }
             }
@@ -219,8 +222,14 @@ struct DashboardView: View {
         .preferredColorScheme(.dark)
     }
 
+    // P3 fix: Cancellable Tasks replace DispatchQueue.main.asyncAfter
+    // Prevents event banner stacking and orphaned shake animations
+
     private func handleEvent(_ event: GameEvent?) {
         guard let event = event else { return }
+
+        // Cancel any pending banner dismissal
+        eventBannerTask?.cancel()
 
         // Show banner
         withAnimation {
@@ -232,16 +241,18 @@ struct DashboardView: View {
             triggerScreenShake()
         }
 
-        // Auto-hide banner after delay
-        let hideDelay: Double = {
+        // Auto-hide banner after delay (cancellable)
+        let hideDelay: UInt64 = {
             switch event {
-            case .malusMessage: return 5.0
-            case .attackStarted: return 3.0
-            default: return 2.0
+            case .malusMessage: return 5_000_000_000
+            case .attackStarted: return 3_000_000_000
+            default: return 2_000_000_000
             }
         }()
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + hideDelay) {
+        eventBannerTask = Task { @MainActor in
+            try? await Task.sleep(nanoseconds: hideDelay)
+            guard !Task.isCancelled else { return }
             withAnimation {
                 if showingEvent == event {
                     showingEvent = nil
@@ -251,28 +262,25 @@ struct DashboardView: View {
     }
 
     private func triggerScreenShake() {
+        // Cancel any in-progress shake sequence
+        shakeTask?.cancel()
+
         let shakeAnimation = Animation.spring(response: 0.1, dampingFraction: 0.3)
 
-        withAnimation(shakeAnimation) {
-            screenShake = 8
-        }
+        shakeTask = Task { @MainActor in
+            withAnimation(shakeAnimation) { screenShake = 8 }
+            try? await Task.sleep(nanoseconds: 100_000_000)
+            guard !Task.isCancelled else { return }
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            withAnimation(shakeAnimation) {
-                screenShake = -6
-            }
-        }
+            withAnimation(shakeAnimation) { screenShake = -6 }
+            try? await Task.sleep(nanoseconds: 100_000_000)
+            guard !Task.isCancelled else { return }
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-            withAnimation(shakeAnimation) {
-                screenShake = 4
-            }
-        }
+            withAnimation(shakeAnimation) { screenShake = 4 }
+            try? await Task.sleep(nanoseconds: 100_000_000)
+            guard !Task.isCancelled else { return }
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-            withAnimation(shakeAnimation) {
-                screenShake = 0
-            }
+            withAnimation(shakeAnimation) { screenShake = 0 }
         }
     }
 }

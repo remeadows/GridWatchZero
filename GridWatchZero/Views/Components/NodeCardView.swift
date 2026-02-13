@@ -282,6 +282,7 @@ struct SourceCardView: View {
         }
         .terminalCard(borderColor: .neonGreen)
         .shadow(color: .neonGreen.opacity(reduceMotion ? 0.1 : (isPulsing ? 0.3 : 0.1)), radius: reduceMotion ? 3 : (isPulsing ? 8 : 3))
+        .compositingGroup()  // P2 fix: flatten card + animated shadow into single compositing layer
         .onAppear {
             guard !reduceMotion else { return }
             withAnimation(.easeInOut(duration: 1.5).repeatForever(autoreverses: true)) {
@@ -529,6 +530,7 @@ struct LinkCardView: View {
         }
         .terminalCard(borderColor: .neonCyan)
         .shadow(color: .neonCyan.opacity(reduceMotion ? 0.1 : (isPulsing ? 0.3 : 0.1)), radius: reduceMotion ? 3 : (isPulsing ? 8 : 3))
+        .compositingGroup()  // P2 fix: flatten card + animated shadow into single compositing layer
         .onAppear {
             guard !reduceMotion else { return }
             withAnimation(.easeInOut(duration: 1.8).repeatForever(autoreverses: true)) {
@@ -748,6 +750,7 @@ struct SinkCardView: View {
         }
         .terminalCard(borderColor: .neonAmber)
         .shadow(color: .neonAmber.opacity(reduceMotion ? 0.1 : (isPulsing ? 0.3 : 0.1)), radius: reduceMotion ? 3 : (isPulsing ? 8 : 3))
+        .compositingGroup()  // P2 fix: flatten card + animated shadow into single compositing layer
         .onAppear {
             guard !reduceMotion else { return }
             withAnimation(.easeInOut(duration: 2.0).repeatForever(autoreverses: true)) {

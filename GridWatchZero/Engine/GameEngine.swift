@@ -252,10 +252,11 @@ final class GameEngine {
     // Sprint E: Link Latency Buffer (transient, not persisted)
     var latencyBuffer: [(amount: Double, ticksRemaining: Int)] = []
 
+    /// Cached total buffered data (P3 fix: avoids reduce() per view read)
+    private(set) var _cachedBufferedData: Double = 0
+
     /// Total data buffered in the latency buffer (for view display)
-    var totalBufferedData: Double {
-        latencyBuffer.reduce(0.0) { $0 + $1.amount }
-    }
+    var totalBufferedData: Double { _cachedBufferedData }
 
     // MARK: - Cached Defense Totals (recomputed each tick, not persisted)
 
@@ -313,6 +314,39 @@ final class GameEngine {
         levelConfiguration?.level.availableTiers.max() ?? 6
     }
 
+    // MARK: - Display State (P0 Perf Fix)
+
+    /// Scoped observable for tick-driven UI. Views should read from this
+    /// instead of GameEngine for frequently-changing values.
+    private(set) var displayState: TickDisplayState!
+
+    /// Syncs all display-relevant state into displayState at end of tick.
+    /// Single batch write minimizes observation invalidation scope.
+    func syncDisplayState() {
+        let ds = displayState!
+        ds.lastTickStats = lastTickStats
+        ds.currentTick = currentTick
+        ds.isRunning = isRunning
+        ds.credits = resources.credits
+        ds.source = source
+        ds.link = link
+        ds.sink = sink
+        ds.firewall = firewall
+        ds.threatState = threatState
+        ds.activeAttack = activeAttack
+        ds.activeEarlyWarning = activeEarlyWarning
+        ds.totalBufferedData = _cachedBufferedData
+        ds.totalDataGenerated = totalDataGenerated
+        ds.totalDataTransferred = totalDataTransferred
+        ds.totalDataDropped = totalDataDropped
+        ds.totalDataProcessed = resources.totalDataProcessed
+        ds.defenseStack = defenseStack
+        ds.cachedDefenseTotals = cachedDefenseTotals
+        ds.malusIntel = malusIntel
+        ds.batchUploadState = batchUploadState
+        ds.prestigeState = prestigeState
+    }
+
     // MARK: - Private
 
     private var tickTimer: AnyCancellable?
@@ -345,8 +379,18 @@ final class GameEngine {
         self.prestigeState = state.prestigeState
         self.criticalAlarmAcknowledged = state.criticalAlarmAcknowledged
 
+        // Initialize display state
+        self.displayState = TickDisplayState(
+            source: state.source,
+            link: state.link,
+            sink: state.sink
+        )
+
         // Load saved game (with migration support)
         loadGame()
+
+        // Sync display state after load
+        syncDisplayState()
     }
 
     // MARK: - Game Loop Control
@@ -354,6 +398,7 @@ final class GameEngine {
     func start() {
         guard !isRunning else { return }
         isRunning = true
+        displayState.isRunning = true
 
         tickTimer = Timer.publish(every: tickInterval, on: .main, in: .common)
             .autoconnect()
@@ -364,6 +409,7 @@ final class GameEngine {
 
     func pause() {
         isRunning = false
+        displayState.isRunning = false
         tickTimer?.cancel()
         tickTimer = nil
         if isInCampaignMode {
@@ -582,6 +628,12 @@ final class GameEngine {
 
         // Tick engagement bonus multiplier
         EngagementManager.shared.tickBonus()
+
+        // P3: Update cached buffered data total
+        _cachedBufferedData = latencyBuffer.reduce(0.0) { $0 + $1.amount }
+
+        // P0: Sync display state — single batch write for scoped view invalidation
+        syncDisplayState()
     }
 
     func emitEvent(_ event: GameEvent) {

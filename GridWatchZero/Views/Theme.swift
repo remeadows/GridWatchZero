@@ -123,6 +123,7 @@ struct TerminalCardModifier: ViewModifier {
             )
             // Outer depth shadow
             .shadow(color: borderColor.opacity(0.1), radius: 6, x: 0, y: 3)
+            .compositingGroup()  // P1 fix: flatten 6 compositing layers into one raster
     }
 }
 
@@ -187,6 +188,7 @@ struct NoiseTextureView: View {
                 }
             }
         }
+        .drawingGroup()  // P1 fix: rasterize to Metal — eliminates ~160K fill ops per invalidation
         .allowsHitTesting(false)
         .accessibilityHidden(true)
     }

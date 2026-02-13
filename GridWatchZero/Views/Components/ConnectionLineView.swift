@@ -41,7 +41,6 @@ struct ConnectionLineView: View {
             Image(systemName: "chevron.down")
                 .font(.system(size: 10))
                 .foregroundColor(lineColor)
-                .glow(lineColor, radius: isActive ? 4 : 0)
 
             ZStack {
                 // Background line with glow
@@ -66,7 +65,7 @@ struct ConnectionLineView: View {
                         Circle()
                             .fill(lineColor)
                             .frame(width: 4, height: 4)
-                            .glow(lineColor, radius: 2)
+                            // P2 fix: removed .glow() shadow — plain opacity is cheaper
                             .offset(x: -20 + particlePhase * 40)
                             .opacity(particlePhase > 0.05 && particlePhase < 0.95 ? 1 : 0)
                     }
@@ -77,7 +76,6 @@ struct ConnectionLineView: View {
             Image(systemName: "chevron.down")
                 .font(.system(size: 10))
                 .foregroundColor(lineColor)
-                .glow(lineColor, radius: isActive ? 4 : 0)
         }
         .onAppear {
             startAnimation()
