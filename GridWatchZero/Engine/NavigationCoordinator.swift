@@ -526,8 +526,11 @@ struct RootNavigationView: View {
         .environment(gameEngine)
         .environmentObject(campaignState)
         .environmentObject(cloudManager)
-        .animation(.easeInOut(duration: 0.3), value: coordinator.currentScreen)
-        .animation(.easeInOut(duration: 0.3), value: coordinator.activeStoryMoment?.id)
+        // P0 fix: removed global .animation() modifiers
+        // Each navigation call already uses explicit withAnimation(),
+        // and the global modifier was causing double-animation + full-tree
+        // participation (both old and new screens rendered simultaneously
+        // with GlassDashboardBackground = ~320K Canvas fill ops per transition)
         .onAppear {
             coordinator.campaignState = campaignState
             coordinator.loadStoryState()

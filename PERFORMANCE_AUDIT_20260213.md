@@ -245,17 +245,36 @@ Cache the total as a stored property, update it when latencyBuffer changes.
 
 ---
 
-## SUMMARY: Priority-Ordered Fix List
+## FIX TRACKER
 
-| Priority | Issue | Impact | Effort |
-|----------|-------|--------|--------|
-| P0 | Observable scope — full-tree invalidation | Eliminates ~80% of render overhead | Medium-High |
-| P1 | NoiseTextureView — add drawingGroup or pre-render | Eliminates 160K fill ops per invalidation | Low |
-| P1 | `.terminalCard()` — add `.compositingGroup()` | Reduces compositing layers by ~60 | Low |
-| P2 | Perpetual shadow animations on node cards | Reduces continuous GPU compositing | Low |
-| P2 | ConnectionLineView particle shadows | Reduces animated compositing layers | Low |
-| P3 | DispatchQueue.main.asyncAfter → Task.sleep | Prevents animation stacking | Low-Medium |
-| P3 | Cache totalBufferedData | Removes redundant reduce per tick | Trivial |
+| Priority | Issue | Status | Commit | Notes |
+|----------|-------|--------|--------|-------|
+| P0 | Observable scope — TickDisplayState isolation | ✅ DONE | `856f2a6` | iPhone + iPad dashboard migrated. All mutation paths sync. |
+| P0 | TitleScreenView scanline ForEach → Canvas | ✅ DONE | `df8efd7` | ~240 Rectangle views replaced with single Canvas + drawingGroup |
+| P0 | TitleScreenView glow compositingGroup | ✅ DONE | `df8efd7` | Flattens glow+glitch into single rasterized composite |
+| P1 | NoiseTextureView — add drawingGroup | ✅ DONE | `856f2a6` | Added .drawingGroup() to Theme.swift NoiseTextureView |
+| P1 | `.terminalCard()` — add `.compositingGroup()` | ✅ DONE | (prior) | Flattens ~60 compositing layers per dashboard |
+| P1 | Global `.animation()` on RootNavigationView | ✅ DONE | pending | Was double-animating all transitions + rendering both screens |
+| P1 | MainMenuView gridBackground drawingGroup | ✅ DONE | pending | Static Path rasterized to Metal |
+| P2 | Perpetual shadow animations on node cards | ✅ DONE | (prior) | .compositingGroup() on all 3 cards |
+| P2 | ConnectionLineView particle shadows | ✅ DONE | (prior) | .glow() removed from particles |
+| P3 | DispatchQueue.main.asyncAfter → Task.sleep | 🔴 TODO | — | Event banners can stack during rapid attacks |
+| P3 | Cache totalBufferedData | 🔴 TODO | — | Computed property re-traverses latencyBuffer every tick |
+| P3 | GameplayContainerView victoryProgress observation | 🟡 MINOR | — | Reads ~6 engine props per tick; body is thin so low impact |
+
+### User-Reported Issues (2026-02-13)
+
+- Title screen → campaign menu transition: SLOW (pre-fix recording captured)
+- Level goals screen: SLOW (user report, longer video forthcoming)
+- Dashboard gameplay: NOT YET VERIFIED (recording never reached dashboard)
+
+### Root Cause Analysis (Session 2)
+
+Global `.animation(.easeInOut, value: coordinator.currentScreen)` on RootNavigationView's ZStack was the likely primary cause of transition sluggishness. Every navigation already used explicit `withAnimation`, so the global modifier caused **double-animation** where SwiftUI rendered BOTH the departing and arriving screens simultaneously (each with GlassDashboardBackground = ~320K Canvas fill ops). Removed in this session.
+
+### Xcode Cloud Baseline
+
+If regression testing needed, restore from last successful Xcode Cloud build on `main` branch (pre-CLAUDE_UPDATE).
 
 ---
 

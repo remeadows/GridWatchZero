@@ -145,6 +145,7 @@ struct MainMenuView: View {
             }
             .stroke(Color.neonGreen.opacity(0.05), lineWidth: 1)
         }
+        .drawingGroup()  // Perf: rasterize static grid to Metal texture
         .allowsHitTesting(false)
     }
 
