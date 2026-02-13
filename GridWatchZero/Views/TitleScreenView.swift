@@ -71,6 +71,9 @@ struct TitleScreenView: View {
 
     // MARK: - Title Section
 
+    // P1 FIX: .compositingGroup() flattens glow+glitch layers into single
+    // rasterized composite. Without it, each glitch tick re-renders 3 text
+    // layers + blur shadow = ~12 compositing passes at 10fps.
     private var titleSection: some View {
         VStack(spacing: 8) {
             // Glitch layers for "GRID WATCH"
@@ -93,6 +96,7 @@ struct TitleScreenView: View {
                     .foregroundColor(.neonGreen)
             }
             .glow(.neonGreen, radius: 12)
+            .compositingGroup()
             .opacity(titleOpacity)
 
             ZStack {
@@ -114,6 +118,7 @@ struct TitleScreenView: View {
                     .foregroundColor(.neonAmber)
             }
             .glow(.neonAmber, radius: 15)
+            .compositingGroup()
             .opacity(titleOpacity)
 
             // Subtitle
@@ -165,20 +170,17 @@ struct TitleScreenView: View {
     }
 
     // MARK: - Scanline Overlay
+    // P1 FIX: Replaced ForEach (~240 views) with single Canvas + drawingGroup.
+    // Canvas rasterizes to Metal texture — zero per-frame view diffing cost.
 
     private var scanlineOverlay: some View {
-        GeometryReader { geo in
-            VStack(spacing: 2) {
-                ForEach(0..<Int(geo.size.height / 4), id: \.self) { _ in
-                    Rectangle()
-                        .fill(Color.black.opacity(0.15))
-                        .frame(height: 1)
-                    Spacer()
-                        .frame(height: 3)
-                }
+        Canvas { context, size in
+            for y in stride(from: scanlineOffset.truncatingRemainder(dividingBy: 4), to: size.height, by: 4) {
+                let rect = CGRect(x: 0, y: y, width: size.width, height: 1)
+                context.fill(Path(rect), with: .color(.black.opacity(0.15)))
             }
-            .offset(y: scanlineOffset)
         }
+        .drawingGroup()
         .allowsHitTesting(false)
     }
 
