@@ -253,7 +253,7 @@ final class GameEngine {
     var latencyBuffer: [(amount: Double, ticksRemaining: Int)] = []
 
     /// Cached total buffered data (P3 fix: avoids reduce() per view read)
-    private(set) var _cachedBufferedData: Double = 0
+    var _cachedBufferedData: Double = 0
 
     /// Total data buffered in the latency buffer (for view display)
     var totalBufferedData: Double { _cachedBufferedData }
