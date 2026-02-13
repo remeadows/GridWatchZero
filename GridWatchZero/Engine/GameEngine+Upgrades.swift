@@ -5,7 +5,6 @@ import Foundation
 extension GameEngine {
 
     func upgradeSource() -> Bool {
-        // Check if at max level for this tier
         guard source.canUpgrade else { return false }
         let cost = source.upgradeCost
         guard resources.spendCredits(cost) else { return false }
@@ -13,12 +12,12 @@ extension GameEngine {
         AudioManager.shared.playSound(.upgrade)
         TutorialManager.shared.recordAction(.upgradedSource)
         recordUnitUpgrade()
+        syncDisplayState()  // P0: push mutation to display layer
         saveGame()
         return true
     }
 
     func upgradeLink() -> Bool {
-        // Check if at max level for this tier
         guard link.canUpgrade else { return false }
         let cost = link.upgradeCost
         guard resources.spendCredits(cost) else { return false }
@@ -26,12 +25,12 @@ extension GameEngine {
         AudioManager.shared.playSound(.upgrade)
         TutorialManager.shared.recordAction(.upgradedLink)
         recordUnitUpgrade()
+        syncDisplayState()
         saveGame()
         return true
     }
 
     func upgradeSink() -> Bool {
-        // Check if at max level for this tier
         guard sink.canUpgrade else { return false }
         let cost = sink.upgradeCost
         guard resources.spendCredits(cost) else { return false }
@@ -39,13 +38,13 @@ extension GameEngine {
         AudioManager.shared.playSound(.upgrade)
         TutorialManager.shared.recordAction(.upgradedSink)
         recordUnitUpgrade()
+        syncDisplayState()
         saveGame()
         return true
     }
 
     func upgradeFirewall() -> Bool {
         guard var fw = firewall else { return false }
-        // Check if at max level for this tier
         guard fw.canUpgrade else { return false }
         let cost = fw.upgradeCost
         guard resources.spendCredits(cost) else { return false }
@@ -53,6 +52,7 @@ extension GameEngine {
         firewall = fw
         AudioManager.shared.playSound(.upgrade)
         recordUnitUpgrade()
+        syncDisplayState()
         saveGame()
         return true
     }
@@ -167,6 +167,7 @@ extension GameEngine {
             return false
         }
         source = newSource
+        syncDisplayState()
         saveGame()
         return true
     }
@@ -177,6 +178,7 @@ extension GameEngine {
             return false
         }
         link = newLink
+        syncDisplayState()
         saveGame()
         return true
     }
@@ -187,6 +189,7 @@ extension GameEngine {
             return false
         }
         sink = newSink
+        syncDisplayState()
         saveGame()
         return true
     }
@@ -201,6 +204,7 @@ extension GameEngine {
         } else {
             firewall = nil
         }
+        syncDisplayState()
         saveGame()
         return true
     }
@@ -216,13 +220,13 @@ extension GameEngine {
         let firewallInfo = UnitFactory.unit(withId: "defense_t1_basic_firewall")
         guard let info = firewallInfo else { return false }
 
-        // Unlock if needed
         if !unlockState.isUnlocked(info.id) {
             guard unlockUnit(info) else { return false }
         }
 
         firewall = UnitFactory.createBasicFirewall()
         TutorialManager.shared.recordAction(.purchasedFirewall)
+        syncDisplayState()
         saveGame()
         return true
     }
@@ -236,6 +240,7 @@ extension GameEngine {
         guard resources.spendCredits(repairCost) else { return false }
 
         firewall = fw
+        syncDisplayState()
         saveGame()
         return true
     }

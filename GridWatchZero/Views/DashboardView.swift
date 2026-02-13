@@ -84,13 +84,13 @@ struct DashboardView: View {
                 iPhoneLayout
             }
 
-            // Critical Alarm Overlay
+            // Critical Alarm Overlay — reads from displayState for tick-driven values
             if showingCriticalAlarm {
                 CriticalAlarmView(
-                    threatLevel: engine.threatState.currentLevel,
-                    riskLevel: engine.threatState.effectiveRiskLevel,
-                    activeAttack: engine.activeAttack,
-                    defenseStack: engine.defenseStack,
+                    threatLevel: engine.displayState.threatState.currentLevel,
+                    riskLevel: engine.displayState.threatState.effectiveRiskLevel,
+                    activeAttack: engine.displayState.activeAttack,
+                    defenseStack: engine.displayState.defenseStack,
                     onAcknowledge: {
                         engine.acknowledgeCriticalAlarm()
                         showingCriticalAlarm = false

@@ -57,17 +57,22 @@ extension DashboardView {
 
     // MARK: - iPad Left Sidebar
 
+    // P0 FIX: All tick-driven reads go through `ds` (TickDisplayState).
+    // Structural reads (isInCampaignMode, maxTierAvailable, canPrestige) and
+    // action closures stay on engine.
     func iPadLeftSidebar(layoutMode: IPadLayoutStyle) -> some View {
-        VStack(spacing: 0) {
+        let ds = engine.displayState!
+
+        return VStack(spacing: 0) {
             // Header with stats
             iPadHeaderView
 
             // Threat bar
             ThreatBarView(
-                threatState: engine.threatState,
-                activeAttack: engine.activeAttack,
-                attacksSurvived: engine.threatState.attacksSurvived,
-                earlyWarning: engine.activeEarlyWarning
+                threatState: ds.threatState,
+                activeAttack: ds.activeAttack,
+                attacksSurvived: ds.threatState.attacksSurvived,
+                earlyWarning: ds.activeEarlyWarning
             )
 
             // Sidebar content
@@ -81,16 +86,16 @@ extension DashboardView {
 
                     // Compact firewall card matching Source/Link/Sink design
                     IPadCompactFirewallCard(
-                        firewall: engine.firewall,
-                        credits: engine.resources.credits,
+                        firewall: ds.firewall,
+                        credits: ds.credits,
                         onRepair: { _ = engine.repairFirewall() },
                         onUpgrade: { _ = engine.upgradeFirewall() },
                         onPurchase: { _ = engine.purchaseFirewall() }
                     )
 
                     DefenseStackView(
-                        stack: engine.defenseStack,
-                        credits: engine.resources.credits,
+                        stack: ds.defenseStack,
+                        credits: ds.credits,
                         maxTierAvailable: engine.maxTierAvailable,
                         onUpgrade: { category in
                             _ = engine.upgradeDefenseApp(category)
@@ -106,8 +111,8 @@ extension DashboardView {
                     // Prestige (only in endless mode, and only in 2-column)
                     if !layoutMode.showsThirdColumn && !engine.isInCampaignMode {
                         PrestigeCardView(
-                            prestigeState: engine.prestigeState,
-                            totalCredits: engine.threatState.totalCreditsEarned,
+                            prestigeState: ds.prestigeState,
+                            totalCredits: ds.threatState.totalCreditsEarned,
                             canPrestige: engine.canPrestige,
                             creditsRequired: engine.creditsRequiredForPrestige,
                             helixCoresReward: engine.helixCoresFromPrestige,
@@ -123,7 +128,9 @@ extension DashboardView {
     // MARK: - iPad Center Panel (Network Map)
 
     func iPadCenterPanel(layoutMode: IPadLayoutStyle) -> some View {
-        VStack(spacing: 0) {
+        let ds = engine.displayState!
+
+        return VStack(spacing: 0) {
             sectionHeader("NETWORK MAP")
                 .padding(.top, 16)
                 .padding(.horizontal)
@@ -133,15 +140,15 @@ extension DashboardView {
                 VStack(spacing: 0) {
                     // Network Topology at top for iPad
                     NetworkTopologyView(
-                        source: engine.source,
-                        link: engine.link,
-                        sink: engine.sink,
-                        stack: engine.defenseStack,
-                        isRunning: engine.isRunning,
-                        tickStats: engine.lastTickStats,
-                        threatLevel: engine.threatState.currentLevel,
-                        activeAttack: engine.activeAttack,
-                        malusIntel: engine.malusIntel
+                        source: ds.source,
+                        link: ds.link,
+                        sink: ds.sink,
+                        stack: ds.defenseStack,
+                        isRunning: ds.isRunning,
+                        tickStats: ds.lastTickStats,
+                        threatLevel: ds.threatState.currentLevel,
+                        activeAttack: ds.activeAttack,
+                        malusIntel: ds.malusIntel
                     )
                     .padding(.horizontal, layoutMode == .expanded ? 40 : 24)
                     .padding(.top, 16)
@@ -153,11 +160,11 @@ extension DashboardView {
 
                     // Network stats at bottom
                     ThreatStatsView(
-                        threatState: engine.threatState,
-                        totalGenerated: engine.totalDataGenerated,
-                        totalTransferred: engine.totalDataTransferred,
-                        totalDropped: engine.totalDataDropped,
-                        totalProcessed: engine.resources.totalDataProcessed
+                        threatState: ds.threatState,
+                        totalGenerated: ds.totalDataGenerated,
+                        totalTransferred: ds.totalDataTransferred,
+                        totalDropped: ds.totalDataDropped,
+                        totalProcessed: ds.totalDataProcessed
                     )
                     .padding(.horizontal, layoutMode == .expanded ? 40 : 24)
                     .padding(.top, 24)
@@ -165,7 +172,7 @@ extension DashboardView {
                     // Malus Intelligence - in center for 2-column, right sidebar for 3-column
                     if !layoutMode.showsThirdColumn {
                         MalusIntelPanel(
-                            intel: engine.malusIntel,
+                            intel: ds.malusIntel,
                             onSendReport: {
                                 _ = engine.sendMalusReport()
                             },
@@ -173,8 +180,8 @@ extension DashboardView {
                                 _ = engine.sendAllMalusReports()
                             },
                             canSendAll: engine.canSendAllReports,
-                            batchUpload: engine.batchUploadState,
-                            earlyWarning: engine.activeEarlyWarning
+                            batchUpload: ds.batchUploadState,
+                            earlyWarning: ds.activeEarlyWarning
                         )
                         .padding(.horizontal, layoutMode == .expanded ? 40 : 24)
                         .padding(.top, 16)
@@ -189,45 +196,47 @@ extension DashboardView {
 
     @ViewBuilder
     func iPadNodeCards(layoutMode: IPadLayoutStyle) -> some View {
+        let ds = engine.displayState!
+
         if layoutMode.useVerticalCardLayout {
             // Vertical stack for compact mode (portrait)
             VStack(spacing: 0) {
                 SourceCardView(
-                    source: engine.source,
-                    credits: engine.resources.credits,
+                    source: ds.source,
+                    credits: ds.credits,
                     onUpgrade: { _ = engine.upgradeSource() }
                 )
 
                 ConnectionLineView(
-                    isActive: engine.isRunning,
-                    throughput: engine.lastTickStats.dataGenerated,
-                    maxThroughput: engine.source.productionPerTick
+                    isActive: ds.isRunning,
+                    throughput: ds.lastTickStats.dataGenerated,
+                    maxThroughput: ds.source.productionPerTick
                 )
                 .frame(height: 30)
 
                 ZStack {
                     LinkCardView(
-                        link: engine.link,
-                        credits: engine.resources.credits,
+                        link: ds.link,
+                        credits: ds.credits,
                         onUpgrade: { _ = engine.upgradeLink() },
-                        bufferedData: engine.totalBufferedData
+                        bufferedData: ds.totalBufferedData
                     )
-                    if let attack = engine.activeAttack,
+                    if let attack = ds.activeAttack,
                        attack.type == .ddos && attack.isActive {
                         DDoSOverlay()
                     }
                 }
 
                 ConnectionLineView(
-                    isActive: engine.isRunning,
-                    throughput: engine.lastTickStats.dataTransferred,
-                    maxThroughput: engine.link.bandwidth
+                    isActive: ds.isRunning,
+                    throughput: ds.lastTickStats.dataTransferred,
+                    maxThroughput: ds.link.bandwidth
                 )
                 .frame(height: 30)
 
                 SinkCardView(
-                    sink: engine.sink,
-                    credits: engine.resources.credits,
+                    sink: ds.sink,
+                    credits: ds.credits,
                     onUpgrade: { _ = engine.upgradeSink() }
                 )
             }
@@ -237,25 +246,25 @@ extension DashboardView {
             HStack(alignment: .top, spacing: 12) {
                 // Source Card - Compact
                 IPadCompactSourceCard(
-                    source: engine.source,
-                    credits: engine.resources.credits,
+                    source: ds.source,
+                    credits: ds.credits,
                     onUpgrade: { _ = engine.upgradeSource() }
                 )
                 .frame(minWidth: 180, maxWidth: .infinity)
 
                 // Link Card - Compact
                 IPadCompactLinkCard(
-                    link: engine.link,
-                    credits: engine.resources.credits,
-                    activeAttack: engine.activeAttack,
+                    link: ds.link,
+                    credits: ds.credits,
+                    activeAttack: ds.activeAttack,
                     onUpgrade: { _ = engine.upgradeLink() }
                 )
                 .frame(minWidth: 180, maxWidth: .infinity)
 
                 // Sink Card - Compact
                 IPadCompactSinkCard(
-                    sink: engine.sink,
-                    credits: engine.resources.credits,
+                    sink: ds.sink,
+                    credits: ds.credits,
                     onUpgrade: { _ = engine.upgradeSink() }
                 )
                 .frame(minWidth: 180, maxWidth: .infinity)
@@ -266,7 +275,9 @@ extension DashboardView {
     // MARK: - iPad Right Sidebar (Intel/Milestones - 3-column only)
 
     var iPadRightSidebar: some View {
-        VStack(spacing: 0) {
+        let ds = engine.displayState!
+
+        return VStack(spacing: 0) {
             // Section header
             sectionHeader("INTEL & PROGRESS")
                 .padding(.horizontal)
@@ -276,7 +287,7 @@ extension DashboardView {
                 VStack(spacing: 16) {
                     // Malus Intel
                     MalusIntelPanel(
-                        intel: engine.malusIntel,
+                        intel: ds.malusIntel,
                         onSendReport: {
                             _ = engine.sendMalusReport()
                         },
@@ -284,8 +295,8 @@ extension DashboardView {
                             _ = engine.sendAllMalusReports()
                         },
                         canSendAll: engine.canSendAllReports,
-                        batchUpload: engine.batchUploadState,
-                        earlyWarning: engine.activeEarlyWarning
+                        batchUpload: ds.batchUploadState,
+                        earlyWarning: ds.activeEarlyWarning
                     )
 
                     // Recent lore/intel teaser
@@ -294,8 +305,8 @@ extension DashboardView {
                     // Prestige (only in endless mode)
                     if !engine.isInCampaignMode {
                         PrestigeCardView(
-                            prestigeState: engine.prestigeState,
-                            totalCredits: engine.threatState.totalCreditsEarned,
+                            prestigeState: ds.prestigeState,
+                            totalCredits: ds.threatState.totalCreditsEarned,
                             canPrestige: engine.canPrestige,
                             creditsRequired: engine.creditsRequiredForPrestige,
                             helixCoresReward: engine.helixCoresFromPrestige,
@@ -389,7 +400,9 @@ extension DashboardView {
     // MARK: - iPad Header View
 
     var iPadHeaderView: some View {
-        VStack(spacing: 0) {
+        let ds = engine.displayState!
+
+        return VStack(spacing: 0) {
             // Campaign level bar (if in campaign mode)
             if let config = engine.levelConfiguration {
                 HStack(spacing: 8) {
@@ -450,9 +463,9 @@ extension DashboardView {
                                 Image(systemName: "creditcard.fill")
                                     .font(.system(size: 10))
                                     .foregroundColor(.neonAmber)
-                                Text("\(engine.resources.credits.formatted)/\(creditsRequired.formatted)")
+                                Text("\(ds.credits.formatted)/\(creditsRequired.formatted)")
                                     .font(.terminalMicro)
-                                    .foregroundColor(engine.resources.credits >= creditsRequired ? .neonGreen : .terminalGray)
+                                    .foregroundColor(ds.credits >= creditsRequired ? .neonGreen : .terminalGray)
                             }
                         }
 
@@ -462,9 +475,9 @@ extension DashboardView {
                                 Image(systemName: "doc.text.fill")
                                     .font(.system(size: 10))
                                     .foregroundColor(.neonCyan)
-                                Text("\(engine.malusIntel.reportsSent)/\(reportsRequired)")
+                                Text("\(ds.malusIntel.reportsSent)/\(reportsRequired)")
                                     .font(.terminalMicro)
-                                    .foregroundColor(engine.malusIntel.reportsSent >= reportsRequired ? .neonGreen : .terminalGray)
+                                    .foregroundColor(ds.malusIntel.reportsSent >= reportsRequired ? .neonGreen : .terminalGray)
                             }
                         }
                     }
@@ -490,13 +503,13 @@ extension DashboardView {
                     Text("¢")
                         .font(.terminalBody)
                         .foregroundColor(.neonAmber)
-                    Text(engine.resources.credits.formatted)
+                    Text(ds.credits.formatted)
                         .font(.terminalTitle)
                         .foregroundColor(.neonAmber)
                         .glow(.neonAmber, radius: 3)
                 }
                 .accessibilityElement(children: .combine)
-                .accessibilityLabel("\(engine.resources.credits.formatted) credits")
+                .accessibilityLabel("\(ds.credits.formatted) credits")
 
                 // Control buttons
                 HStack(spacing: 4) {
@@ -557,7 +570,7 @@ extension DashboardView {
                     .accessibilityLabel("Shop")
 
                     Button(action: { engine.toggle() }) {
-                        Image(systemName: engine.isRunning ? "pause.fill" : "play.fill")
+                        Image(systemName: ds.isRunning ? "pause.fill" : "play.fill")
                             .font(.system(size: 16))
                             .foregroundColor(.neonGreen)
                             .frame(width: 36, height: 36)
@@ -568,7 +581,7 @@ extension DashboardView {
                                     .stroke(Color.neonGreen.opacity(0.5), lineWidth: 1)
                             )
                     }
-                    .accessibilityLabel(engine.isRunning ? "Pause game" : "Resume game")
+                    .accessibilityLabel(ds.isRunning ? "Pause game" : "Resume game")
                 }
             }
             .padding(.horizontal, 12)
@@ -580,37 +593,39 @@ extension DashboardView {
     // MARK: - iPad Quick Stats Panel
 
     var iPadQuickStatsPanel: some View {
-        VStack(spacing: 12) {
+        let ds = engine.displayState!
+
+        return VStack(spacing: 12) {
             sectionHeader("LIVE STATS")
 
             HStack(spacing: 16) {
-                iPadStatBox(label: "GEN", value: engine.lastTickStats.dataGenerated.formatted, color: .neonGreen)
-                iPadStatBox(label: "TX", value: engine.lastTickStats.dataTransferred.formatted, color: .neonCyan)
-                iPadStatBox(label: "DROP", value: engine.lastTickStats.dataDropped.formatted, color: engine.lastTickStats.dataDropped > 0 ? .neonRed : .terminalGray)
-                iPadStatBox(label: "EARN", value: "¢\(engine.lastTickStats.creditsEarned.formatted)", color: .neonAmber)
+                iPadStatBox(label: "GEN", value: ds.lastTickStats.dataGenerated.formatted, color: .neonGreen)
+                iPadStatBox(label: "TX", value: ds.lastTickStats.dataTransferred.formatted, color: .neonCyan)
+                iPadStatBox(label: "DROP", value: ds.lastTickStats.dataDropped.formatted, color: ds.lastTickStats.dataDropped > 0 ? .neonRed : .terminalGray)
+                iPadStatBox(label: "EARN", value: "¢\(ds.lastTickStats.creditsEarned.formatted)", color: .neonAmber)
             }
 
             // Tick indicator
             HStack {
                 Circle()
-                    .fill(engine.isRunning ? Color.neonGreen : Color.neonRed)
+                    .fill(ds.isRunning ? Color.neonGreen : Color.neonRed)
                     .frame(width: 8, height: 8)
-                    .glow(engine.isRunning ? .neonGreen : .neonRed, radius: 3)
+                    .glow(ds.isRunning ? .neonGreen : .neonRed, radius: 3)
 
-                Text("Tick \(engine.currentTick)")
+                Text("Tick \(ds.currentTick)")
                     .font(.terminalSmall)
                     .foregroundColor(.terminalGray)
 
                 Spacer()
 
-                Text(engine.isRunning ? "RUNNING" : "PAUSED")
+                Text(ds.isRunning ? "RUNNING" : "PAUSED")
                     .font(.terminalMicro)
-                    .foregroundColor(engine.isRunning ? .neonGreen : .neonRed)
+                    .foregroundColor(ds.isRunning ? .neonGreen : .neonRed)
             }
         }
         .terminalCard(borderColor: .terminalGray)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("Live stats: Generated \(engine.lastTickStats.dataGenerated.formatted), transferred \(engine.lastTickStats.dataTransferred.formatted), dropped \(engine.lastTickStats.dataDropped.formatted), earned \(engine.lastTickStats.creditsEarned.formatted) credits. Tick \(engine.currentTick), \(engine.isRunning ? "running" : "paused")")
+        .accessibilityLabel("Live stats: Generated \(ds.lastTickStats.dataGenerated.formatted), transferred \(ds.lastTickStats.dataTransferred.formatted), dropped \(ds.lastTickStats.dataDropped.formatted), earned \(ds.lastTickStats.creditsEarned.formatted) credits. Tick \(ds.currentTick), \(ds.isRunning ? "running" : "paused")")
     }
 
     func iPadStatBox(label: String, value: String, color: Color) -> some View {

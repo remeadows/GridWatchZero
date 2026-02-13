@@ -11,7 +11,8 @@ extension GameEngine {
 
         defenseStack.unlock(tier)
         emitEvent(.unitUnlocked(tier.displayName))
-        AudioManager.shared.playSound(.equip)  // Play equip sound when unlocking new defense
+        AudioManager.shared.playSound(.equip)
+        syncDisplayState()
         saveGame()
         return true
     }
@@ -22,9 +23,10 @@ extension GameEngine {
 
         defenseStack.deploy(tier)
         emitEvent(.milestone("Deployed: \(tier.displayName)"))
-        AudioManager.shared.playSound(.equip)  // Play equip sound when deploying defense
+        AudioManager.shared.playSound(.equip)
         TutorialManager.shared.recordAction(.deployedDefenseApp)
         recordDefenseDeployed()
+        syncDisplayState()
         saveGame()
         return true
     }
@@ -36,6 +38,7 @@ extension GameEngine {
 
         _ = defenseStack.upgrade(category)
         AudioManager.shared.playSound(.upgrade)
+        syncDisplayState()
         saveGame()
         return true
     }

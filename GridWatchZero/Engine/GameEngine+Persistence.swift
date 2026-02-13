@@ -228,6 +228,8 @@ extension GameEngine {
         activeEarlyWarning = nil
         batchUploadState = nil
         latencyBuffer = []
+        _cachedBufferedData = 0
+        syncDisplayState()
         UserDefaults.standard.removeObject(forKey: saveKey)
     }
 }

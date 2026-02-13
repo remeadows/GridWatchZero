@@ -20,8 +20,15 @@ extension DashboardView {
 
     // MARK: - iPhone Layout (Original stacked layout)
 
+    // P0 FIX: All tick-driven reads go through `ds` (TickDisplayState).
+    // Only structural/infrequent reads (levelConfiguration, loreState, isInCampaignMode)
+    // and action closures (engine.upgradeSource()) stay on engine.
+    // This scopes observation so only TickDisplayState triggers view invalidation per tick.
+
     var iPhoneLayout: some View {
-        ZStack(alignment: .top) {
+        let ds = engine.displayState!
+
+        return ZStack(alignment: .top) {
             // Main content in VStack
             VStack(spacing: 0) {
                 // Tutorial hint banner (Level 1 only)
@@ -31,10 +38,10 @@ extension DashboardView {
 
                 // Header with stats + threat indicator
                 StatsHeaderView(
-                credits: engine.resources.credits,
-                tickStats: engine.lastTickStats,
-                currentTick: engine.currentTick,
-                isRunning: engine.isRunning,
+                credits: ds.credits,
+                tickStats: ds.lastTickStats,
+                currentTick: ds.currentTick,
+                isRunning: ds.isRunning,
                 unreadLore: engine.loreState.unreadCount,
                 onToggle: { engine.toggle() },
                 onReset: { engine.resetGame() },
@@ -50,10 +57,10 @@ extension DashboardView {
 
             // Threat / Defense / Risk bar (fixed height to prevent layout shift)
             ThreatBarView(
-                threatState: engine.threatState,
-                activeAttack: engine.activeAttack,
-                attacksSurvived: engine.threatState.attacksSurvived,
-                earlyWarning: engine.activeEarlyWarning
+                threatState: ds.threatState,
+                activeAttack: ds.activeAttack,
+                attacksSurvived: ds.threatState.attacksSurvived,
+                earlyWarning: ds.activeEarlyWarning
             )
             .frame(height: 32)
             .clipped()
@@ -80,21 +87,21 @@ extension DashboardView {
 
                     // Source Node
                     SourceCardView(
-                        source: engine.source,
-                        credits: engine.resources.credits,
+                        source: ds.source,
+                        credits: ds.credits,
                         onUpgrade: { _ = engine.upgradeSource() }
                     )
                     .tutorialHighlight(.sourceCard, manager: tutorialManager)
                     .padding(.horizontal)
                     .accessibilityElement(children: .combine)
-                    .accessibilityLabel("Source node: \(engine.source.name), level \(engine.source.level), output \(engine.source.productionPerTick.formatted) per tick")
-                    .accessibilityHint("Double tap to upgrade for \(engine.source.upgradeCost.formatted) credits")
+                    .accessibilityLabel("Source node: \(ds.source.name), level \(ds.source.level), output \(ds.source.productionPerTick.formatted) per tick")
+                    .accessibilityHint("Double tap to upgrade for \(ds.source.upgradeCost.formatted) credits")
 
                     // Connection: Source -> Link
                     ConnectionLineView(
-                        isActive: engine.isRunning,
-                        throughput: engine.lastTickStats.dataGenerated,
-                        maxThroughput: engine.source.productionPerTick
+                        isActive: ds.isRunning,
+                        throughput: ds.lastTickStats.dataGenerated,
+                        maxThroughput: ds.source.productionPerTick
                     )
                     .frame(height: 30)
                     .accessibilityHidden(true)
@@ -102,14 +109,14 @@ extension DashboardView {
                     // Link Node (with attack indicator overlay)
                     ZStack {
                         LinkCardView(
-                            link: engine.link,
-                            credits: engine.resources.credits,
+                            link: ds.link,
+                            credits: ds.credits,
                             onUpgrade: { _ = engine.upgradeLink() },
-                            bufferedData: engine.totalBufferedData
+                            bufferedData: ds.totalBufferedData
                         )
 
                         // DDoS attack overlay
-                        if let attack = engine.activeAttack,
+                        if let attack = ds.activeAttack,
                            attack.type == .ddos && attack.isActive {
                             DDoSOverlay()
                         }
@@ -117,45 +124,45 @@ extension DashboardView {
                     .tutorialHighlight(.linkCard, manager: tutorialManager)
                     .padding(.horizontal)
                     .accessibilityElement(children: .combine)
-                    .accessibilityLabel("Link node: \(engine.link.name), level \(engine.link.level), bandwidth \(engine.link.bandwidth.formatted) per tick")
-                    .accessibilityHint("Double tap to upgrade for \(engine.link.upgradeCost.formatted) credits")
+                    .accessibilityLabel("Link node: \(ds.link.name), level \(ds.link.level), bandwidth \(ds.link.bandwidth.formatted) per tick")
+                    .accessibilityHint("Double tap to upgrade for \(ds.link.upgradeCost.formatted) credits")
 
                     // Connection: Link -> Sink
                     ConnectionLineView(
-                        isActive: engine.isRunning,
-                        throughput: engine.lastTickStats.dataTransferred,
-                        maxThroughput: engine.link.bandwidth
+                        isActive: ds.isRunning,
+                        throughput: ds.lastTickStats.dataTransferred,
+                        maxThroughput: ds.link.bandwidth
                     )
                     .frame(height: 30)
                     .accessibilityHidden(true)
 
                     // Sink Node
                     SinkCardView(
-                        sink: engine.sink,
-                        credits: engine.resources.credits,
+                        sink: ds.sink,
+                        credits: ds.credits,
                         onUpgrade: { _ = engine.upgradeSink() }
                     )
                     .tutorialHighlight(.sinkCard, manager: tutorialManager)
                     .padding(.horizontal)
                     .accessibilityElement(children: .combine)
-                    .accessibilityLabel("Sink node: \(engine.sink.name), level \(engine.sink.level), processing \(engine.sink.processingPerTick.formatted) per tick")
-                    .accessibilityHint("Double tap to upgrade for \(engine.sink.upgradeCost.formatted) credits")
+                    .accessibilityLabel("Sink node: \(ds.sink.name), level \(ds.sink.level), processing \(ds.sink.processingPerTick.formatted) per tick")
+                    .accessibilityHint("Double tap to upgrade for \(ds.sink.upgradeCost.formatted) credits")
 
                     // Network Topology
                     NetworkTopologyView(
-                        source: engine.source,
-                        link: engine.link,
-                        sink: engine.sink,
-                        stack: engine.defenseStack,
-                        isRunning: engine.isRunning,
-                        tickStats: engine.lastTickStats,
-                        threatLevel: engine.threatState.currentLevel,
-                        activeAttack: engine.activeAttack,
-                        malusIntel: engine.malusIntel
+                        source: ds.source,
+                        link: ds.link,
+                        sink: ds.sink,
+                        stack: ds.defenseStack,
+                        isRunning: ds.isRunning,
+                        tickStats: ds.lastTickStats,
+                        threatLevel: ds.threatState.currentLevel,
+                        activeAttack: ds.activeAttack,
+                        malusIntel: ds.malusIntel
                     )
                     .padding(.horizontal)
                     .padding(.top, 16)
-                    .accessibilityLabel("Network topology visualization showing \(Int((1.0 - engine.lastTickStats.dropRate) * 100)) percent efficiency")
+                    .accessibilityLabel("Network topology visualization showing \(Int((1.0 - ds.lastTickStats.dropRate) * 100)) percent efficiency")
 
                     // Defense section header
                     sectionHeader("PERIMETER DEFENSE")
@@ -165,9 +172,9 @@ extension DashboardView {
 
                     // Firewall Node (legacy - still needed)
                     FirewallCardView(
-                        firewall: engine.firewall,
-                        credits: engine.resources.credits,
-                        damageAbsorbed: engine.lastTickStats.damageAbsorbed,
+                        firewall: ds.firewall,
+                        credits: ds.credits,
+                        damageAbsorbed: ds.lastTickStats.damageAbsorbed,
                         onUpgrade: { _ = engine.upgradeFirewall() },
                         onRepair: { _ = engine.repairFirewall() },
                         onPurchase: { _ = engine.purchaseFirewall() }
@@ -177,8 +184,8 @@ extension DashboardView {
 
                     // Security Applications Stack
                     DefenseStackView(
-                        stack: engine.defenseStack,
-                        credits: engine.resources.credits,
+                        stack: ds.defenseStack,
+                        credits: ds.credits,
                         maxTierAvailable: engine.maxTierAvailable,
                         onUpgrade: { category in
                             _ = engine.upgradeDefenseApp(category)
@@ -196,18 +203,18 @@ extension DashboardView {
 
                     // Bottom stats
                     ThreatStatsView(
-                        threatState: engine.threatState,
-                        totalGenerated: engine.totalDataGenerated,
-                        totalTransferred: engine.totalDataTransferred,
-                        totalDropped: engine.totalDataDropped,
-                        totalProcessed: engine.resources.totalDataProcessed
+                        threatState: ds.threatState,
+                        totalGenerated: ds.totalDataGenerated,
+                        totalTransferred: ds.totalDataTransferred,
+                        totalDropped: ds.totalDataDropped,
+                        totalProcessed: ds.totalDataProcessed
                     )
                     .padding(.horizontal)
                     .padding(.top, 16)
 
                     // Malus Intelligence Panel - moved after stats for stability
                     MalusIntelPanel(
-                        intel: engine.malusIntel,
+                        intel: ds.malusIntel,
                         onSendReport: {
                             _ = engine.sendMalusReport()
                         },
@@ -215,8 +222,8 @@ extension DashboardView {
                             _ = engine.sendAllMalusReports()
                         },
                         canSendAll: engine.canSendAllReports,
-                        batchUpload: engine.batchUploadState,
-                        earlyWarning: engine.activeEarlyWarning
+                        batchUpload: ds.batchUploadState,
+                        earlyWarning: ds.activeEarlyWarning
                     )
                     .tutorialHighlight(.intelPanel, manager: tutorialManager)
                     .padding(.horizontal)
@@ -225,8 +232,8 @@ extension DashboardView {
                     // Prestige section (only in endless mode)
                     if !engine.isInCampaignMode {
                         PrestigeCardView(
-                            prestigeState: engine.prestigeState,
-                            totalCredits: engine.threatState.totalCreditsEarned,
+                            prestigeState: ds.prestigeState,
+                            totalCredits: ds.threatState.totalCreditsEarned,
                             canPrestige: engine.canPrestige,
                             creditsRequired: engine.creditsRequiredForPrestige,
                             helixCoresReward: engine.helixCoresFromPrestige,

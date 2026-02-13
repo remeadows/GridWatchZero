@@ -71,6 +71,7 @@ extension GameEngine {
         emitEvent(.milestone("NETWORK WIPE COMPLETE - Helix Core +\(coresEarned)"))
         AudioManager.shared.playSound(.milestone)
 
+        syncDisplayState()
         saveGame()
         return true
     }

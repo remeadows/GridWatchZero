@@ -37,6 +37,7 @@ extension GameEngine {
         recordIntelReportSent()
 
         TutorialManager.shared.recordAction(.sentReport)
+        syncDisplayState()
         saveGame()
         return true
     }
@@ -65,12 +66,14 @@ extension GameEngine {
 
         emitEvent(.batchUploadStarted(pending))
         AudioManager.shared.playSound(.upgrade)
+        syncDisplayState()
         return true
     }
 
     /// Cancel an in-progress batch upload
     func cancelBatchUpload() {
         batchUploadState = nil
+        syncDisplayState()
     }
 
     /// Whether the "Send ALL" button should be shown
