@@ -39,6 +39,8 @@ iOSInjectionProject/
 .claude/
 .codex/
 project/SPRINT_BALANCE.md
+.tmp/
+Simulator Screen Recording - *.mov
 
 # Xcode Test Results
 *.xcresult/

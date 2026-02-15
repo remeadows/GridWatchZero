@@ -5,6 +5,12 @@ This audit encompassed a comprehensive, principal-level evaluation of the GridWa
 
 ## Work Completed (2026-02-15)
 
+### QA Follow-Up (2026-02-15)
+- Current save/profile state is reset to **Campaign Level 1**.
+- Manual Insane-mode validation now requires progression through **Level 7** to re-unlock Insane access.
+- Interim verification status: gameplay behavior and audio output are both stable during current playthrough.
+- Focused automated regression coverage for Insane unlock runway and upgrade responsiveness remains green (latest focused simulator run: pass).
+
 ### Visual Playback Stabilization (Simulator + SwiftUI)
 - Reduced animation pressure across startup/menu/gameplay overlays by honoring `RenderPerformanceProfile.reducedEffects` in major screens and components.
 - Disabled simulator-only upgrade feedback SFX scheduling in rapid loops to prevent tap/hold hitching (`GameEngine+Upgrades.swift`).
@@ -20,6 +26,29 @@ This audit encompassed a comprehensive, principal-level evaluation of the GridWa
   - no false `Mission tier cap is T1` blocks for Tier 2 startup units,
   - explicit Level 1 Insane Tier 3 unlock coverage once Tier 2 is maxed/equipped (SOURCE/LINK/SINK/FW),
   - top-tier (Tier 25) unlock eligibility in Insane when tier-gate is satisfied.
+
+### Linear Evaluation + Deferred Plan (2026-02-15)
+Scope evaluated: `REM-10`, `REM-11`, `REM-12`, `REM-13`, `REM-14`.
+
+Current status snapshot (kept open pending verification):
+- `REM-10` (campaign objective semantics): **Partially addressed**. Core victory logic uses campaign-earned credits and Insane multipliers, but at least one objective UI path still displays raw credits/base thresholds.
+- `REM-11` (transient runtime reset): **Partially addressed**. Reset coverage exists for multiple transitions, but resume/re-entry consistency still needs hardening.
+- `REM-12` (integration tests for launch blockers): **Partially addressed**. New focused tests exist, but full launch-blocker matrix is not yet complete.
+- `REM-13` (performance hardening pass): **Partially addressed**. Broad performance work landed, but unmanaged repeating timer patterns remain in some views.
+- `REM-14` (Level 11-20 rebalance): **Not complete**. Late-game tuning remains an explicit follow-up risk.
+
+Deferred execution plan (documented only, no code changes in this step):
+1. `REM-10`: Align all campaign objective UI surfaces with victory-progress semantics and Insane-adjusted thresholds.
+2. `REM-11`: Normalize transient-state reset behavior across all mode transitions, including checkpoint resume.
+3. `REM-12`: Add blocker-focused integration tests for persistence, damage accounting, tier gating, and checkpoint/exit-resume flows.
+4. `REM-13`: Replace unmanaged repeating timers with lifecycle-safe scheduling/cancellation and re-test repeated present/dismiss cycles.
+5. `REM-14`: Perform structured L11-L20 balance runs (normal + insane samples), collect p50/p90 completion/economy metrics, and define tuning deltas.
+
+Issue closure gate:
+- Keep `REM-10..14` open until:
+  - target code and tests are implemented,
+  - focused simulator/device validation passes,
+  - evidence (test names, pass results, and for `REM-14` metric tables) is attached in Linear.
 
 ## Overall Project Health
 **Overall Project Health: Green-Yellow** *(upgraded from Yellow after fixes below)*
