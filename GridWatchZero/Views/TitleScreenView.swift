@@ -12,6 +12,7 @@ struct TitleScreenView: View {
     @State private var scanlineOffset: CGFloat = 0
     @State private var titleOpacity: Double = 0
     @State private var tapToContinue = false
+    private let reducedEffects = RenderPerformanceProfile.reducedEffects
 
     var onTap: () -> Void
 
@@ -167,24 +168,25 @@ struct TitleScreenView: View {
     // MARK: - Scanline Overlay
 
     private var scanlineOverlay: some View {
-        GeometryReader { geo in
-            VStack(spacing: 2) {
-                ForEach(0..<Int(geo.size.height / 4), id: \.self) { _ in
-                    Rectangle()
-                        .fill(Color.black.opacity(0.15))
-                        .frame(height: 1)
-                    Spacer()
-                        .frame(height: 3)
-                }
-            }
-            .offset(y: scanlineOffset)
-        }
-        .allowsHitTesting(false)
+        ScanlineOverlay()
+            .offset(y: reducedEffects ? 0 : scanlineOffset)
+            .allowsHitTesting(false)
     }
 
     // MARK: - Animations
 
     private func startAnimations() {
+        if reducedEffects {
+            glitchOffset = 0
+            scanlineOffset = 0
+            titleOpacity = 1
+            showTitle = true
+            showVersion = true
+            showCredit = true
+            tapToContinue = true
+            return
+        }
+
         // Glitch effect
         withAnimation(.easeInOut(duration: 0.1).repeatForever(autoreverses: true)) {
             glitchOffset = 2

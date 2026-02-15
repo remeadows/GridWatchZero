@@ -3,6 +3,10 @@
 // Cyberpunk terminal aesthetic
 
 import SwiftUI
+import Foundation
+#if canImport(UIKit)
+import UIKit
+#endif
 
 // MARK: - Color Theme
 
@@ -91,38 +95,62 @@ extension Font {
 
 // MARK: - View Modifiers (Glass HUD Style)
 
+enum RenderPerformanceProfile {
+    static var reducedEffects: Bool {
+        #if targetEnvironment(simulator)
+        return true
+        #else
+        return ProcessInfo.processInfo.environment["GWZ_REDUCED_EFFECTS"] == "1"
+        #endif
+    }
+}
+
 struct TerminalCardModifier: ViewModifier {
     var borderColor: Color = .neonGreen
 
     func body(content: Content) -> some View {
-        content
-            .padding(.horizontal, 12)
-            .padding(.vertical, 10)
-            .background(
-                // Frosted glass: translucent dark base with ultra-thin material
-                ZStack {
-                    Color.terminalDarkGray.opacity(0.55)
-                    Color.terminalBlack.opacity(0.15)
-                }
-            )
-            .background(.ultraThinMaterial.opacity(0.4))
-            .cornerRadius(4)
-            // Inner shadow for glass depth
-            .overlay(
-                RoundedRectangle(cornerRadius: 4)
-                    .stroke(Color.black.opacity(0.4), lineWidth: 1)
-                    .blur(radius: 1)
-                    .offset(x: 0, y: 1)
-                    .mask(RoundedRectangle(cornerRadius: 4).fill())
-            )
-            // Neon rim glow
-            .overlay(
-                RoundedRectangle(cornerRadius: 4)
-                    .stroke(borderColor.opacity(0.5), lineWidth: 1)
-                    .shadow(color: borderColor.opacity(0.25), radius: 3, x: 0, y: 0)
-            )
-            // Outer depth shadow
-            .shadow(color: borderColor.opacity(0.1), radius: 6, x: 0, y: 3)
+        Group {
+            if RenderPerformanceProfile.reducedEffects {
+                content
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 10)
+                    .background(Color.terminalDarkGray.opacity(0.92))
+                    .cornerRadius(4)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 4)
+                            .stroke(borderColor.opacity(0.35), lineWidth: 1)
+                    )
+            } else {
+                content
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 10)
+                    .background(
+                        // Frosted glass: translucent dark base with ultra-thin material
+                        ZStack {
+                            Color.terminalDarkGray.opacity(0.55)
+                            Color.terminalBlack.opacity(0.15)
+                        }
+                    )
+                    .background(.ultraThinMaterial.opacity(0.4))
+                    .cornerRadius(4)
+                    // Inner shadow for glass depth
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 4)
+                            .stroke(Color.black.opacity(0.4), lineWidth: 1)
+                            .blur(radius: 1)
+                            .offset(x: 0, y: 1)
+                            .mask(RoundedRectangle(cornerRadius: 4).fill())
+                    )
+                    // Neon rim glow
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 4)
+                            .stroke(borderColor.opacity(0.5), lineWidth: 1)
+                            .shadow(color: borderColor.opacity(0.25), radius: 3, x: 0, y: 0)
+                    )
+                    // Outer depth shadow
+                    .shadow(color: borderColor.opacity(0.1), radius: 6, x: 0, y: 3)
+            }
+        }
     }
 }
 
@@ -130,9 +158,14 @@ struct GlowModifier: ViewModifier {
     var color: Color
     var radius: CGFloat = 8
 
+    @ViewBuilder
     func body(content: Content) -> some View {
-        content
-            .shadow(color: color.opacity(0.6), radius: radius)
+        if RenderPerformanceProfile.reducedEffects {
+            content
+        } else {
+            content
+                .shadow(color: color.opacity(0.6), radius: radius)
+        }
     }
 }
 
@@ -172,19 +205,17 @@ struct TerminalButtonModifier: ViewModifier {
 /// Micro-noise texture overlay for dark matte depth (OLED-friendly)
 struct NoiseTextureView: View {
     var body: some View {
-        Canvas { context, size in
-            // Deterministic noise pattern for consistent rendering
-            var rng = StableRNG(seed: 42)
-            let step: CGFloat = 3
-            for x in stride(from: 0, to: size.width, by: step) {
-                for y in stride(from: 0, to: size.height, by: step) {
-                    let brightness = rng.nextDouble() * 0.04  // Very subtle: 0-4% white
-                    let rect = CGRect(x: x, y: y, width: step, height: step)
-                    context.fill(
-                        Path(rect),
-                        with: .color(Color.white.opacity(brightness))
-                    )
-                }
+        Group {
+            if RenderPerformanceProfile.reducedEffects {
+                EmptyView()
+            } else {
+                #if canImport(UIKit)
+                Image(uiImage: NoiseTextureCache.tileImage)
+                    .resizable(resizingMode: .tile)
+                    .opacity(0.08)
+                #else
+                EmptyView()
+                #endif
             }
         }
         .allowsHitTesting(false)
@@ -192,7 +223,31 @@ struct NoiseTextureView: View {
     }
 }
 
-/// Simple deterministic RNG for noise texture (avoids random() per-frame)
+#if canImport(UIKit)
+private enum NoiseTextureCache {
+    static let tileImage: UIImage = {
+        let size = CGSize(width: 64, height: 64)
+        let format = UIGraphicsImageRendererFormat()
+        format.opaque = false
+        let renderer = UIGraphicsImageRenderer(size: size, format: format)
+
+        return renderer.image { context in
+            UIColor.clear.setFill()
+            context.fill(CGRect(origin: .zero, size: size))
+
+            var rng = StableRNG(seed: 42)
+            for x in stride(from: 0, to: Int(size.width), by: 2) {
+                for y in stride(from: 0, to: Int(size.height), by: 2) {
+                    let alpha = CGFloat(rng.nextDouble() * 0.06)
+                    UIColor.white.withAlphaComponent(alpha).setFill()
+                    context.fill(CGRect(x: x, y: y, width: 2, height: 2))
+                }
+            }
+        }
+    }()
+}
+
+/// Simple deterministic RNG for cached texture generation
 private struct StableRNG {
     private var state: UInt64
 
@@ -201,13 +256,13 @@ private struct StableRNG {
     }
 
     mutating func nextDouble() -> Double {
-        // xorshift64
         state ^= state << 13
         state ^= state >> 7
         state ^= state << 17
         return Double(state % 10000) / 10000.0
     }
 }
+#endif
 
 /// Glass-style background for main dashboard
 struct GlassDashboardBackground: View {

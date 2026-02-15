@@ -88,13 +88,14 @@ struct AttackBanner: View {
     let attackType: AttackType
     @State private var isFlashing = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    private let reducedEffects = RenderPerformanceProfile.reducedEffects
 
     var body: some View {
         HStack(spacing: 12) {
             Image(systemName: attackType.icon)
                 .font(.system(size: 20, weight: .bold))
                 .foregroundColor(.neonRed)
-                .opacity(reduceMotion ? 1.0 : (isFlashing ? 0.5 : 1.0))
+                .opacity((reduceMotion || reducedEffects) ? 1.0 : (isFlashing ? 0.5 : 1.0))
 
             VStack(alignment: .leading, spacing: 2) {
                 Text("⚠ INCOMING \(attackType.rawValue)")
@@ -115,12 +116,12 @@ struct AttackBanner: View {
                 .overlay(
                     RoundedRectangle(cornerRadius: 4)
                         .stroke(Color.neonRed, lineWidth: 2)
-                        .opacity(reduceMotion ? 1.0 : (isFlashing ? 0.5 : 1.0))
+                        .opacity((reduceMotion || reducedEffects) ? 1.0 : (isFlashing ? 0.5 : 1.0))
                 )
         )
         .padding(.horizontal)
         .onAppear {
-            guard !reduceMotion else { return }
+            guard !reduceMotion && !reducedEffects else { return }
             withAnimation(
                 Animation.easeInOut(duration: 0.2)
                     .repeatForever(autoreverses: true)
@@ -143,6 +144,7 @@ struct MalusBanner: View {
     @State private var isGlitching = false
     @State private var glitchTimer: Timer?
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    private let reducedEffects = RenderPerformanceProfile.reducedEffects
 
     var body: some View {
         HStack(spacing: 12) {
@@ -150,7 +152,7 @@ struct MalusBanner: View {
             Image(systemName: "exclamationmark.triangle.fill")
                 .font(.system(size: 24, weight: .bold))
                 .foregroundColor(.neonRed)
-                .offset(x: reduceMotion ? 0 : glitchOffset)
+                .offset(x: (reduceMotion || reducedEffects) ? 0 : glitchOffset)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text("MALUS")
@@ -161,7 +163,7 @@ struct MalusBanner: View {
                 Text(displayedText)
                     .font(.terminalBody)
                     .foregroundColor(.neonGreen)
-                    .offset(x: reduceMotion ? 0 : (isGlitching ? CGFloat.random(in: -2...2) : 0))
+                    .offset(x: (reduceMotion || reducedEffects) ? 0 : (isGlitching ? CGFloat.random(in: -2...2) : 0))
             }
 
             Spacer()
@@ -178,7 +180,7 @@ struct MalusBanner: View {
         .overlay(
             // Scanline effect (skip if reduce motion)
             Group {
-                if !reduceMotion {
+                if !reduceMotion && !reducedEffects {
                     ScanlineOverlay()
                         .opacity(0.3)
                         .clipShape(RoundedRectangle(cornerRadius: 4))
@@ -187,7 +189,7 @@ struct MalusBanner: View {
         )
         .padding(.horizontal)
         .onAppear {
-            if reduceMotion {
+            if reduceMotion || reducedEffects {
                 displayedText = message
             } else {
                 typewriterEffect()
@@ -269,13 +271,14 @@ struct MilestoneBanner: View {
     let message: String
     @State private var isGlowing = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    private let reducedEffects = RenderPerformanceProfile.reducedEffects
 
     var body: some View {
         HStack(spacing: 12) {
             Image(systemName: "star.fill")
                 .font(.system(size: 20))
                 .foregroundColor(.neonAmber)
-                .glow(.neonAmber, radius: reduceMotion ? 4 : (isGlowing ? 8 : 2))
+                .glow(.neonAmber, radius: (reduceMotion || reducedEffects) ? 4 : (isGlowing ? 8 : 2))
 
             Text(message)
                 .font(.terminalBody)
@@ -294,7 +297,7 @@ struct MilestoneBanner: View {
         )
         .padding(.horizontal)
         .onAppear {
-            guard !reduceMotion else { return }
+            guard !reduceMotion && !reducedEffects else { return }
             withAnimation(
                 Animation.easeInOut(duration: 0.5)
                     .repeatForever(autoreverses: true)
@@ -366,13 +369,14 @@ struct LoreUnlockedBanner: View {
     let title: String
     @State private var isPulsing = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    private let reducedEffects = RenderPerformanceProfile.reducedEffects
 
     var body: some View {
         HStack(spacing: 12) {
             Image(systemName: "book.fill")
                 .font(.system(size: 18))
                 .foregroundColor(.neonCyan)
-                .glow(.neonCyan, radius: reduceMotion ? 4 : (isPulsing ? 6 : 2))
+                .glow(.neonCyan, radius: (reduceMotion || reducedEffects) ? 4 : (isPulsing ? 6 : 2))
 
             VStack(alignment: .leading, spacing: 2) {
                 Text("INTEL ACQUIRED")
@@ -401,7 +405,7 @@ struct LoreUnlockedBanner: View {
         )
         .padding(.horizontal)
         .onAppear {
-            guard !reduceMotion else { return }
+            guard !reduceMotion && !reducedEffects else { return }
             withAnimation(
                 Animation.easeInOut(duration: 0.6)
                     .repeatForever(autoreverses: true)
@@ -420,13 +424,14 @@ struct MilestoneCompletedBanner: View {
     let title: String
     @State private var isGlowing = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    private let reducedEffects = RenderPerformanceProfile.reducedEffects
 
     var body: some View {
         HStack(spacing: 12) {
             Image(systemName: "trophy.fill")
                 .font(.system(size: 20))
                 .foregroundColor(.neonAmber)
-                .glow(.neonAmber, radius: reduceMotion ? 4 : (isGlowing ? 8 : 2))
+                .glow(.neonAmber, radius: (reduceMotion || reducedEffects) ? 4 : (isGlowing ? 8 : 2))
 
             VStack(alignment: .leading, spacing: 2) {
                 Text("MILESTONE COMPLETE")
@@ -451,7 +456,7 @@ struct MilestoneCompletedBanner: View {
         )
         .padding(.horizontal)
         .onAppear {
-            guard !reduceMotion else { return }
+            guard !reduceMotion && !reducedEffects else { return }
             withAnimation(
                 Animation.easeInOut(duration: 0.5)
                     .repeatForever(autoreverses: true)
@@ -472,13 +477,14 @@ struct EarlyWarningBanner: View {
     let accuracy: Double
     @State private var isPulsing = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    private let reducedEffects = RenderPerformanceProfile.reducedEffects
 
     var body: some View {
         HStack(spacing: 12) {
             Image(systemName: "exclamationmark.triangle.fill")
                 .font(.system(size: 20, weight: .bold))
                 .foregroundColor(.neonAmber)
-                .opacity(reduceMotion ? 1.0 : (isPulsing ? 0.5 : 1.0))
+                .opacity((reduceMotion || reducedEffects) ? 1.0 : (isPulsing ? 0.5 : 1.0))
 
             VStack(alignment: .leading, spacing: 2) {
                 Text("⚡ IDS EARLY WARNING")
@@ -499,12 +505,12 @@ struct EarlyWarningBanner: View {
                 .overlay(
                     RoundedRectangle(cornerRadius: 4)
                         .stroke(Color.neonAmber, lineWidth: 2)
-                        .opacity(reduceMotion ? 1.0 : (isPulsing ? 0.5 : 1.0))
+                        .opacity((reduceMotion || reducedEffects) ? 1.0 : (isPulsing ? 0.5 : 1.0))
                 )
         )
         .padding(.horizontal)
         .onAppear {
-            guard !reduceMotion else { return }
+            guard !reduceMotion && !reducedEffects else { return }
             withAnimation(
                 Animation.easeInOut(duration: 0.4)
                     .repeatForever(autoreverses: true)

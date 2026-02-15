@@ -10,7 +10,7 @@ extension GameEngine {
         let cost = source.upgradeCost
         guard resources.spendCredits(cost) else { return false }
         source.upgrade()
-        AudioManager.shared.playSound(.upgrade)
+        playUpgradeFeedbackIfNeeded()
         TutorialManager.shared.recordAction(.upgradedSource)
         recordUnitUpgrade()
         saveGame()
@@ -23,7 +23,7 @@ extension GameEngine {
         let cost = link.upgradeCost
         guard resources.spendCredits(cost) else { return false }
         link.upgrade()
-        AudioManager.shared.playSound(.upgrade)
+        playUpgradeFeedbackIfNeeded()
         TutorialManager.shared.recordAction(.upgradedLink)
         recordUnitUpgrade()
         saveGame()
@@ -36,7 +36,7 @@ extension GameEngine {
         let cost = sink.upgradeCost
         guard resources.spendCredits(cost) else { return false }
         sink.upgrade()
-        AudioManager.shared.playSound(.upgrade)
+        playUpgradeFeedbackIfNeeded()
         TutorialManager.shared.recordAction(.upgradedSink)
         recordUnitUpgrade()
         saveGame()
@@ -51,10 +51,22 @@ extension GameEngine {
         guard resources.spendCredits(cost) else { return false }
         fw.upgrade()
         firewall = fw
-        AudioManager.shared.playSound(.upgrade)
+        playUpgradeFeedbackIfNeeded()
         recordUnitUpgrade()
         saveGame()
         return true
+    }
+
+    private func playUpgradeFeedbackIfNeeded() {
+        #if targetEnvironment(simulator)
+        // Rapid upgrade loops in simulator are bottlenecked by repeated SFX scheduling.
+        return
+        #else
+        let now = Date().timeIntervalSinceReferenceDate
+        guard now - lastUpgradeFeedbackTimestamp >= upgradeFeedbackMinimumInterval else { return }
+        lastUpgradeFeedbackTimestamp = now
+        AudioManager.shared.playSound(.upgrade)
+        #endif
     }
 }
 
@@ -68,8 +80,8 @@ extension GameEngine {
         guard resources.credits >= unitInfo.unlockCost else { return false }
 
         // Campaign mode: enforce availableTiers cap for all unit types
-        if isInCampaignMode, let config = levelConfiguration {
-            let maxAllowedTier = config.level.availableTiers.max() ?? 1
+        if isInCampaignMode {
+            let maxAllowedTier = maxUnlockTierInCampaign(for: unitInfo)
             guard unitInfo.tier.rawValue <= maxAllowedTier else { return false }
         }
 
@@ -77,6 +89,22 @@ extension GameEngine {
         guard isTierGateSatisfied(for: unitInfo) else { return false }
 
         return true
+    }
+
+    /// Returns the campaign tier ceiling for this category.
+    /// Insane mode ignores per-mission caps so full tier progression remains possible.
+    /// Normal mode on early T1-only levels still exposes Tier 2 so upgrades don't dead-end.
+    private func maxUnlockTierInCampaign(for _: UnitFactory.UnitInfo) -> Int {
+        guard isInCampaignMode else { return 25 }
+
+        if levelConfiguration?.isInsane == true {
+            return NodeTier.tier25.rawValue
+        }
+
+        let missionCap = maxTierAvailable
+        let earlyNormalRunwayCap = max(missionCap, 2)
+        // Early campaign levels that publish only T1 still need a visible/usable progression path.
+        return missionCap <= 1 ? earlyNormalRunwayCap : missionCap
     }
 
     /// Check if the tier gate requirement is satisfied
@@ -139,6 +167,35 @@ extension GameEngine {
             }
             return "T\(previousTier.rawValue) Defense must be at max level (\(previousTier.maxLevel))"
         }
+    }
+
+    /// Campaign tier cap reason for UI display
+    func campaignTierGateReason(for unitInfo: UnitFactory.UnitInfo) -> String? {
+        guard isInCampaignMode else { return nil }
+        let maxAllowedTier = maxUnlockTierInCampaign(for: unitInfo)
+        guard unitInfo.tier.rawValue > maxAllowedTier else { return nil }
+        if levelConfiguration?.isInsane == true {
+            return "Insane runway currently allows up to T\(maxAllowedTier)"
+        }
+        return "Mission tier cap is T\(maxAllowedTier)"
+    }
+
+    /// Primary unlock block reason for UI display
+    func unlockBlockReason(for unitInfo: UnitFactory.UnitInfo) -> String? {
+        guard !unlockState.isUnlocked(unitInfo.id) else { return nil }
+        if resources.credits < unitInfo.unlockCost {
+            return "Need ¢\(unitInfo.unlockCost.formatted)"
+        }
+        if let campaignCapReason = campaignTierGateReason(for: unitInfo) {
+            return campaignCapReason
+        }
+        if let tierReason = tierGateReason(for: unitInfo) {
+            return tierReason
+        }
+        if !canUnlock(unitInfo) {
+            return "Unlock requirements not met"
+        }
+        return nil
     }
 
     func unlockUnit(_ unitInfo: UnitFactory.UnitInfo) -> Bool {

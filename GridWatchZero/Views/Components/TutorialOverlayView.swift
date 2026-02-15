@@ -10,6 +10,7 @@ struct TutorialOverlayView: View {
     @ObservedObject var tutorialManager: TutorialManager
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    private let reducedEffects = RenderPerformanceProfile.reducedEffects
 
     @State private var pulseScale: CGFloat = 1.0
     @State private var glowOpacity: Double = 0.5
@@ -153,7 +154,7 @@ struct TutorialOverlayView: View {
     }
 
     private func startGlowAnimation() {
-        guard !reduceMotion else {
+        guard !reduceMotion && !reducedEffects else {
             glowOpacity = 1.0
             return
         }
@@ -172,6 +173,7 @@ struct TutorialHighlightModifier: ViewModifier {
     @State private var pulseScale: CGFloat = 1.0
     @State private var glowOpacity: Double = 0.5
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    private let reducedEffects = RenderPerformanceProfile.reducedEffects
 
     private var isHighlighted: Bool {
         tutorialManager.currentHighlight == highlightType
@@ -189,6 +191,7 @@ struct TutorialHighlightModifier: ViewModifier {
                             .glow(.neonGreen, radius: 12)
                     }
                 }
+                .allowsHitTesting(false)
             )
             .overlay(
                 Group {
@@ -206,6 +209,7 @@ struct TutorialHighlightModifier: ViewModifier {
                         .offset(y: -36)
                     }
                 }
+                .allowsHitTesting(false)
             )
             .zIndex(isHighlighted ? 100 : 0)
             .onChange(of: isHighlighted) { _, highlighted in
@@ -221,7 +225,7 @@ struct TutorialHighlightModifier: ViewModifier {
     }
 
     private func startPulseAnimation() {
-        guard !reduceMotion else {
+        guard !reduceMotion && !reducedEffects else {
             pulseScale = 1.0
             glowOpacity = 1.0
             return

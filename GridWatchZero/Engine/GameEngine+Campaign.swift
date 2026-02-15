@@ -22,7 +22,7 @@ extension GameEngine {
         // Reset to level's starting state
         let level = config.level
         resources = PlayerResources()
-        resources.credits = level.startingCredits
+        resources.credits = config.startingCredits
         source = UnitFactory.createPublicMeshSniffer()
         link = UnitFactory.createCopperVPNTunnel()
         sink = UnitFactory.createDataBroker()
@@ -30,7 +30,7 @@ extension GameEngine {
 
         // ISSUE-020: Auto-deploy starter firewall for elevated threat levels
         // "Rusty rigged an emergency firewall before you went in."
-        if level.startingThreatLevel.rawValue >= ThreatLevel.target.rawValue {
+        if config.isInsane || level.startingThreatLevel.rawValue >= ThreatLevel.target.rawValue {
             firewall = UnitFactory.createBasicFirewall()
         }
 
@@ -107,6 +107,8 @@ extension GameEngine {
             attacksSurvived: levelAttacksSurvived,
             damageBlocked: levelDamageBlocked,
             creditsEarned: levelCreditsEarned,
+            totalCreditsEarned: threatState.totalCreditsEarned,
+            threatLevel: threatState.currentLevel,
             sourceUnitId: source.unitTypeId,
             sourceLevel: source.level,
             linkUnitId: link.unitTypeId,
@@ -236,7 +238,19 @@ extension GameEngine {
 
         // Set threat state
         threatState = ThreatState()
-        threatState.currentLevel = config.level.startingThreatLevel
+        // Restore earned-credit progression so unlock/threat gates stay consistent after resume.
+        let restoredTotalCredits = checkpoint.totalCreditsEarned ??
+            max(checkpoint.creditsEarned, checkpoint.credits)
+        threatState.totalCreditsEarned = max(0, restoredTotalCredits)
+        threatState.attacksSurvived = checkpoint.attacksSurvived
+        threatState.totalDamageBlocked = checkpoint.damageBlocked
+        threatState.currentLevel = checkpoint.threatLevel ?? config.level.startingThreatLevel
+        threatState.updateThreatLevel()
+        // Honor explicit saved threat if it was higher than computed thresholds.
+        if let savedThreat = checkpoint.threatLevel,
+           savedThreat.rawValue > threatState.currentLevel.rawValue {
+            threatState.currentLevel = savedThreat
+        }
 
         // Reset event multipliers
         sourceMultiplier = 1.0

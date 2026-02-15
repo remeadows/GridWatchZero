@@ -14,51 +14,69 @@ struct ContinuousUpgradeButton<Label: View>: View {
     let canPerformAction: () -> Bool
     @ViewBuilder let label: () -> Label
 
-    @State private var holdTask: Task<Void, Never>?
-    @State private var didContinuousUpgrade = false
+    @State private var repeatTask: Task<Void, Never>?
+    @State private var suppressTapAfterLongPress = false
+    private let reducedEffects = RenderPerformanceProfile.reducedEffects
 
     var body: some View {
-        label()
-            .contentShape(Rectangle())
-            .gesture(
-                DragGesture(minimumDistance: 0)
-                    .onChanged { _ in
-                        // Only start once per gesture sequence
-                        guard holdTask == nil else { return }
-                        didContinuousUpgrade = false
-
-                        holdTask = Task { @MainActor in
-                            // Wait 0.5s before entering continuous mode
-                            try? await Task.sleep(nanoseconds: 500_000_000)
-                            guard !Task.isCancelled else { return }
-
-                            // Enter continuous upgrade mode
-                            didContinuousUpgrade = true
-                            while !Task.isCancelled && canPerformAction() {
-                                action()
-                                HapticManager.selection()
-                                try? await Task.sleep(nanoseconds: 150_000_000)
-                            }
-                        }
+        Button(action: handleTap) {
+            label()
+        }
+        .buttonStyle(.plain)
+        .contentShape(Rectangle())
+        .onLongPressGesture(minimumDuration: reducedEffects ? 0.2 : 0.35, maximumDistance: 20, pressing: { isPressing in
+            if !isPressing {
+                stopContinuousUpgrade()
+                // Prevent trailing tap from firing after a long-press release.
+                if suppressTapAfterLongPress {
+                    Task { @MainActor in
+                        try? await Task.sleep(nanoseconds: 120_000_000)
+                        suppressTapAfterLongPress = false
                     }
-                    .onEnded { _ in
-                        // Cancel continuous upgrade immediately
-                        holdTask?.cancel()
-                        holdTask = nil
-
-                        // If we never entered continuous mode, treat as single tap
-                        if !didContinuousUpgrade && canPerformAction() {
-                            action()
-                            HapticManager.selection()
-                        }
-                        didContinuousUpgrade = false
-                    }
-            )
-            .onDisappear {
-                holdTask?.cancel()
-                holdTask = nil
+                }
             }
-            .opacity(canPerformAction() ? 1.0 : 0.5)
+        }) {
+            suppressTapAfterLongPress = true
+            startContinuousUpgrade()
+        }
+        .onDisappear {
+            stopContinuousUpgrade()
+        }
+        .opacity(canPerformAction() ? 1.0 : 0.5)
+    }
+
+    private func handleTap() {
+        // Long-press repeat already performed upgrades.
+        guard !suppressTapAfterLongPress else { return }
+        guard canPerformAction() else { return }
+        action()
+        if !reducedEffects {
+            HapticManager.selection()
+        }
+    }
+
+    private func startContinuousUpgrade() {
+        guard repeatTask == nil else { return }
+        guard canPerformAction() else { return }
+
+        repeatTask = Task { @MainActor in
+            var iteration = 0
+            let intervalNanoseconds: UInt64 = reducedEffects ? 45_000_000 : 70_000_000
+            while !Task.isCancelled && canPerformAction() {
+                action()
+                // Throttle haptics during rapid repeat to avoid UI/audio contention.
+                if !reducedEffects && iteration % 8 == 0 {
+                    HapticManager.selection()
+                }
+                iteration += 1
+                try? await Task.sleep(nanoseconds: intervalNanoseconds)
+            }
+        }
+    }
+
+    private func stopContinuousUpgrade() {
+        repeatTask?.cancel()
+        repeatTask = nil
     }
 }
 
@@ -212,7 +230,7 @@ struct SourceCardView: View {
 
                         // Upgrade button or MAX badge - full width on compact
                         if source.isAtMaxLevel {
-                            Text("MAX")
+                            Text("MAX T\(source.tier.rawValue)")
                                 .font(.terminalSmall)
                                 .foregroundColor(.terminalBlack)
                                 .frame(maxWidth: .infinity)
@@ -253,7 +271,7 @@ struct SourceCardView: View {
 
                         // Upgrade button or MAX badge
                         if source.isAtMaxLevel {
-                            Text("MAX")
+                            Text("MAX T\(source.tier.rawValue)")
                                 .font(.terminalSmall)
                                 .foregroundColor(.terminalBlack)
                                 .padding(.horizontal, 10)
@@ -281,9 +299,12 @@ struct SourceCardView: View {
             .accessibilityHidden(true)
         }
         .terminalCard(borderColor: .neonGreen)
-        .shadow(color: .neonGreen.opacity(reduceMotion ? 0.1 : (isPulsing ? 0.3 : 0.1)), radius: reduceMotion ? 3 : (isPulsing ? 8 : 3))
+        .shadow(
+            color: .neonGreen.opacity((reduceMotion || RenderPerformanceProfile.reducedEffects) ? 0.1 : (isPulsing ? 0.3 : 0.1)),
+            radius: (reduceMotion || RenderPerformanceProfile.reducedEffects) ? 3 : (isPulsing ? 8 : 3)
+        )
         .onAppear {
-            guard !reduceMotion else { return }
+            guard !reduceMotion, !RenderPerformanceProfile.reducedEffects else { return }
             withAnimation(.easeInOut(duration: 1.5).repeatForever(autoreverses: true)) {
                 isPulsing = true
             }
@@ -420,7 +441,7 @@ struct LinkCardView: View {
 
                         // Upgrade button or MAX badge - full width on compact
                         if link.isAtMaxLevel {
-                            Text("MAX")
+                            Text("MAX T\(link.tier.rawValue)")
                                 .font(.terminalSmall)
                                 .foregroundColor(.terminalBlack)
                                 .frame(maxWidth: .infinity)
@@ -487,7 +508,7 @@ struct LinkCardView: View {
 
                             // Upgrade button or MAX badge
                             if link.isAtMaxLevel {
-                                Text("MAX")
+                                Text("MAX T\(link.tier.rawValue)")
                                     .font(.terminalSmall)
                                     .foregroundColor(.terminalBlack)
                                     .padding(.horizontal, 10)
@@ -528,9 +549,12 @@ struct LinkCardView: View {
             .accessibilityHidden(true)
         }
         .terminalCard(borderColor: .neonCyan)
-        .shadow(color: .neonCyan.opacity(reduceMotion ? 0.1 : (isPulsing ? 0.3 : 0.1)), radius: reduceMotion ? 3 : (isPulsing ? 8 : 3))
+        .shadow(
+            color: .neonCyan.opacity((reduceMotion || RenderPerformanceProfile.reducedEffects) ? 0.1 : (isPulsing ? 0.3 : 0.1)),
+            radius: (reduceMotion || RenderPerformanceProfile.reducedEffects) ? 3 : (isPulsing ? 8 : 3)
+        )
         .onAppear {
-            guard !reduceMotion else { return }
+            guard !reduceMotion, !RenderPerformanceProfile.reducedEffects else { return }
             withAnimation(.easeInOut(duration: 1.8).repeatForever(autoreverses: true)) {
                 isPulsing = true
             }
@@ -656,7 +680,7 @@ struct SinkCardView: View {
 
                         // Upgrade button or MAX badge - full width on compact
                         if sink.isAtMaxLevel {
-                            Text("MAX")
+                            Text("MAX T\(sink.tier.rawValue)")
                                 .font(.terminalSmall)
                                 .foregroundColor(.terminalBlack)
                                 .frame(maxWidth: .infinity)
@@ -719,7 +743,7 @@ struct SinkCardView: View {
 
                         // Upgrade button or MAX badge
                         if sink.isAtMaxLevel {
-                            Text("MAX")
+                            Text("MAX T\(sink.tier.rawValue)")
                                 .font(.terminalSmall)
                                 .foregroundColor(.terminalBlack)
                                 .padding(.horizontal, 10)
@@ -747,9 +771,12 @@ struct SinkCardView: View {
             .accessibilityHidden(true)
         }
         .terminalCard(borderColor: .neonAmber)
-        .shadow(color: .neonAmber.opacity(reduceMotion ? 0.1 : (isPulsing ? 0.3 : 0.1)), radius: reduceMotion ? 3 : (isPulsing ? 8 : 3))
+        .shadow(
+            color: .neonAmber.opacity((reduceMotion || RenderPerformanceProfile.reducedEffects) ? 0.1 : (isPulsing ? 0.3 : 0.1)),
+            radius: (reduceMotion || RenderPerformanceProfile.reducedEffects) ? 3 : (isPulsing ? 8 : 3)
+        )
         .onAppear {
-            guard !reduceMotion else { return }
+            guard !reduceMotion, !RenderPerformanceProfile.reducedEffects else { return }
             withAnimation(.easeInOut(duration: 2.0).repeatForever(autoreverses: true)) {
                 isPulsing = true
             }

@@ -4,12 +4,29 @@ import Foundation
 
 extension GameEngine {
 
-    func saveGame() {
-        #if DEBUG
-        print("[GameEngine] saveGame() CALLED at \(Date())")
-        print("[GameEngine] Current state: \(resources.credits.formatted) credits, tick \(currentTick)")
-        #endif
+    func saveGame(immediate: Bool = false) {
+        if immediate {
+            pendingSaveTask?.cancel()
+            pendingSaveTask = nil
+            persistGameNow()
+            return
+        }
 
+        // Coalesce rapid save callers (e.g. hold-to-upgrade) without cancel/recreate churn.
+        guard pendingSaveTask == nil else { return }
+        pendingSaveTask = Task { @MainActor [weak self] in
+            guard let self else { return }
+            try? await Task.sleep(nanoseconds: saveDebounceDelayNanoseconds)
+            guard !Task.isCancelled else {
+                self.pendingSaveTask = nil
+                return
+            }
+            persistGameNow()
+            self.pendingSaveTask = nil
+        }
+    }
+
+    private func persistGameNow() {
         let state = GameState(
             resources: resources,
             source: source,
@@ -32,21 +49,6 @@ extension GameEngine {
         do {
             let data = try JSONEncoder().encode(state)
             UserDefaults.standard.set(data, forKey: saveKey)
-
-            #if DEBUG
-            print("[GameEngine] State encoded (\(data.count) bytes), written to key: \(saveKey)")
-
-            // Verification: decode back to ensure data integrity (debug only)
-            if let verifyData = UserDefaults.standard.data(forKey: saveKey) {
-                if let verifyState = try? JSONDecoder().decode(GameState.self, from: verifyData) {
-                    print("[GameEngine] VERIFIED: decodable, credits=\(verifyState.resources.credits.formatted)")
-                } else {
-                    print("[GameEngine] WARNING: Data exists but cannot be decoded!")
-                }
-            } else {
-                print("[GameEngine] CRITICAL: Data NOT found in UserDefaults after save!")
-            }
-            #endif
         } catch {
             #if DEBUG
             print("[GameEngine] CRITICAL: Save failed - \(error.localizedDescription)")
@@ -195,6 +197,8 @@ extension GameEngine {
     }
 
     func resetGame() {
+        pendingSaveTask?.cancel()
+        pendingSaveTask = nil
         pause()
         let state = GameState.newGame()
         resources = state.resources

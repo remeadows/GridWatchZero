@@ -365,6 +365,8 @@ class EngagementManager: ObservableObject {
     @Published var showWeeklyChallenges = false
 
     private let saveKey = "GridWatchZero.EngagementState.v1"
+    private var pendingSaveTask: Task<Void, Never>?
+    private let saveDebounceDelayNanoseconds: UInt64 = 500_000_000
 
     private init() {
         load()
@@ -373,7 +375,21 @@ class EngagementManager: ObservableObject {
 
     // MARK: - Persistence
 
-    func save() {
+    func save(immediate: Bool = false) {
+        pendingSaveTask?.cancel()
+        if immediate {
+            persistNow()
+            return
+        }
+
+        pendingSaveTask = Task { [weak self] in
+            try? await Task.sleep(nanoseconds: self?.saveDebounceDelayNanoseconds ?? 0)
+            guard !Task.isCancelled else { return }
+            self?.persistNow()
+        }
+    }
+
+    private func persistNow() {
         if let data = try? JSONEncoder().encode(state) {
             UserDefaults.standard.set(data, forKey: saveKey)
         }
@@ -398,7 +414,7 @@ class EngagementManager: ObservableObject {
             }
         }
 
-        save()
+        save(immediate: true)
     }
 
     // MARK: - Daily Rewards
@@ -407,7 +423,7 @@ class EngagementManager: ObservableObject {
         guard let (reward, streakBonus) = state.claimDailyReward() else { return nil }
 
         let totalCredits = reward.credits * streakBonus
-        save()
+        save(immediate: true)
 
         return (totalCredits, reward.bonusMultiplier, reward.specialReward)
     }
@@ -425,7 +441,7 @@ class EngagementManager: ObservableObject {
 
     func claimChallengeReward(_ challengeId: String) -> Double? {
         guard let challenge = state.claimChallengeReward(challengeId) else { return nil }
-        save()
+        save(immediate: true)
         return challenge.rewardCredits
     }
 
@@ -473,6 +489,6 @@ class EngagementManager: ObservableObject {
 
     func reset() {
         state = EngagementState()
-        save()
+        save(immediate: true)
     }
 }

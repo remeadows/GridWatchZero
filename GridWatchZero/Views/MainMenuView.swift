@@ -9,6 +9,7 @@ struct MainMenuView: View {
     @State private var hasSaveData: Bool = false
     @State private var pulseOpacity: Double = 0.3
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    private let reducedEffects = RenderPerformanceProfile.reducedEffects
 
     var onNewGame: () -> Void
     var onContinue: () -> Void
@@ -44,13 +45,23 @@ struct MainMenuView: View {
         }
         .onAppear {
             checkSaveData()
-            withAnimation(.easeOut(duration: 0.6).delay(0.2)) {
+            if reducedEffects {
                 showButtons = true
+            } else {
+                withAnimation(.easeOut(duration: 0.6).delay(0.2)) {
+                    showButtons = true
+                }
             }
-            if !reduceMotion {
+            if !reduceMotion && !reducedEffects {
                 withAnimation(.easeInOut(duration: 1.5).repeatForever(autoreverses: true)) {
                     pulseOpacity = 0.8
                 }
+            }
+        }
+        .transaction { transaction in
+            if reducedEffects {
+                transaction.disablesAnimations = true
+                transaction.animation = nil
             }
         }
     }
@@ -129,21 +140,27 @@ struct MainMenuView: View {
     // MARK: - Grid Background
 
     private var gridBackground: some View {
-        GeometryReader { geo in
-            Path { path in
-                let spacing: CGFloat = 40
-                // Vertical lines
-                for x in stride(from: 0, to: geo.size.width, by: spacing) {
-                    path.move(to: CGPoint(x: x, y: 0))
-                    path.addLine(to: CGPoint(x: x, y: geo.size.height))
-                }
-                // Horizontal lines
-                for y in stride(from: 0, to: geo.size.height, by: spacing) {
-                    path.move(to: CGPoint(x: 0, y: y))
-                    path.addLine(to: CGPoint(x: geo.size.width, y: y))
+        Group {
+            if reducedEffects {
+                EmptyView()
+            } else {
+                GeometryReader { geo in
+                    Path { path in
+                        let spacing: CGFloat = 40
+                        // Vertical lines
+                        for x in stride(from: 0, to: geo.size.width, by: spacing) {
+                            path.move(to: CGPoint(x: x, y: 0))
+                            path.addLine(to: CGPoint(x: x, y: geo.size.height))
+                        }
+                        // Horizontal lines
+                        for y in stride(from: 0, to: geo.size.height, by: spacing) {
+                            path.move(to: CGPoint(x: 0, y: y))
+                            path.addLine(to: CGPoint(x: geo.size.width, y: y))
+                        }
+                    }
+                    .stroke(Color.neonGreen.opacity(0.05), lineWidth: 1)
                 }
             }
-            .stroke(Color.neonGreen.opacity(0.05), lineWidth: 1)
         }
         .allowsHitTesting(false)
     }

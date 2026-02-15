@@ -5,13 +5,18 @@ import SwiftUI
 struct VictoryProgressBar: View {
     let progress: VictoryProgress
     @State private var isExpanded = false
+    private let reducedEffects = RenderPerformanceProfile.reducedEffects
 
     var body: some View {
         VStack(spacing: 0) {
             // Collapsed view - tap to expand
             Button {
-                withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                if reducedEffects {
                     isExpanded.toggle()
+                } else {
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                        isExpanded.toggle()
+                    }
                 }
             } label: {
                 HStack(spacing: 12) {
@@ -144,6 +149,12 @@ struct VictoryProgressBar: View {
                     insertion: .move(edge: .bottom).combined(with: .opacity),
                     removal: .opacity
                 ))
+            }
+        }
+        .transaction { transaction in
+            if reducedEffects {
+                transaction.disablesAnimations = true
+                transaction.animation = nil
             }
         }
     }

@@ -11,6 +11,7 @@ struct ConnectionLineView: View {
 
     @State private var animationPhase: CGFloat = 0
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    private let reducedEffects = RenderPerformanceProfile.reducedEffects
 
     private var flowIntensity: Double {
         guard maxThroughput > 0 else { return 0 }
@@ -36,6 +37,38 @@ struct ConnectionLineView: View {
     }
 
     var body: some View {
+        if reducedEffects {
+            return AnyView(reducedBody)
+        }
+        return AnyView(animatedBody)
+    }
+
+    private var reducedBody: some View {
+        HStack(spacing: 4) {
+            Image(systemName: "chevron.down")
+                .font(.system(size: 10))
+                .foregroundColor(lineColor)
+
+            ZStack {
+                Rectangle()
+                    .fill(Color.terminalDarkGray)
+                    .frame(width: 40, height: 3)
+
+                if isActive {
+                    Rectangle()
+                        .fill(lineColor.opacity(0.7))
+                        .frame(width: max(8, 40 * flowIntensity), height: 3)
+                }
+            }
+            .frame(width: 50, height: 20)
+
+            Image(systemName: "chevron.down")
+                .font(.system(size: 10))
+                .foregroundColor(lineColor)
+        }
+    }
+
+    private var animatedBody: some View {
         HStack(spacing: 4) {
             // Arrow indicator
             Image(systemName: "chevron.down")
@@ -90,7 +123,7 @@ struct ConnectionLineView: View {
     }
 
     private func startAnimation() {
-        guard isActive, !reduceMotion else { return }
+        guard isActive, !reduceMotion, !reducedEffects else { return }
         animationPhase = 0
         withAnimation(.linear(duration: animationDuration).repeatForever(autoreverses: false)) {
             animationPhase = 1.0

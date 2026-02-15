@@ -16,6 +16,7 @@ struct HomeView: View {
     @State private var showProfileSheet = false
     @State private var showSettingsSheet = false
     @State private var showDossierSheet = false
+    private let reducedEffects = RenderPerformanceProfile.reducedEffects
 
     var onStartLevel: (CampaignLevel, Bool) -> Void  // (level, isInsane)
     var onPlayEndless: () -> Void
@@ -95,6 +96,12 @@ struct HomeView: View {
         }
         .sheet(isPresented: $showDossierSheet) {
             DossierCollectionView()
+        }
+        .transaction { transaction in
+            if reducedEffects {
+                transaction.disablesAnimations = true
+                transaction.animation = nil
+            }
         }
     }
 

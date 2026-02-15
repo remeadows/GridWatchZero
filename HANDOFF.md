@@ -3,6 +3,24 @@
 ## Scope of Review
 This audit encompassed a comprehensive, principal-level evaluation of the GridWatchZero codebase (as of 2026-02-11), focusing on gameplay systems (Levels 1-20, Endless Mode, core loop, economy, balance, progression), architectural risks (SwiftUI patterns, state management), and technical performance aspects (rendering, memory, crash vectors). The review was conducted in a strict read-only environment, with analysis based solely on static code inspection.
 
+## Work Completed (2026-02-15)
+
+### Visual Playback Stabilization (Simulator + SwiftUI)
+- Reduced animation pressure across startup/menu/gameplay overlays by honoring `RenderPerformanceProfile.reducedEffects` in major screens and components.
+- Disabled simulator-only upgrade feedback SFX scheduling in rapid loops to prevent tap/hold hitching (`GameEngine+Upgrades.swift`).
+- Added scheduler catch-up polling in the game loop so short UI stalls do not accumulate perceived lag (`GameEngine.swift`).
+- Preserved gameplay UX by reducing expensive transition work instead of removing functional state updates.
+
+### Insane Mode Progression Unlock Policy
+- Updated campaign unlock ceiling logic so **Insane mode is no longer mission-tier capped**; progression is now controlled by:
+  1. credits, and
+  2. tier-gate (previous tier equipped + maxed).
+- Normal mode continues to enforce mission caps (with early Tier 2 runway protection on T1-only missions).
+- Regression coverage added for:
+  - no false `Mission tier cap is T1` blocks for Tier 2 startup units,
+  - explicit Level 1 Insane Tier 3 unlock coverage once Tier 2 is maxed/equipped (SOURCE/LINK/SINK/FW),
+  - top-tier (Tier 25) unlock eligibility in Insane when tier-gate is satisfied.
+
 ## Overall Project Health
 **Overall Project Health: Green-Yellow** *(upgraded from Yellow after fixes below)*
 

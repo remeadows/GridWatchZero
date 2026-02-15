@@ -310,19 +310,38 @@ final class GameEngine {
 
     /// Maximum tier available in current level (6 if sandbox/endless mode)
     var maxTierAvailable: Int {
-        levelConfiguration?.level.availableTiers.max() ?? 6
+        guard let config = levelConfiguration else { return 6 }
+        let baseMaxTier = config.level.availableTiers.max() ?? 1
+        // Insane Level 1 needs at least one progression tier beyond starter units.
+        if config.isInsane {
+            return max(baseMaxTier, 2)
+        }
+        return baseMaxTier
     }
 
     // MARK: - Private
 
     private var tickTimer: AnyCancellable?
     private let tickInterval: TimeInterval = 1.0
+    /// Poll faster than gameplay tick interval so we can catch up after brief UI stalls.
+    private let tickPollInterval: TimeInterval = 0.25
+    /// Caps catch-up work per poll to avoid long main-thread bursts.
+    private let maxCatchUpTicksPerPoll: Int = 8
+    private var lastSchedulerUptime: TimeInterval?
+    private var accumulatedTickTime: TimeInterval = 0
     var totalPlayTime: TimeInterval = 0
     var rng: RandomNumberGenerator = SystemRandomNumberGenerator()
 
     // MARK: - Persistence
 
+    // Coalesce rapid save bursts (e.g., hold-to-upgrade) to protect frame pacing.
+    var pendingSaveTask: Task<Void, Never>?
+    let saveDebounceDelayNanoseconds: UInt64 = 400_000_000
     var saveKey: String { SaveVersion.current.saveKey }
+
+    // Throttle upgrade SFX/haptics during rapid tap/hold automation.
+    var lastUpgradeFeedbackTimestamp: TimeInterval = 0
+    let upgradeFeedbackMinimumInterval: TimeInterval = 0.14
 
     // MARK: - Init
 
@@ -354,11 +373,13 @@ final class GameEngine {
     func start() {
         guard !isRunning else { return }
         isRunning = true
+        accumulatedTickTime = 0
+        lastSchedulerUptime = ProcessInfo.processInfo.systemUptime
 
-        tickTimer = Timer.publish(every: tickInterval, on: .main, in: .common)
+        tickTimer = Timer.publish(every: min(tickInterval, tickPollInterval), on: .main, in: .common)
             .autoconnect()
             .sink { [weak self] _ in
-                self?.processTick()
+                self?.drainScheduledTicks()
             }
     }
 
@@ -366,10 +387,12 @@ final class GameEngine {
         isRunning = false
         tickTimer?.cancel()
         tickTimer = nil
+        lastSchedulerUptime = nil
+        accumulatedTickTime = 0
         if isInCampaignMode {
             saveCampaignCheckpoint()
         }
-        saveGame()
+        saveGame(immediate: true)
     }
 
     func toggle() {
@@ -586,6 +609,27 @@ final class GameEngine {
 
     func emitEvent(_ event: GameEvent) {
         lastEvent = event
+    }
+
+    private func drainScheduledTicks() {
+        let now = ProcessInfo.processInfo.systemUptime
+        guard let last = lastSchedulerUptime else {
+            lastSchedulerUptime = now
+            return
+        }
+
+        lastSchedulerUptime = now
+        accumulatedTickTime += max(0, now - last)
+
+        var ticksToProcess = Int(accumulatedTickTime / tickInterval)
+        guard ticksToProcess > 0 else { return }
+
+        ticksToProcess = min(ticksToProcess, maxCatchUpTicksPerPoll)
+        accumulatedTickTime -= Double(ticksToProcess) * tickInterval
+
+        for _ in 0..<ticksToProcess {
+            processTick()
+        }
     }
 
 }

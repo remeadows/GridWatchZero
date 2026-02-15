@@ -7,6 +7,7 @@ struct OfflineProgressView: View {
     let onDismiss: () -> Void
 
     @State private var showContent = false
+    private let reducedEffects = RenderPerformanceProfile.reducedEffects
 
     var body: some View {
         ZStack {
@@ -116,10 +117,20 @@ struct OfflineProgressView: View {
             .padding(.top, 40)
         }
         .onAppear {
-            withAnimation(.spring(response: 0.6, dampingFraction: 0.8).delay(0.2)) {
+            if reducedEffects {
                 showContent = true
+            } else {
+                withAnimation(.spring(response: 0.6, dampingFraction: 0.8).delay(0.2)) {
+                    showContent = true
+                }
             }
             AudioManager.shared.playSound(.milestone)
+        }
+        .transaction { transaction in
+            if reducedEffects {
+                transaction.disablesAnimations = true
+                transaction.animation = nil
+            }
         }
     }
 }

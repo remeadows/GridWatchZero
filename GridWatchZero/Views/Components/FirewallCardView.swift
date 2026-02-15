@@ -143,7 +143,7 @@ struct FirewallCardView: View {
 
                 // Upgrade button or MAX badge
                 if fw.isAtMaxLevel {
-                    Text("MAX")
+                    Text("MAX T\(fw.nodeTier.rawValue)")
                         .font(.terminalMicro)
                         .foregroundColor(.terminalBlack)
                         .padding(.horizontal, 8)

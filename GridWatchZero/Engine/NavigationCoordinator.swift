@@ -331,13 +331,14 @@ struct RootNavigationView: View {
     @StateObject private var cloudManager = CloudSaveManager.shared
     @State private var hasPerformedInitialSync = false
     @Environment(\.scenePhase) private var scenePhase
+    private let reducedEffects = RenderPerformanceProfile.reducedEffects
 
     var body: some View {
         ZStack {
             switch coordinator.currentScreen {
             case .brandIntro:
                 BrandIntroView {
-                    withAnimation(.easeInOut(duration: 0.5)) {
+                    performAnimated(duration: 0.5) {
                         coordinator.currentScreen = .title
                     }
                 }
@@ -346,7 +347,7 @@ struct RootNavigationView: View {
             
             case .title:
                 TitleScreenView {
-                    withAnimation(.easeInOut(duration: 0.3)) {
+                    performAnimated(duration: 0.3) {
                         // Skip main menu and go directly to campaign hub
                         coordinator.showHome()
                     }
@@ -359,7 +360,7 @@ struct RootNavigationView: View {
                         coordinator.handleNewGame()
                     },
                     onContinue: {
-                        withAnimation(.easeInOut(duration: 0.3)) {
+                        performAnimated(duration: 0.3) {
                             coordinator.handleContinue()
                         }
                     }
@@ -378,7 +379,7 @@ struct RootNavigationView: View {
                         }
                     },
                     onPlayEndless: {
-                        withAnimation(.easeInOut(duration: 0.3)) {
+                        performAnimated(duration: 0.3) {
                             coordinator.startEndlessMode()
                         }
                     }
@@ -405,7 +406,7 @@ struct RootNavigationView: View {
                         gameEngine.exitCampaignMode()
                         // Ensure we return to hub state properly
                         campaignState.returnToHub()
-                        withAnimation(.easeInOut(duration: 0.3)) {
+                        performAnimated(duration: 0.3) {
                             coordinator.returnToHome()
                         }
                     },
@@ -431,7 +432,7 @@ struct RootNavigationView: View {
                         coordinator.syncToCloud(progress: campaignState.progress)
 
                         gameEngine.exitCampaignMode()
-                        withAnimation(.easeInOut(duration: 0.3)) {
+                        performAnimated(duration: 0.3) {
                             coordinator.completeLevel(stats.levelId, stats: stats)
                         }
                     },
@@ -440,7 +441,7 @@ struct RootNavigationView: View {
                         // Force save on failure too
                         campaignState.save()
                         gameEngine.exitCampaignMode()
-                        withAnimation(.easeInOut(duration: 0.3)) {
+                        performAnimated(duration: 0.3) {
                             coordinator.failLevel(levelId, reason: reason, isInsane: isInsane)
                         }
                     }
@@ -463,7 +464,7 @@ struct RootNavigationView: View {
                     onReturnHome: {
                         // Clear checkpoint since level is complete
                         campaignState.returnToHub(clearCheckpoint: true)
-                        withAnimation(.easeInOut(duration: 0.3)) {
+                        performAnimated(duration: 0.3) {
                             coordinator.returnToHome()
                         }
                     }
@@ -491,7 +492,7 @@ struct RootNavigationView: View {
                     onReturnHome: {
                         // Clear checkpoint since player gave up
                         campaignState.returnToHub(clearCheckpoint: true)
-                        withAnimation(.easeInOut(duration: 0.3)) {
+                        performAnimated(duration: 0.3) {
                             coordinator.returnToHome()
                         }
                     }
@@ -506,7 +507,7 @@ struct RootNavigationView: View {
 
             case .helixAwakening:
                 HelixAwakeningView {
-                    withAnimation(.easeInOut(duration: 0.5)) {
+                    performAnimated(duration: 0.5) {
                         coordinator.completeHelixAwakening()
                     }
                 }
@@ -526,8 +527,14 @@ struct RootNavigationView: View {
         .environment(gameEngine)
         .environmentObject(campaignState)
         .environmentObject(cloudManager)
-        .animation(.easeInOut(duration: 0.3), value: coordinator.currentScreen)
-        .animation(.easeInOut(duration: 0.3), value: coordinator.activeStoryMoment?.id)
+        .transaction { transaction in
+            if reducedEffects {
+                transaction.disablesAnimations = true
+                transaction.animation = nil
+            }
+        }
+        .animation(reducedEffects ? nil : .easeInOut(duration: 0.3), value: coordinator.currentScreen)
+        .animation(reducedEffects ? nil : .easeInOut(duration: 0.3), value: coordinator.activeStoryMoment?.id)
         .onAppear {
             coordinator.campaignState = campaignState
             coordinator.loadStoryState()
@@ -535,13 +542,10 @@ struct RootNavigationView: View {
             campaignState.storyStateProvider = { [weak coordinator] in
                 coordinator?.storyState ?? StoryState()
             }
-            // Perform initial cloud sync only once per app session
-            if !hasPerformedInitialSync {
-                hasPerformedInitialSync = true
-                Task {
-                    await coordinator.performInitialCloudSync(campaignState: campaignState)
-                }
-            }
+            triggerInitialCloudSyncIfNeeded()
+        }
+        .onChange(of: coordinator.currentScreen) { _, _ in
+            triggerInitialCloudSyncIfNeeded()
         }
         .onChange(of: scenePhase) { oldPhase, newPhase in
             // Auto-save when app goes to background or becomes inactive
@@ -566,9 +570,25 @@ struct RootNavigationView: View {
             }
         }
     }
+
+    private func triggerInitialCloudSyncIfNeeded() {
+        guard !hasPerformedInitialSync else { return }
+        guard coordinator.currentScreen != .brandIntro else { return }
+        hasPerformedInitialSync = true
+        Task {
+            await coordinator.performInitialCloudSync(campaignState: campaignState)
+        }
+    }
+
+    private func performAnimated(duration: Double, action: () -> Void) {
+        if reducedEffects {
+            action()
+        } else {
+            withAnimation(.easeInOut(duration: duration), action)
+        }
+    }
 }
 
 #Preview("Root Navigation") {
     RootNavigationView()
 }
-

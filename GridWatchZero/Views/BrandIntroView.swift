@@ -46,23 +46,20 @@ class VideoPlayerUIView: UIView {
         // Mute video audio (storm audio plays instead)
         player.isMuted = true
 
-        // Create player layer sized to full screen
+        // Replace any existing layer to avoid stacked AVPlayerLayers.
+        playerLayer?.removeFromSuperlayer()
+
         let layer = AVPlayerLayer(player: player)
         layer.videoGravity = .resizeAspectFill
-        let screenBounds = UIScreen.main.bounds
-        layer.frame = screenBounds
+        layer.frame = bounds
 
         self.layer.addSublayer(layer)
         self.playerLayer = layer
-
-        print("[VideoPlayerUIView] Created with screen bounds: \(screenBounds)")
     }
 
     override func layoutSubviews() {
         super.layoutSubviews()
-        // Always use full screen bounds to ensure no gaps
-        let screenBounds = UIScreen.main.bounds
-        playerLayer?.frame = CGRect(origin: .zero, size: screenBounds.size)
+        playerLayer?.frame = bounds
     }
 }
 
@@ -75,14 +72,26 @@ struct BrandIntroView: View {
     @State private var isVideoComplete = false
     @State private var opacity: Double = 0
     @State private var videoObserver: NSObjectProtocol?
+    @State private var playerItemStatusObserver: NSKeyValueObservation?
     @State private var stormAudioPlayer: AVAudioPlayer?
+    private let reducedEffects = RenderPerformanceProfile.reducedEffects
 
     var body: some View {
         ZStack {
             Color.black
                 .ignoresSafeArea(.all)
 
-            if let player = player {
+            if reducedEffects {
+                VStack(spacing: 12) {
+                    Text("WAR SIGNAL LABS")
+                        .font(.terminalLarge)
+                        .foregroundColor(.neonGreen)
+                    Text("GRID WATCH ZERO")
+                        .font(.terminalTitle)
+                        .foregroundColor(.neonAmber)
+                }
+                .opacity(opacity)
+            } else if let player = player {
                 // Full-screen video player
                 VideoPlayerView(player: player)
                     .ignoresSafeArea(.all)
@@ -91,6 +100,13 @@ struct BrandIntroView: View {
         }
         .ignoresSafeArea(.all)
         .onAppear {
+            if reducedEffects {
+                opacity = 1.0
+                AmbientAudioManager.shared.startAmbient()
+                onComplete()
+                return
+            }
+
             setupVideoPlayer()
             playStormAudio()
             
@@ -116,10 +132,10 @@ struct BrandIntroView: View {
             return
         }
 
-        print("[BrandIntro] ✅ 9.16.5 ratio video found at: \(videoURL.path)")
-
         let playerItem = AVPlayerItem(url: videoURL)
+        playerItem.preferredForwardBufferDuration = 1.5
         let avPlayer = AVPlayer(playerItem: playerItem)
+        avPlayer.automaticallyWaitsToMinimizeStalling = true
 
         // Observe when video finishes
         videoObserver = NotificationCenter.default.addObserver(
@@ -127,16 +143,25 @@ struct BrandIntroView: View {
             object: playerItem,
             queue: .main
         ) { _ in
-            print("[BrandIntro] Video playback complete")
             handleVideoComplete()
         }
 
         self.player = avPlayer
 
-        // Start playing after a brief delay
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-            avPlayer.play()
-            print("[BrandIntro] Video playback started")
+        // Start playback when AVPlayerItem is actually ready to avoid first-frame stalls.
+        playerItemStatusObserver = playerItem.observe(\.status, options: [.initial, .new]) { item, _ in
+            DispatchQueue.main.async {
+                guard self.player === avPlayer, !self.isVideoComplete else { return }
+                switch item.status {
+                case .readyToPlay:
+                    avPlayer.play()
+                case .failed:
+                    cleanupPlayers()
+                    onComplete()
+                default:
+                    break
+                }
+            }
         }
     }
 
@@ -192,6 +217,8 @@ struct BrandIntroView: View {
     private func cleanupPlayers() {
         player?.pause()
         player = nil
+        playerItemStatusObserver?.invalidate()
+        playerItemStatusObserver = nil
         
         // Stop storm audio
         stormAudioPlayer?.stop()
@@ -204,8 +231,6 @@ struct BrandIntroView: View {
             NotificationCenter.default.removeObserver(observer)
             videoObserver = nil
         }
-
-        print("[BrandIntro] Cleanup complete")
     }
 }
 

@@ -11,6 +11,7 @@ struct ThreatIndicatorView: View {
 
     @State private var isPulsing = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    private let reducedEffects = RenderPerformanceProfile.reducedEffects
 
     private var threatLevel: ThreatLevel { threatState.currentLevel }
     private var netDefense: NetDefenseLevel { threatState.netDefenseLevel }
@@ -46,8 +47,8 @@ struct ThreatIndicatorView: View {
                 Circle()
                     .fill(threatColor)
                     .frame(width: 8, height: 8)
-                    .scaleEffect(isPulsing ? 1.2 : 1.0)
-                    .glow(threatColor, radius: isPulsing ? 4 : 1)
+                    .scaleEffect((!reducedEffects && isPulsing) ? 1.2 : 1.0)
+                    .glow(threatColor, radius: (!reducedEffects && isPulsing) ? 4 : 1)
 
                 Text("THR")
                     .font(.terminalMicro)
@@ -114,7 +115,7 @@ struct ThreatIndicatorView: View {
         .accessibilityElement(children: .combine)
         .accessibilityLabel(accessibilityDescription)
         .onAppear {
-            guard !reduceMotion else { return }
+            guard !reduceMotion && !reducedEffects else { return }
             withAnimation(
                 Animation.easeInOut(duration: 1.0)
                     .repeatForever(autoreverses: true)
@@ -145,13 +146,14 @@ struct AttackIndicator: View {
 
     @State private var isFlashing = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    private let reducedEffects = RenderPerformanceProfile.reducedEffects
 
     var body: some View {
         HStack(spacing: 6) {
             Image(systemName: attack.type.icon)
                 .font(.system(size: 14))
                 .foregroundColor(.neonRed)
-                .opacity(isFlashing ? 0.4 : 1.0)
+                .opacity((!reducedEffects && isFlashing) ? 0.4 : 1.0)
 
             Text(attack.type.shortName)
                 .font(.terminalSmall)
@@ -173,7 +175,7 @@ struct AttackIndicator: View {
             .cornerRadius(3)
         }
         .onAppear {
-            guard !reduceMotion else { return }
+            guard !reduceMotion && !reducedEffects else { return }
             withAnimation(
                 Animation.easeInOut(duration: 0.3)
                     .repeatForever(autoreverses: true)
@@ -189,13 +191,14 @@ struct EarlyWarningIndicator: View {
 
     @State private var isPulsing = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    private let reducedEffects = RenderPerformanceProfile.reducedEffects
 
     var body: some View {
         HStack(spacing: 4) {
             Image(systemName: "exclamationmark.triangle.fill")
                 .font(.system(size: 12))
                 .foregroundColor(.neonAmber)
-                .opacity(isPulsing ? 0.5 : 1.0)
+                .opacity((!reducedEffects && isPulsing) ? 0.5 : 1.0)
 
             Text("IDS")
                 .font(.terminalMicro)
@@ -211,7 +214,7 @@ struct EarlyWarningIndicator: View {
                 .foregroundColor(.neonRed)
         }
         .onAppear {
-            guard !reduceMotion else { return }
+            guard !reduceMotion && !reducedEffects else { return }
             withAnimation(
                 Animation.easeInOut(duration: 0.5)
                     .repeatForever(autoreverses: true)

@@ -19,6 +19,8 @@ struct LevelCheckpoint: Codable {
     let attacksSurvived: Int
     let damageBlocked: Double
     let creditsEarned: Double  // Track total earned for level objective
+    let totalCreditsEarned: Double?
+    let threatLevel: ThreatLevel?
 
     // Node states - save actual unit IDs and levels for proper restoration
     let sourceUnitId: String

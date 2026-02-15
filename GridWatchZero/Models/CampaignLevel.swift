@@ -305,9 +305,11 @@ struct LevelConfiguration {
         isInsane ? (level.insaneModifiers?.defensePointMultiplier ?? 2.0) : 1.0
     }
 
-    /// Starting credits (always 0 for insane mode)
+    /// Starting credits
+    /// Insane mode gets a small bootstrap so first upgrades are immediately attainable.
     var startingCredits: Double {
-        isInsane ? 0 : level.startingCredits
+        guard isInsane else { return level.startingCredits }
+        return max(level.startingCredits, 120)
     }
 
     var maxTier: Int {
@@ -320,10 +322,11 @@ struct LevelConfiguration {
     }
 
     /// Attack grace period in ticks (ISSUE-020)
-    /// Insane mode halves it (min 30 ticks to remain playable)
+    /// Insane mode guarantees an opening runway so first upgrades are attainable.
     var attackGracePeriod: Int {
         let base = level.attackGracePeriod ?? 0
-        guard base > 0 else { return 0 }
-        return isInsane ? max(base / 2, 30) : base
+        guard isInsane else { return base }
+        if base == 0 { return 60 }      // L1/L2 had no grace; Insane needs startup breathing room.
+        return max(base / 2, 45)        // Preserve challenge while preventing immediate upgrade starvation.
     }
 }

@@ -5,6 +5,7 @@ import SwiftUI
 struct DDoSOverlay: View {
     @State private var isGlitching = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    private let reducedEffects = RenderPerformanceProfile.reducedEffects
 
     var body: some View {
         Rectangle()
@@ -14,9 +15,9 @@ struct DDoSOverlay: View {
                 VStack(spacing: 0) {
                     ForEach(0..<10, id: \.self) { i in
                         Rectangle()
-                            .fill(Color.neonRed.opacity(isGlitching ? 0.3 : 0))
+                            .fill(Color.neonRed.opacity((!reducedEffects && isGlitching) ? 0.3 : 0))
                             .frame(height: 2)
-                            .offset(x: isGlitching ? CGFloat.random(in: -5...5) : 0)
+                            .offset(x: (!reducedEffects && isGlitching) ? CGFloat.random(in: -5...5) : 0)
                         Spacer()
                     }
                 }
@@ -24,7 +25,7 @@ struct DDoSOverlay: View {
             .cornerRadius(4)
             .allowsHitTesting(false)
             .onAppear {
-                guard !reduceMotion else { return }
+                guard !reduceMotion && !reducedEffects else { return }
                 withAnimation(
                     Animation.easeInOut(duration: 0.1)
                         .repeatForever(autoreverses: true)

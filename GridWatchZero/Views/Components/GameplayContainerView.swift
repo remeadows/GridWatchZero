@@ -14,6 +14,7 @@ struct GameplayContainerView: View {
 
     @State private var showExitConfirm = false
     @State private var showVictoryProgress = false
+    @State private var setupKey: String?
 
     var body: some View {
         ZStack {
@@ -52,8 +53,24 @@ struct GameplayContainerView: View {
             Text("Progress is auto-saved every 30 seconds. You can resume this mission anytime.")
         }
         .onAppear {
-            setupLevel()
+            setupLevelIfNeeded()
         }
+        .onChange(of: levelId) { _, _ in
+            setupLevelIfNeeded()
+        }
+        .onChange(of: isInsane) { _, _ in
+            setupLevelIfNeeded()
+        }
+    }
+
+    private var currentSetupKey: String {
+        "level:\(levelId ?? -1)-insane:\(isInsane)"
+    }
+
+    private func setupLevelIfNeeded() {
+        guard setupKey != currentSetupKey else { return }
+        setupKey = currentSetupKey
+        setupLevel()
     }
 
     private func setupLevel() {

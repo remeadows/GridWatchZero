@@ -23,6 +23,7 @@ struct DashboardView: View {
     @State var showingSettings = false
     @Environment(\.horizontalSizeClass) var horizontalSizeClass
     @Environment(\.accessibilityReduceMotion) var reduceMotion
+    private let reducedEffects = RenderPerformanceProfile.reducedEffects
 
     // Campaign exit callback (nil for endless mode)
     var onCampaignExit: (() -> Void)? = nil
@@ -155,8 +156,10 @@ struct DashboardView: View {
             if engine.shouldShowCriticalAlarm {
                 showingCriticalAlarm = true
             }
-            // Start tutorial for Level 1 (if not completed)
-            if engine.levelConfiguration?.level.id == 1 && !tutorialManager.state.hasCompletedTutorial {
+            // Start tutorial for Level 1 normal mode only (never in Insane mode)
+            if engine.levelConfiguration?.level.id == 1,
+               engine.levelConfiguration?.isInsane != true,
+               !tutorialManager.state.hasCompletedTutorial {
                 // Delay to let intro story finish
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                     tutorialManager.startTutorialForLevel1()
@@ -168,7 +171,7 @@ struct DashboardView: View {
         }
         .onChange(of: engine.showCriticalAlarm) { _, shouldShow in
             if shouldShow {
-                withAnimation {
+                performAnimated {
                     showingCriticalAlarm = true
                 }
             }
@@ -216,6 +219,12 @@ struct DashboardView: View {
                 }
             )
         }
+        .transaction { transaction in
+            if RenderPerformanceProfile.reducedEffects {
+                transaction.disablesAnimations = true
+                transaction.animation = nil
+            }
+        }
         .preferredColorScheme(.dark)
     }
 
@@ -223,7 +232,7 @@ struct DashboardView: View {
         guard let event = event else { return }
 
         // Show banner
-        withAnimation {
+        performAnimated {
             showingEvent = event
         }
 
@@ -242,7 +251,7 @@ struct DashboardView: View {
         }()
 
         DispatchQueue.main.asyncAfter(deadline: .now() + hideDelay) {
-            withAnimation {
+            performAnimated {
                 if showingEvent == event {
                     showingEvent = nil
                 }
@@ -251,6 +260,11 @@ struct DashboardView: View {
     }
 
     private func triggerScreenShake() {
+        guard !reduceMotion, !reducedEffects else {
+            screenShake = 0
+            return
+        }
+
         let shakeAnimation = Animation.spring(response: 0.1, dampingFraction: 0.3)
 
         withAnimation(shakeAnimation) {
@@ -272,6 +286,16 @@ struct DashboardView: View {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
             withAnimation(shakeAnimation) {
                 screenShake = 0
+            }
+        }
+    }
+
+    private func performAnimated(_ updates: @escaping () -> Void) {
+        if reducedEffects || reduceMotion {
+            updates()
+        } else {
+            withAnimation {
+                updates()
             }
         }
     }

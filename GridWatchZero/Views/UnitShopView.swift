@@ -5,10 +5,11 @@
 import SwiftUI
 
 struct UnitShopView: View {
-    var engine: GameEngine
+    @Bindable var engine: GameEngine
     @Environment(\.dismiss) private var dismiss
     @State private var selectedCategory: UnitFactory.UnitCategory = .source
     @State private var selectedUnit: UnitFactory.UnitInfo?
+    private let reducedEffects = RenderPerformanceProfile.reducedEffects
 
     var body: some View {
         ZStack {
@@ -32,6 +33,19 @@ struct UnitShopView: View {
             }
         }
         .preferredColorScheme(.dark)
+        .onAppear {
+            selectInitialUnitIfNeeded(for: selectedCategory)
+        }
+        .onChange(of: selectedCategory) { _, newCategory in
+            selectedUnit = nil
+            selectInitialUnitIfNeeded(for: newCategory)
+        }
+        .transaction { transaction in
+            if reducedEffects {
+                transaction.disablesAnimations = true
+                transaction.animation = nil
+            }
+        }
     }
 
     // MARK: - Header
@@ -94,7 +108,6 @@ struct UnitShopView: View {
 
         return Button(action: {
             selectedCategory = category
-            selectedUnit = nil
         }) {
             VStack(spacing: 4) {
                 Image(systemName: category.icon)
@@ -130,23 +143,37 @@ struct UnitShopView: View {
     private var unitList: some View {
         ScrollView {
             LazyVStack(spacing: 12) {
-                ForEach(UnitFactory.units(for: selectedCategory)) { unit in
+                ForEach(displayedUnits(for: selectedCategory)) { unit in
                     UnitRowView(
                         unit: unit,
                         isUnlocked: engine.unlockState.isUnlocked(unit.id),
                         isEquipped: isEquipped(unit),
                         isSelected: selectedUnit?.id == unit.id,
-                        credits: engine.resources.credits,
-                        tierGateReason: engine.tierGateReason(for: unit)
+                        canUnlock: engine.canUnlock(unit),
+                        unlockBlockReason: engine.unlockBlockReason(for: unit),
+                        onQuickUnlock: {
+                            purchaseUnit(unit)
+                        },
+                        onQuickEquip: {
+                            equipUnit(unit)
+                        }
                     ) {
-                        withAnimation(.easeInOut(duration: 0.15)) {
-                            selectedUnit = (selectedUnit?.id == unit.id) ? nil : unit
+                        if reducedEffects {
+                            selectedUnit = unit
+                        } else {
+                            withAnimation(.easeInOut(duration: 0.15)) {
+                                selectedUnit = unit
+                            }
                         }
                     }
                 }
             }
             .padding()
         }
+    }
+
+    private func displayedUnits(for category: UnitFactory.UnitCategory) -> [UnitFactory.UnitInfo] {
+        UnitFactory.units(for: category)
     }
 
     private func isEquipped(_ unit: UnitFactory.UnitInfo) -> Bool {
@@ -167,7 +194,8 @@ struct UnitShopView: View {
     private func unitActionBar(_ unit: UnitFactory.UnitInfo) -> some View {
         let isUnlocked = engine.unlockState.isUnlocked(unit.id)
         let isEquipped = isEquipped(unit)
-        let canAfford = engine.resources.credits >= unit.unlockCost
+        let canUnlockUnit = engine.canUnlock(unit)
+        let unlockBlockReason = engine.unlockBlockReason(for: unit)
 
         return VStack(spacing: 12) {
             Divider()
@@ -209,23 +237,37 @@ struct UnitShopView: View {
                 } else {
                     Button(action: { purchaseUnit(unit) }) {
                         HStack(spacing: 8) {
-                            Image(systemName: "lock.open.fill")
+                            Image(systemName: canUnlockUnit ? "lock.open.fill" : "lock.fill")
                             Text("UNLOCK")
                             Text("¢\(unit.unlockCost.formatted)")
                         }
                         .font(.terminalSmall)
-                        .foregroundColor(canAfford ? .terminalBlack : .terminalGray)
+                        .foregroundColor(canUnlockUnit ? .terminalBlack : .terminalBlack.opacity(0.72))
                         .padding(.horizontal, 16)
                         .padding(.vertical, 10)
-                        .background(canAfford ? Color.neonAmber : Color.terminalGray)
+                        .background(canUnlockUnit ? Color.neonAmber : Color.terminalGray.opacity(0.8))
                         .cornerRadius(4)
                     }
-                    .disabled(!canAfford)
+                    .disabled(!canUnlockUnit)
                 }
             }
             .padding(.horizontal)
-            .padding(.bottom)
+
+            if !isUnlocked, let unlockBlockReason {
+                HStack(spacing: 6) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .font(.system(size: 11))
+                    Text(unlockBlockReason)
+                        .font(.terminalMicro)
+                }
+                .foregroundColor(.neonRed)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal)
+                .padding(.top, 2)
+            }
+
         }
+        .padding(.bottom)
         .background(Color.terminalDarkGray)
     }
 
@@ -233,7 +275,8 @@ struct UnitShopView: View {
 
     private func purchaseUnit(_ unit: UnitFactory.UnitInfo) {
         if engine.unlockUnit(unit) {
-            // Stay selected to allow immediate equip
+            // Keep selected so action bar immediately shows EQUIP.
+            selectedUnit = unit
         }
     }
 
@@ -248,7 +291,24 @@ struct UnitShopView: View {
         case .defense:
             _ = engine.setFirewall(unit.id)
         }
-        selectedUnit = nil
+        selectedUnit = unit
+    }
+
+    private func selectInitialUnitIfNeeded(for category: UnitFactory.UnitCategory) {
+        guard selectedUnit == nil else { return }
+        var units = displayedUnits(for: category)
+        if units.isEmpty {
+            units = UnitFactory.units(for: category)
+        }
+        if let firstUnlockable = units.first(where: { engine.canUnlock($0) }) {
+            selectedUnit = firstUnlockable
+            return
+        }
+        if let firstLocked = units.first(where: { !engine.unlockState.isUnlocked($0.id) }) {
+            selectedUnit = firstLocked
+            return
+        }
+        selectedUnit = units.first
     }
 }
 
@@ -259,8 +319,10 @@ struct UnitRowView: View {
     let isUnlocked: Bool
     let isEquipped: Bool
     let isSelected: Bool
-    let credits: Double
-    let tierGateReason: String?
+    let canUnlock: Bool
+    let unlockBlockReason: String?
+    let onQuickUnlock: () -> Void
+    let onQuickEquip: () -> Void
     let onTap: () -> Void
 
     private var tierColor: Color {
@@ -277,101 +339,118 @@ struct UnitRowView: View {
     }
 
     var body: some View {
-        Button(action: onTap) {
-            VStack(alignment: .leading, spacing: 8) {
-                // Header row
-                HStack {
-                    // Tier badge
-                    Text("T\(unit.tier.rawValue)")
+        VStack(alignment: .leading, spacing: 8) {
+            // Header row
+            HStack {
+                // Tier badge
+                Text("T\(unit.tier.rawValue)")
+                    .font(.terminalMicro)
+                    .foregroundColor(.terminalBlack)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 2)
+                    .background(tierColor)
+                    .cornerRadius(2)
+
+                // Name
+                Text(unit.name)
+                    .font(.terminalBody)
+                    .foregroundColor(isUnlocked ? categoryColor : .terminalGray)
+
+                Spacer()
+
+                // Status indicator / quick actions
+                if isEquipped {
+                    HStack(spacing: 4) {
+                        Circle()
+                            .fill(Color.neonGreen)
+                            .frame(width: 6, height: 6)
+                        Text("ACTIVE")
+                            .font(.terminalMicro)
+                            .foregroundColor(.neonGreen)
+                    }
+                } else if isUnlocked {
+                    Button(action: onQuickEquip) {
+                        Text("EQUIP")
+                            .font(.terminalMicro)
+                            .foregroundColor(.terminalBlack)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 3)
+                            .background(Color.neonCyan)
+                            .cornerRadius(3)
+                    }
+                    .buttonStyle(.plain)
+                } else if canUnlock {
+                    Button(action: onQuickUnlock) {
+                        HStack(spacing: 4) {
+                            Image(systemName: "lock.open.fill")
+                                .font(.system(size: 10))
+                            Text("UNLOCK")
+                            Text("¢\(unit.unlockCost.formatted)")
+                        }
                         .font(.terminalMicro)
                         .foregroundColor(.terminalBlack)
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 2)
-                        .background(tierColor)
-                        .cornerRadius(2)
-
-                    // Name
-                    Text(unit.name)
-                        .font(.terminalBody)
-                        .foregroundColor(isUnlocked ? categoryColor : .terminalGray)
-
-                    Spacer()
-
-                    // Status indicator
-                    if isEquipped {
-                        HStack(spacing: 4) {
-                            Circle()
-                                .fill(Color.neonGreen)
-                                .frame(width: 6, height: 6)
-                            Text("ACTIVE")
-                                .font(.terminalMicro)
-                                .foregroundColor(.neonGreen)
-                        }
-                    } else if isUnlocked {
-                        // Unlocked but not equipped - show owned status
-                        HStack(spacing: 4) {
-                            Image(systemName: "checkmark.circle.fill")
-                                .font(.system(size: 10))
-                            Text("OWNED")
-                                .font(.terminalMicro)
-                        }
-                        .foregroundColor(.neonCyan)
-                    } else {
-                        // Locked - show cost
-                        HStack(spacing: 4) {
-                            Image(systemName: "lock.fill")
-                                .font(.system(size: 10))
-                            Text("¢\(unit.unlockCost.formatted)")
-                                .font(.terminalSmall)
-                        }
-                        .foregroundColor(credits >= unit.unlockCost ? .neonAmber : .terminalGray)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3)
+                        .background(Color.neonAmber)
+                        .cornerRadius(3)
                     }
-                }
-
-                // Description (shown when selected or always for locked)
-                if isSelected || !isUnlocked {
-                    Text(unit.description)
-                        .font(.terminalMicro)
-                        .foregroundColor(.terminalGray)
-                        .lineLimit(isSelected ? nil : 2)
-
-                    if !isUnlocked {
-                        Text("Requirement: \(unit.unlockRequirement)")
-                            .font(.terminalMicro)
-                            .foregroundColor(.dimAmber)
-
-                        // Show tier gate reason proactively
-                        if let gateReason = tierGateReason {
-                            HStack(spacing: 4) {
-                                Image(systemName: "exclamationmark.triangle.fill")
-                                    .font(.system(size: 10))
-                                Text(gateReason)
-                            }
-                            .font(.terminalMicro)
-                            .foregroundColor(.neonRed)
-                        }
+                    .buttonStyle(.plain)
+                } else {
+                    // Locked - show cost
+                    HStack(spacing: 4) {
+                        Image(systemName: "lock.fill")
+                            .font(.system(size: 10))
+                        Text("¢\(unit.unlockCost.formatted)")
+                            .font(.terminalSmall)
                     }
-                }
-
-                // Stats preview
-                if isSelected {
-                    unitStats
+                    .foregroundColor(.terminalGray)
                 }
             }
-            .padding()
-            .background(
-                RoundedRectangle(cornerRadius: 4)
-                    .fill(isSelected ? categoryColor.opacity(0.1) : Color.terminalDarkGray)
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 4)
-                    .stroke(
-                        isSelected ? categoryColor : (isEquipped ? Color.neonGreen.opacity(0.5) : Color.terminalGray.opacity(0.3)),
-                        lineWidth: isSelected ? 2 : 1
-                    )
-            )
+
+            // Keep collapsed rows lightweight to avoid list scroll stalls on simulator.
+            if isSelected {
+                Text(unit.description)
+                    .font(.terminalMicro)
+                    .foregroundColor(.terminalGray)
+                    .lineLimit(nil)
+            }
+
+            if !isUnlocked {
+                Text("Requirement: \(unit.unlockRequirement)")
+                    .font(.terminalMicro)
+                    .foregroundColor(.dimAmber)
+                    .lineLimit(isSelected ? nil : 1)
+
+                if let gateReason = unlockBlockReason {
+                    HStack(spacing: 4) {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .font(.system(size: 10))
+                        Text(gateReason)
+                            .lineLimit(isSelected ? nil : 1)
+                    }
+                    .font(.terminalMicro)
+                    .foregroundColor(.neonRed)
+                }
+            }
+
+            if isSelected {
+                unitStats
+            }
         }
-        .buttonStyle(.plain)
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 4)
+                .fill(isSelected ? categoryColor.opacity(0.1) : Color.terminalDarkGray)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 4)
+                .stroke(
+                    isSelected ? categoryColor : (isEquipped ? Color.neonGreen.opacity(0.5) : Color.terminalGray.opacity(0.3)),
+                    lineWidth: isSelected ? 2 : 1
+                )
+        )
+        .contentShape(Rectangle())
+        .onTapGesture(perform: onTap)
     }
 
     @ViewBuilder
